@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "GCaLink (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "GCaLink (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

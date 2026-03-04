@@ -7,7 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="GCaLink">
+    Title="GCaLink"
+    >
 
     <Window.SystemBackdrop>
         <MicaBackdrop />
@@ -24,7 +25,18 @@
 
         <Rectangle Height="2" Fill="Gray" Grid.Row="1" VerticalAlignment="Center"/>
 
-        <TextBlock Grid.Row="2" Text="Hi this is a test"/>
+        <ListView
+            x:Name="TaskList"
+            Grid.Row="2">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="Models:TaskItem">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Background="{x:Bind color}">
+                        <TextBlock Text="{x:Bind Title}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            
+        </ListView>
     </Grid>
     
 </Window>

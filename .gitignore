@@ -619,3 +619,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+#ical files
+*.ics

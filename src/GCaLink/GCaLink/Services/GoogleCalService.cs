@@ -27,22 +27,8 @@ namespace GCaLink.Services
             _options = options;
         }
 
-        public async Task WriteUpcomingEventsMessagePackAsync(string outputPath = "data.msgpack")
-        {
-            CalendarService service = await CreateCalendarServiceAsync();
-            Dictionary<string, CalEventDto> calendarData = await FetchUpcomingEventsAsync(service);
 
-            byte[] bytes = MessagePackSerializer.Serialize(calendarData);
-            await File.WriteAllBytesAsync(outputPath, bytes);
-        }
-
-        public async Task<Dictionary<string, CalEventDto>> ReadUpcomingEventsMessagePackAsync(string inputPath = "data.msgpack")
-        {
-            byte[] bytes = await File.ReadAllBytesAsync(inputPath);
-            return MessagePackSerializer.Deserialize<Dictionary<string, CalEventDto>>(bytes);
-        }
-
-        private async Task<CalendarService> CreateCalendarServiceAsync()
+        public async Task<CalendarService> CreateCalendarServiceAsync()
         {
             ClientSecrets secrets = new ClientSecrets
             {
@@ -60,11 +46,11 @@ namespace GCaLink.Services
             return new CalendarService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = credential,
-                ApplicationName = "My Calendar App"
+                ApplicationName = "GCWidget"
             });
         }
 
-        private async Task<Dictionary<string, CalEventDto>> FetchUpcomingEventsAsync(CalendarService service)
+        public async Task<Dictionary<string, CalEventDto>> FetchUpcomingEventsAsync(CalendarService service)
         {
             DateTimeOffset now = DateTimeOffset.UtcNow;
             DateTimeOffset end = now.AddDays(7);

@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace GCaLink.Models
 {
-    internal class EventTypeConfig
+    public class EventTypeConfig
     {
+        public string BkgColor { get; set; } = "#ff00ff";
+        public string BkgImg { get; set; } = "";
     }
 }

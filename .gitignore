@@ -401,5 +401,9 @@ FodyWeavers.xsd
 
 # End of https://www.toptal.com/developers/gitignore/api/csharp
 
+.env
+.ipynb_checkpoints/
+env/
+
 #ical files
 *.ics

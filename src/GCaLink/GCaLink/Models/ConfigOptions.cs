@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Drawing;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace GCaLink.Models
 {
@@ -22,5 +23,13 @@ namespace GCaLink.Models
         public Boolean UseAcrylic { get; set; } = true;
         public string FontFamily {get; set; } = "Segoe UI";
         public int FontSize { get; set; } = 12;
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement>? ExtraData { get; set; }
+
+        public void Normalize()
+        {
+            // Keep this for later if settings config gets updated in released version
+        }
     }
 }

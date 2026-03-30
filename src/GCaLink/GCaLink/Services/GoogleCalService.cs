@@ -1,19 +1,21 @@
-﻿using System;
-using System.IO;
+﻿using GCaLink.Models;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Auth.OAuth2.Responses;
+using Google.Apis.Calendar.v3;
+using Google.Apis.Calendar.v3.Data;
+using Google.Apis.Services;
+using Google.Apis.Util;
+using Google.Apis.Util.Store;
+using MessagePack;
+using MessagePack.Formatters;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Calendar.v3;
-using Google.Apis.Services;
-using Google.Apis.Util.Store;
 using System.Threading;
-
-using GCaLink.Models;
-using Google.Apis.Calendar.v3.Data;
-using MessagePack;
+using System.Threading.Tasks;
 
 namespace GCaLink.Services
 {
@@ -27,6 +29,52 @@ namespace GCaLink.Services
             _options = options;
         }
 
+        private GoogleAuthorizationCodeFlow CreateFlow()
+        {
+            var secrets = new ClientSecrets
+            {
+                ClientId = _options.ClientId,
+                ClientSecret = _options.ClientSecret
+            };
+
+            return new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+            {
+                ClientSecrets = secrets,
+                Scopes = Scopes,
+                DataStore = new FileDataStore(
+                    Path.GetDirectoryName(_options.TokenPath) ?? "token-store",
+                    true),
+                Clock = SystemClock.Default
+            });
+        }
+
+        public async Task<bool> IsAccountActiveAsync()
+        {
+            const string userId = "user";
+
+            try
+            {
+                using var flow = CreateFlow();
+
+                TokenResponse? token = await flow.LoadTokenAsync(userId, CancellationToken.None);
+                if (token == null)
+                    return false;
+
+                var credential = new UserCredential(flow, userId, token);
+
+                if (credential.Token == null)
+                    return false;
+
+                if (!credential.Token.IsStale)
+                    return true;
+
+                return await credential.RefreshTokenAsync(CancellationToken.None);
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         public async Task<CalendarService> CreateCalendarServiceAsync()
         {
@@ -41,7 +89,8 @@ namespace GCaLink.Services
                 Scopes,
                 "user",
                 CancellationToken.None,
-                new FileDataStore(Path.GetDirectoryName(_options.TokenPath) ?? "token-store", true));
+                new FileDataStore(Path.GetDirectoryName(_options.TokenPath) ?? "token-store", true)
+            );
 
             return new CalendarService(new BaseClientService.Initializer
             {

@@ -29,7 +29,7 @@ namespace GCaLink.Services
                     return filePath;
                 }
 
-                return System.Text.Encoding.UTF8.GetString(content);
+                return Encoding.UTF8.GetString(content);
             }
             catch (HttpRequestException ex)
             {

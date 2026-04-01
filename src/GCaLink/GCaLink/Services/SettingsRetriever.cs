@@ -1,14 +1,12 @@
-﻿using System;
+﻿using GCaLink.Models;
+using Google.Apis.Auth;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 using System.Text.Json;
-
-using Google.Apis.Auth;
-
-using GCaLink.Models;
+using System.Threading.Tasks;
 
 namespace GCaLink.Services
 {
@@ -43,7 +41,12 @@ namespace GCaLink.Services
 
         public void setCanvasICSLink(string newLink)
         {
-            this.options.CanvasICSLink = newLink;
+            bool isValid = Uri.TryCreate(newLink, UriKind.Absolute, out Uri? uriResult)
+                && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+            if (isValid)
+            {
+                this.options.CanvasICSLink = newLink;
+            }
         }
 
         public async Task<Dictionary<string, bool>> getActiveSources(GoogleCalService googleCalService)

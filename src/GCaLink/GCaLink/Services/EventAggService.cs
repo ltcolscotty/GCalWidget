@@ -16,7 +16,11 @@ namespace GCaLink.Services
     {
         public async Task WriteUpcomingEventsMessagePackAsync(string outputPath = "data.msgpack")
         {
+            SettingsRetriever settingsRetriever = new SettingsRetriever();
+
             GoogleCalService GCS = new GoogleCalService(new GoogleCalOptions());
+
+            Dictionary<string, bool> sourceList = await settingsRetriever.getActiveSources(GoogleCalService googleCalService)
             CalendarService service = await GCS.CreateCalendarServiceAsync();
             Dictionary<string, CalEventDto> calendarData = await GCS.FetchUpcomingEventsAsync(service);
 

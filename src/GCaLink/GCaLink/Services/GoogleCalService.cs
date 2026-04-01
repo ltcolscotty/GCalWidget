@@ -1,19 +1,21 @@
-﻿using System;
-using System.IO;
+﻿using GCaLink.Models;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Auth.OAuth2.Responses;
+using Google.Apis.Calendar.v3;
+using Google.Apis.Calendar.v3.Data;
+using Google.Apis.Services;
+using Google.Apis.Util;
+using Google.Apis.Util.Store;
+using MessagePack;
+using MessagePack.Formatters;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Calendar.v3;
-using Google.Apis.Services;
-using Google.Apis.Util.Store;
 using System.Threading;
-
-using GCaLink.Models;
-using Google.Apis.Calendar.v3.Data;
-using MessagePack;
+using System.Threading.Tasks;
 
 namespace GCaLink.Services
 {
@@ -27,6 +29,52 @@ namespace GCaLink.Services
             _options = options;
         }
 
+        private GoogleAuthorizationCodeFlow CreateFlow()
+        {
+            var secrets = new ClientSecrets
+            {
+                ClientId = _options.ClientId,
+                ClientSecret = _options.ClientSecret
+            };
+
+            return new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+            {
+                ClientSecrets = secrets,
+                Scopes = Scopes,
+                DataStore = new FileDataStore(
+                    Path.GetDirectoryName(_options.TokenPath) ?? "token-store",
+                    true),
+                Clock = SystemClock.Default
+            });
+        }
+
+        public async Task<bool> IsAccountActiveAsync()
+        {
+            const string userId = "user";
+
+            try
+            {
+                using GoogleAuthorizationCodeFlow flow = CreateFlow();
+
+                TokenResponse? token = await flow.LoadTokenAsync(userId, CancellationToken.None);
+                if (token == null)
+                    return false;
+
+                UserCredential credential = new UserCredential(flow, userId, token);
+
+                if (credential.Token == null)
+                    return false;
+
+                if (!credential.Token.IsStale)
+                    return true;
+
+                return await credential.RefreshTokenAsync(CancellationToken.None);
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         public async Task<CalendarService> CreateCalendarServiceAsync()
         {
@@ -41,7 +89,8 @@ namespace GCaLink.Services
                 Scopes,
                 "user",
                 CancellationToken.None,
-                new FileDataStore(Path.GetDirectoryName(_options.TokenPath) ?? "token-store", true));
+                new FileDataStore(Path.GetDirectoryName(_options.TokenPath) ?? "token-store", true)
+            );
 
             return new CalendarService(new BaseClientService.Initializer
             {
@@ -50,7 +99,7 @@ namespace GCaLink.Services
             });
         }
 
-        public async Task<Dictionary<string, CalEventDto>> FetchUpcomingEventsAsync(CalendarService service)
+        public async Task FetchUpcomingEventsAsync(CalendarService service, List<CalEventDto> calendarData)
         {
             DateTimeOffset now = DateTimeOffset.UtcNow;
             DateTimeOffset end = now.AddDays(7);
@@ -67,24 +116,16 @@ namespace GCaLink.Services
 
             Events events = await eventsRequest.ExecuteAsync();
 
-            Dictionary<string, CalEventDto> result = new Dictionary<string, CalEventDto>();
+            if (events.Items == null) return;
 
-            if (events.Items == null)
-                return result;
-
-            foreach (var ev in events.Items)
+            foreach (Event ev in events.Items)
             {
-                var normalized = NormalizeEvent(ev, colors, _options.DefaultColor);
-                result[ev.Id] = normalized;
+                CalEventDto normalized = NormalizeEvent(ev, colors, _options.DefaultColor);
+                calendarData.Add(normalized);
             }
-
-            return result;
         }
 
-        private static CalEventDto NormalizeEvent(
-            Google.Apis.Calendar.v3.Data.Event ev,
-            Google.Apis.Calendar.v3.Data.Colors colors,
-            string defaultColor)
+        private static CalEventDto NormalizeEvent(Event ev, Colors colors, string defaultColor)
         {
             DateTimeOffset start = ParseEventStart(ev);
             string color = GetEventColor(ev, colors, defaultColor);
@@ -92,6 +133,7 @@ namespace GCaLink.Services
 
             return new CalEventDto
             {
+                Id = ev.Id,
                 Title = ev.Summary ?? "",
                 Datetime = start.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"),
                 Link = ev.HtmlLink ?? "",
@@ -102,7 +144,7 @@ namespace GCaLink.Services
             };
         }
 
-        private static DateTimeOffset ParseEventStart(Google.Apis.Calendar.v3.Data.Event ev)
+        private static DateTimeOffset ParseEventStart(Event ev)
         {
             if (ev.Start?.DateTimeDateTimeOffset != null)
                 return ev.Start.DateTimeDateTimeOffset.Value;
@@ -113,10 +155,7 @@ namespace GCaLink.Services
             return DateTime.MinValue;
         }
 
-        private static string GetEventColor(
-            Google.Apis.Calendar.v3.Data.Event ev,
-            Google.Apis.Calendar.v3.Data.Colors colors,
-            string defaultColor)
+        private static string GetEventColor(Event ev, Colors colors, string defaultColor)
         {
             if (!string.IsNullOrWhiteSpace(ev.ColorId) &&
                 colors.Event__ != null &&
@@ -129,7 +168,7 @@ namespace GCaLink.Services
             return defaultColor;
         }
 
-        private static string GetEventSource(Google.Apis.Calendar.v3.Data.Event ev)
+        private static string GetEventSource(Event ev)
         {
             Event.OrganizerData organizer = ev.Organizer;
 

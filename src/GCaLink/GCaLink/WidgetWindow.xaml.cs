@@ -14,6 +14,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.UI;
 using GCaLink.Models;
+using GCaLink.Services;
 using Windows.ApplicationModel.UserDataTasks;
 using System.Security.Cryptography.X509Certificates;
 using System.Diagnostics.Contracts;
@@ -34,6 +35,21 @@ namespace GCaLink
         }
 
         private void BkgStyle_changed(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void GoogleSI_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Main_Save_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Canvas_Save_Click(object sender, RoutedEventArgs e)
         {
 
         }

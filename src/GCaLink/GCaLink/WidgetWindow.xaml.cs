@@ -13,7 +13,6 @@ using Microsoft.UI.Xaml.Navigation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.UI;
-using Microsoft.UI.Xaml.Media;
 using GCaLink.Models;
 using Windows.ApplicationModel.UserDataTasks;
 using System.Security.Cryptography.X509Certificates;
@@ -34,14 +33,9 @@ namespace GCaLink
             InitializeComponent();
         }
 
-        private void ColorSchemePicker_ColorChanged(ColorPicker sender, ColorChangedEventArgs args)
+        private void BkgStyle_changed(object sender, SelectionChangedEventArgs e)
         {
-            PublicKey ConfigOptions config = new ConfigOptions();
-            var color = sender.Color;
-            string hex = $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
-            HexOutput.Text = hex;
-            config.BackgroundColor = hex;
-            TaskList.Background = new SolidColorBrush(color);
+
         }
     }
 }

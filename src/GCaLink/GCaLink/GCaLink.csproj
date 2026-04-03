@@ -1,38 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>GCaLink</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-
-    <!-- Force single architecture -->
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <PlatformTarget>x64</PlatformTarget>
-
-    <PublishProfile>win-x64.pubxml</PublishProfile>
-
-    <!-- WinUI + MSIX -->
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
-    <EnableMsixTooling>false</EnableMsixTooling>
-
+    <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <!-- Remove unused assets -->
   <ItemGroup>
     <Content Remove="Assets\google-si-dark.png" />
     <Content Remove="Assets\google-si-light.png" />
     <Content Remove="Assets\google-si-neutral.png" />
   </ItemGroup>
-
-  <!-- Remove XAML page -->
   <ItemGroup>
     <Page Remove="SettingsWindow.xaml" />
   </ItemGroup>
 
-  <!-- App assets -->
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
@@ -43,17 +31,18 @@
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
 
-  <!-- Manifest -->
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
-  <!-- MSIX capability -->
+  <!--
+    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
+    Tools extension to be activated for this project even if the Windows App SDK Nuget
+    package has not yet been restored.
+  -->
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
   </ItemGroup>
-
-  <!-- NuGet packages -->
   <ItemGroup>
     <PackageReference Include="Google.Apis" Version="1.73.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
@@ -64,31 +53,30 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260317003" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.5" />
   </ItemGroup>
-
-  <!-- Folders -->
   <ItemGroup>
     <Folder Include="ViewModels\" />
     <Folder Include="Views\" />
   </ItemGroup>
-
-  <!-- XAML compile fix -->
   <ItemGroup>
     <None Update="SettingsWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>
   </ItemGroup>
 
-  <!-- Enable Package/Publish menu -->
+  <!--
+    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
+    Explorer "Package and Publish" context menu entry to be enabled for this project even if
+    the Windows App SDK Nuget package has not yet been restored.
+  -->
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
   </PropertyGroup>
 
-  <!-- Publish settings -->
+  <!-- Publish Properties -->
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
-
 </Project>

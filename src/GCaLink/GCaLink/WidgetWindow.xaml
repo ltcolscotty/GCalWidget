@@ -49,39 +49,68 @@
         <muxc:TabView
         Grid.Row="1"
         IsAddTabButtonVisible="False"
-        TabWidthMode="Equal">
+        TabWidthMode="SizeToContent">
 
             <muxc:TabViewItem Header="Main" IsClosable="False">
                 <Grid Padding="16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <!-- Header -->
                         <RowDefinition Height="*"/>
-                        <!-- TabView -->
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Home content" FontSize="30" Grid.Row="0"/>
                     <muxc:RadioButtons Header="Background Style"
+                                       FontSize="20"
+                                       FontWeight="Bold"
                                        SelectedIndex="0"
                                        SelectionChanged="BkgStyle_changed"
-                                       Grid.Row="1"
+                                       Grid.Row="0"
                                        >
                         <x:String>Solid</x:String>
                         <x:String>Mica</x:String>
                         <x:String>Arcrylic</x:String>
                     </muxc:RadioButtons>
-
+                    <Grid Grid.Row="1" Padding="0,10">
+                        <muxc:Button Content="Save" Click="Main__Save_Click"/>
+                    </Grid>
+                    
                 </Grid>
             </muxc:TabViewItem>
 
             <muxc:TabViewItem Header="Google" IsClosable="False">
                 <Grid Padding="16">
-                    <TextBlock Text="Settings content" FontSize="30"/>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <Button x:Name="GoogleSI" 
+                                Click="GoogleSI_Click"
+                                Padding="0"
+                                Margin="0">
+                            <!--Image not showing for some reason, this needs to be fixed-->
+                            <Image Source="ms-appx:///Assets/google-si-neutral.png" 
+                                   Width="108" 
+                                   Height="24" 
+                                   Stretch="UniformToFill" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center" />
+                        </Button>
+                    </Grid>
                 </Grid>
             </muxc:TabViewItem>
 
             <muxc:TabViewItem Header="Canvas" IsClosable="False">
                 <Grid Padding="16">
-                    <TextBlock Text="Canvas content" FontSize="30"/>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <muxc:TextBox Header="Canvas calendar link"
+                                  PlaceholderText="https://canvas.asu.edu/feeds/calendars/---.ics"
+                                  Width="300"
+                                  Grid.Row="0"/>
+                    <Grid Grid.Row="1" Padding="0,10">
+                        <muxc:Button Content="Save" Click="Canvas_Save_Click"/>
+                    </Grid>
                 </Grid>
             </muxc:TabViewItem>
 

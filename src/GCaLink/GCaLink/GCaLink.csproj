@@ -13,6 +13,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Content Remove="Assets\google-si-dark.png" />
+    <Content Remove="Assets\google-si-light.png" />
+    <Content Remove="Assets\google-si-neutral.png" />
+  </ItemGroup>
+  <ItemGroup>
     <Page Remove="SettingsWindow.xaml" />
   </ItemGroup>
 

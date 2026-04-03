@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Ical.Net;
+using System.Text.RegularExpressions;
 
 using GCaLink.Models;
 using Ical.Net.CalendarComponents;
@@ -18,10 +19,25 @@ namespace GCaLink.Services
             downloader = new IcsDownloader();
         }
 
-        private CalEventDto Normallize(CalendarEvent inputEvent)
+        private CalEventDto Normalize(CalendarEvent inputEvent)
         {
+            string class_data_regex = @"(?<=\[).*?(?=\])";
+            string assignment_title_regex = @"^([^\[]*)";
+            string class_name_regex = @"[A-Z]{3}[0-9]{3}";
+            string section_regex = @"[0-9]{4}(.*?)[ABC]";
+           
+            Match section_info  = Regex.Match(inputEvent.Summary, class_data_regex).Value.Trim();
+            Match assignment_name = Regex.Match(inputEvent.Summary, assignment_title_regex).Value.Trim();
+            Match class_name = Regex.Match(section_info, class_name_regex).Value.Trim();
+            Match section_name = Regex.Match(section_info, section_regex).Value.Trim();
+
+
             // Placeholder for regex and all the fun stuff
             CalEventDto eventObj = new CalEventDto();
+            eventObj.Id = inputEvent.Uid;
+            eventObj.Title = assignment_name;
+            eventObj.Datetime = inputEvent.Start.DateTimeoffset;
+            eventObj.Link = inputEvent.Url;
 
             return eventObj;
         }
@@ -48,7 +64,7 @@ namespace GCaLink.Services
             foreach (var calendarEvent in calendar.Events)
             {
                 if (calendarEvent == null) continue;
-                eventList.Add(Normallize(calendarEvent));
+                eventList.Add(Normalize(calendarEvent));
             }
         }
     }

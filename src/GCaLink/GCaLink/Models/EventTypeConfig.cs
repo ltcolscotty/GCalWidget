@@ -3,12 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MessagePack;
 
 namespace GCaLink.Models
 {
+    [MessagePackObject]
     public class EventTypeConfig
     {
-        public string BkgColor { get; set; } = "#ff00ff";
-        public string BkgImg { get; set; } = "";
+        [Key(0)] public string Source { get; set; } = "";
+        [Key(1)] public int EventConfigVersion { get; } = 1;
+        [Key(2)] public string BkgColor { get; set; } = "#ff00ff";
+        [Key(3)] public string BkgImg { get; set; } = "";
+
+        public void Normallize()
+        {
+            //leave blank for now
+        }
     }
 }

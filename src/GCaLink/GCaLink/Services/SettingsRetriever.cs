@@ -55,7 +55,12 @@ namespace GCaLink.Services
 
         public void setCanvasICSLink(string newLink)
         {
-            this.options.CanvasICSLink = newLink;
+            bool isValid = Uri.TryCreate(newLink, UriKind.Absolute, out Uri? uriResult)
+                && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+            if (isValid)
+            {
+                this.options.CanvasICSLink = newLink;
+            }
         }
 
         public bool getInitializedStatus() { return initializedAsyncStatus; }

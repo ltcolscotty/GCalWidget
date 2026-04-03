@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Text.Json;
-
+﻿using GCaLink.Models;
 using Google.Apis.Auth;
 
-using GCaLink.Models;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Windows.UI.ViewManagement;
+
+using MessagePack;
 
 namespace GCaLink.Services
 {
@@ -20,6 +22,7 @@ namespace GCaLink.Services
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
             string settingsFile = Path.Combine(appDataLocalFolder, "GCWConfig.json");
+            string ETCsettingsFile = Path.Combine(appDataLocalFolder, "ETCSettings.msgpack");
             
 
             if (!Directory.Exists(appDataLocalFolder))
@@ -46,6 +49,11 @@ namespace GCaLink.Services
             this.options.CanvasICSLink = newLink;
         }
 
+        public async Task<List<EventTypeConfig>> LoadEventTypeConfigs(string inputPath)
+        {
+            byte[] bytes = await File.ReadAllBytesAsync(inputPath);
+            return MessagePackSerializer.Deserialize<List<EventTypeConfig>>(bytes);
+        }
         public async Task<Dictionary<string, bool>> getActiveSources(GoogleCalService googleCalService)
         {
             bool googleActive = await googleCalService.IsAccountActiveAsync();

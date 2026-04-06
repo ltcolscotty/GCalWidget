@@ -135,7 +135,7 @@ namespace GCaLink.Services
             {
                 Id = ev.Id,
                 Title = ev.Summary ?? "",
-                Datetime = start.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"),
+                Datetime = start.ToUniversalTime(),
                 Link = ev.HtmlLink ?? "",
                 CustomConfig = false,
                 Image = "",

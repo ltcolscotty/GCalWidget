@@ -36,8 +36,8 @@ namespace GCaLink.Services
             CalEventDto eventObj = new CalEventDto();
             eventObj.Id = inputEvent.Uid;
             eventObj.Title = assignment_name;
-            eventObj.Datetime = inputEvent.Start.DateTimeoffset;
-            eventObj.Link = inputEvent.Url;
+            eventObj.Datetime = inputEvent.Start.AsUtc;
+            eventObj.Link = inputEvent.Url.ToString();
 
             return eventObj;
         }

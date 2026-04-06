@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace GCaLink.Platform
 {
-    class Win32Interlop
+    class Win32Interop
     {
         private const int GWL_EXSTYLE = -20;
 

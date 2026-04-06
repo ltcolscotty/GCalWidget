@@ -26,10 +26,10 @@ namespace GCaLink.Services
             string class_name_regex = @"[A-Z]{3}[0-9]{3}";
             string section_regex = @"[0-9]{4}(.*?)[ABC]";
            
-            Match section_info  = Regex.Match(inputEvent.Summary, class_data_regex).Value.Trim();
-            Match assignment_name = Regex.Match(inputEvent.Summary, assignment_title_regex).Value.Trim();
-            Match class_name = Regex.Match(section_info, class_name_regex).Value.Trim();
-            Match section_name = Regex.Match(section_info, section_regex).Value.Trim();
+            string section_info  = Regex.Match(inputEvent.Summary, class_data_regex).Value.Trim();
+            string assignment_name = Regex.Match(inputEvent.Summary, assignment_title_regex).Value.Trim();
+            string class_name = Regex.Match(section_info, class_name_regex).Value.Trim();
+            string section_name = Regex.Match(section_info, section_regex).Value.Trim();
 
 
             // Placeholder for regex and all the fun stuff

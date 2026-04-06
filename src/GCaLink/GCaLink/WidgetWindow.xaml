@@ -69,7 +69,7 @@
                         <x:String>Arcrylic</x:String>
                     </muxc:RadioButtons>
                     <Grid Grid.Row="1" Padding="0,10">
-                        <muxc:Button Content="Save" Click="Main__Save_Click"/>
+                        <muxc:Button Content="Save" Click="Main_Save_Click"/>
                     </Grid>
                     
                 </Grid>

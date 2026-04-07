@@ -14,13 +14,13 @@ using MessagePack;
 
 namespace GCaLink.Services
 {
-    internal class SettingsRetriever
+    internal static class SettingsRetriever
     {
-        private ConfigOptions options;
-        private string ETCSettingsFile;
-        private bool initializedAsyncStatus = false;
+        private static ConfigOptions options;
+        private static string ETCSettingsFile;
+        private static bool initializedAsyncStatus = false;
 
-        public SettingsRetriever() 
+        static SettingsRetriever() 
         {
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
@@ -47,25 +47,30 @@ namespace GCaLink.Services
             }
         }
 
-        public async Task InitializeAsync()
+        public static async Task InitializeAsync()
         {
             List<EventTypeConfig> sourceConfigs = await LoadEventTypeConfigs(ETCSettingsFile);
             initializedAsyncStatus = true;
         }
 
-        public void setCanvasICSLink(string newLink)
+        public static void setCanvasICSLink(string newLink)
         {
             bool isValid = Uri.TryCreate(newLink, UriKind.Absolute, out Uri? uriResult)
                 && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
             if (isValid)
             {
-                this.options.CanvasICSLink = newLink;
+                options.CanvasICSLink = newLink;
             }
         }
 
-        public bool getInitializedStatus() { return initializedAsyncStatus; }
+        public static string getSchoolName()
+        {
+            return options.School;
+        }
 
-        private async Task<List<EventTypeConfig>> LoadEventTypeConfigs(string inputPath)
+        public static bool getInitializedStatus() { return initializedAsyncStatus; }
+
+        private static async Task<List<EventTypeConfig>> LoadEventTypeConfigs(string inputPath)
         {
             byte[] bytes;
             if (!File.Exists(inputPath))
@@ -82,7 +87,7 @@ namespace GCaLink.Services
             return MessagePackSerializer.Deserialize<List<EventTypeConfig>>(bytes);
         }
 
-        public async Task<Dictionary<string, bool>> getActiveSources(GoogleCalService googleCalService)
+        public static async Task<Dictionary<string, bool>> getActiveSources(GoogleCalService googleCalService)
         {
             bool googleActive = await googleCalService.IsAccountActiveAsync();
             return new Dictionary<string, bool>

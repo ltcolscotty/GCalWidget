@@ -13,6 +13,7 @@ namespace GCaLink.Models
     {
         public int ConfigVersion { get; } = 1;
         public string CanvasICSLink { get; set; } = "";
+        public string School { get; set; } = "Arizona State University";
         public int BackgroundTransparency { get; set; } = 0;
         public string BackgroundColor { get; set; } = "#ff00ff";
         public string BackgroundImage { get; set; } = "";

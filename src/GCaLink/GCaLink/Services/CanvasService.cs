@@ -15,29 +15,36 @@ namespace GCaLink.Services
     internal class CanvasService
     {
         IcsDownloader downloader;
+        UniRegexService uniRegexService;
         public CanvasService() { 
             downloader = new IcsDownloader();
+            uniRegexService = new UniRegexService(SettingsRetriever.getSchoolName());
+
         }
 
-        private CalEventDto Normalize(CalendarEvent inputEvent)
+        private CalEventDto? Normalize(CalendarEvent inputEvent)
         {
-            string class_data_regex = @"(?<=\[).*?(?=\])";
-            string assignment_title_regex = @"^([^\[]*)";
-            string class_name_regex = @"[A-Z]{3}[0-9]{3}";
-            string section_regex = @"[0-9]{4}(.*?)[ABC]";
-           
-            string section_info  = Regex.Match(inputEvent.Summary, class_data_regex).Value.Trim();
-            string assignment_name = Regex.Match(inputEvent.Summary, assignment_title_regex).Value.Trim();
-            string class_name = Regex.Match(section_info, class_name_regex).Value.Trim();
-            string section_name = Regex.Match(section_info, section_regex).Value.Trim();
+            // NOTE: LOG WHEN MISSING INFO
 
+            if ((inputEvent.Summary == null) ||
+                (inputEvent.Uid == null) ||
+                (inputEvent.Start == null))
+            {
+                return null;
+            }
 
-            // Placeholder for regex and all the fun stuff
+            string sectionInfo = uniRegexService.GetSectionInfo(inputEvent.Summary);
+            string assignmentName = uniRegexService.GetAssignmentName(inputEvent.Summary);
+            string className = uniRegexService.GetClassName(sectionInfo);
+            string sectionName = uniRegexService.GetSectionName(sectionInfo);
+
             CalEventDto eventObj = new CalEventDto();
             eventObj.Id = inputEvent.Uid;
-            eventObj.Title = assignment_name;
+            eventObj.Source = className;
+            eventObj.LongSource = className + "_" + sectionName;
+            eventObj.Title = assignmentName;
             eventObj.Datetime = inputEvent.Start.AsUtc;
-            eventObj.Link = inputEvent.Url.ToString();
+            eventObj.Link = inputEvent.Url?.ToString() ?? "";
 
             return eventObj;
         }

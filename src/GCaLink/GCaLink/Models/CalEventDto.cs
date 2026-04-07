@@ -14,5 +14,6 @@ namespace GCaLink.Models
         [Key(5)] public string Image { get; set; } = "";
         [Key(6)] public string Color { get; set; } = "";
         [Key(7)] public string Source { get; set; } = "";
+        [Key(8)] public string LongSource { get; set; } = "";
     }
 }

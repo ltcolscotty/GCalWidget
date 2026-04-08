@@ -27,13 +27,20 @@ namespace GCaLink.Services
             }
         }
 
-        public static void LogWarning(string warningText)
+        public static void LogWarning(string warningText, bool isException=false)
         {
             try
             {
                 lock (lockObj)
                 {
-                    File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} [WARN] {warningText}{Environment.NewLine}");
+                    if (isException)
+                    {
+                        File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} [EXCEPTION] {warningText}{Environment.NewLine}");
+                    } 
+                    else
+                    {
+                        File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} [WARN] {warningText}{Environment.NewLine}");
+                    }
                 }
             }
             catch

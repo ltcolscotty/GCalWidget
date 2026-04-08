@@ -12,7 +12,6 @@ namespace GCaLink.Services
     {
         private static readonly string logFilePath;
         private static readonly object lockObj = new();
-        private static readonly object LogLock = new();
         private static readonly long MaxFileSizeBytes = 1 * 1024 * 1024;
         private static readonly int MaxOldFiles = 3;
 

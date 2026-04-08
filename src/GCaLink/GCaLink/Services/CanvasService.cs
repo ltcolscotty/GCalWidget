@@ -30,6 +30,7 @@ namespace GCaLink.Services
                 (inputEvent.Uid == null) ||
                 (inputEvent.Start == null))
             {
+                LoggerService.LogWarning("CanvasService.Normalize(): Nonexistent Summary, Start, or Uid for event, skipping over");
                 return null;
             }
 
@@ -68,10 +69,12 @@ namespace GCaLink.Services
 
             if (calendar == null) return;
 
-            foreach (var calendarEvent in calendar.Events)
+            foreach (CalendarEvent? calendarEvent in calendar.Events)
             {
                 if (calendarEvent == null) continue;
-                eventList.Add(Normalize(calendarEvent));
+                CalEventDto? newCED = Normalize(calendarEvent);
+                if (newCED == null) continue;
+                eventList.Add(newCED);
             }
         }
     }

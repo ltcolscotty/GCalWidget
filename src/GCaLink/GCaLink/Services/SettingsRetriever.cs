@@ -26,12 +26,7 @@ namespace GCaLink.Services
             string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
             string settingsFile = Path.Combine(appDataLocalFolder, "GCWConfig.json");
             ETCSettingsFile = Path.Combine(appDataLocalFolder, "ETCSettings.msgpack");
-            
-
-            if (!Directory.Exists(appDataLocalFolder))
-            {
-                Directory.CreateDirectory(appDataLocalFolder);
-            }
+            Directory.CreateDirectory(appDataLocalFolder);
 
             if (!File.Exists(settingsFile))
             {

@@ -12,6 +12,9 @@ namespace GCaLink.Services
     {
         private static readonly string logFilePath;
         private static readonly object lockObj = new();
+        private static readonly object LogLock = new();
+        private static readonly long MaxFileSizeBytes = 1 * 1024 * 1024;
+        private static readonly int MaxOldFiles = 3;
 
         static LoggerService()
         {
@@ -33,6 +36,12 @@ namespace GCaLink.Services
             {
                 lock (lockObj)
                 {
+                    FileInfo? info = new FileInfo(logFilePath);
+                    if (info.Exists && info.Length >= MaxFileSizeBytes)
+                    {
+                        Rotate();
+                    }
+
                     if (isException)
                     {
                         File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} [EXCEPTION] {warningText}{Environment.NewLine}");
@@ -45,6 +54,25 @@ namespace GCaLink.Services
             }
             catch
             {
+            }
+        }
+
+        private static void Rotate()
+        {
+            if (!File.Exists(logFilePath)) return;
+            string current = logFilePath;
+            string next;
+
+            for (int i = MaxOldFiles - 1; i >= 0; i--)
+            {
+                string src = i == 0 ? current : $"{current}.{i}";
+                next = $"{current}.{i + 1}";
+
+                if (File.Exists(src))
+                {
+                    if (File.Exists(next)) File.Delete(next);
+                    File.Move(src, next);
+                }
             }
         }
     }

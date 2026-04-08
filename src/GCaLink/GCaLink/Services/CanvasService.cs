@@ -60,7 +60,7 @@ namespace GCaLink.Services
             string expectedPath = await downloader.DownloadIcsAsync(sourceLink, calendarFile);
             if (expectedPath != calendarFile) {
                 // Make a proper error logger later
-                Console.WriteLine($"CanvasService: Unexpected handling of ics download: {expectedPath}");
+                LoggerService.LogWarning($"CanvasService: Unexpected handling of ics download: {expectedPath}");
                 return;
             }
 

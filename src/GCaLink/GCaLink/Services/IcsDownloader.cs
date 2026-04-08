@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.WebRequestMethods;
 
 namespace GCaLink.Services
 {
@@ -33,6 +34,7 @@ namespace GCaLink.Services
             }
             catch (HttpRequestException ex)
             {
+                LoggerService.LogWarning($"Failed to download ICS from {icsUrl}: {ex.Message}", true);
                 throw new InvalidOperationException($"Failed to download ICS from {icsUrl}: {ex.Message}", ex);
             }
         }

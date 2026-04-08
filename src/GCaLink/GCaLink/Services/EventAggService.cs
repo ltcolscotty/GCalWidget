@@ -12,13 +12,12 @@ using System.Threading.Tasks;
 
 namespace GCaLink.Services
 {
-    internal class EventAggService
+    internal static class EventAggService
     {
-        public async Task WriteUpcomingEventsMessagePackAsync(string outputPath = "data.msgpack")
+        public static async Task WriteUpcomingEventsMessagePackAsync(string outputPath = "data.msgpack")
         {
-            SettingsRetriever settingsRetriever = new SettingsRetriever();
             GoogleCalService GCS = new GoogleCalService(new GoogleCalOptions());
-            Dictionary<string, bool> sourceList = await settingsRetriever.getActiveSources(GCS);
+            Dictionary<string, bool> sourceList = await SettingsRetriever.getActiveSources(GCS);
             List<CalEventDto> calendarData = [];
             if (sourceList["google"])
             {
@@ -31,7 +30,7 @@ namespace GCaLink.Services
             await File.WriteAllBytesAsync(outputPath, bytes);
         }
 
-        public async Task<List<CalEventDto>> ReadUpcomingEventsMessagePackAsync(string inputPath = "data.msgpack")
+        public static async Task<List<CalEventDto>> ReadUpcomingEventsMessagePackAsync(string inputPath = "data.msgpack")
         {
             byte[] bytes = await File.ReadAllBytesAsync(inputPath);
             return MessagePackSerializer.Deserialize<List<CalEventDto>>(bytes);

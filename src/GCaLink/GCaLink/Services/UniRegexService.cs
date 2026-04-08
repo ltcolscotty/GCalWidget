@@ -20,15 +20,15 @@ namespace GCaLink.Services
             {
                 ["Arizona State University"] = new Dictionary<string, Func<string, string>>
                 {
-                    ["SectionInfo"] = GetAzStUniSI,
-                    ["AssignmentName"] = GetAzStUniAN,
+                    ["SectionInfo"] = SectionInfoUniversal,
+                    ["AssignmentName"] = AssignmentNameUniversal,
                     ["ClassName"] = GetAzStUniCN,
                     ["SectionName"] = GetAzStUniSN
                 },
                 ["Ohio State University"] = new Dictionary<string, Func<string, string>>
                 {
-                    ["SectionInfo"] = GetOhioStUniSI,
-                    ["AssignmentName"] = GetOhioStUniAN,
+                    ["SectionInfo"] = SectionInfoUniversal,
+                    ["AssignmentName"] = AssignmentNameUniversal,
                     ["ClassName"] = GetOhioStUniCN,
                     ["SectionName"] = GetOhioStUniSN
                 }
@@ -59,17 +59,20 @@ namespace GCaLink.Services
          * Certain universities may have edge cases for section naming. We will keep Regex.Match in every definition for this reason.
          */
 
+        // Universal
+        private string SectionInfoUniversal(string summary) => Regex.Match(summary, @"(?<=\[).*?(?=\])").Value.Trim();
+        private string AssignmentNameUniversal(string summary) => Regex.Match(summary, @"^([^\[]*)").Value.Trim();
+
+        // Generalized Regex; deals with 3-4
+        private string GetGeneralCN(string sectionInfo) => Regex.Match(sectionInfo, @"[A-Z]{3, 5} ?[0-9]{3}[a-zA-Z]{0, 3}").Value.Trim();
+
         // Arizona State University
-        private string GetAzStUniSI(string summary) => Regex.Match(summary, @"(?<=\[).*?(?=\])").Value.Trim();
-        private string GetAzStUniAN(string summary) => Regex.Match(summary, @"^([^\[]*)").Value.Trim();
-        private string GetAzStUniCN(string sectionInfo) => Regex.Match(sectionInfo, @"[A-Z]{3}[0-9]{3}").Value.Trim();
+        private string GetAzStUniCN(string sectionInfo) => Regex.Match(sectionInfo, @"[A-Z]{3}[0-9]{3}?").Value.Trim();
         private string GetAzStUniSN(string sectionInfo) => Regex.Match(sectionInfo, @"[0-9]{4}(.*?)[ABC]").Value.Trim();
 
         // Ohio State University
-        private string GetOhioStUniSI(string summary) => "";
-        private string GetOhioStUniAN(string summary) => "";
-        private string GetOhioStUniCN(string sectionInfo) => "";
-        private string GetOhioStUniSN(string sectionInfo) => "";
+        private string GetOhioStUniCN(string sectionInfo) => Regex.Match(sectionInfo, @"[A-Z]{3,} [0-9]{4}(?:\\.[0-9]{2})?(?:[A-Z])?").Value.Trim();
+        private string GetOhioStUniSN(string sectionInfo) => Regex.Match(sectionInfo, @"(?<=[.* .* ])[A-Z]{2}[0-9]{4}").Value.Trim();
 
     }
 }

@@ -14,10 +14,32 @@ namespace GCaLink.Services
 {
     internal static class EventAggService
     {
+        private static GoogleCalService GCS = new GoogleCalService(new GoogleCalOptions());
+        private static Dictionary<string, bool>? sourceList;
+
+        static  EventAggService()
+        {
+
+        }
+
+        private static async Task AsyncInitialize()
+        {
+            sourceList = await SettingsRetriever.getActiveSources(GCS);
+        }
+
+        public static bool GetGoogleStatus()
+        {
+            if (sourceList == null)
+            {
+                LoggerService.LogWarning("EventAggService: Attempted to get google status when sourceList not initialized");
+                return false;
+            }
+            return sourceList["google"];
+        }
+
         public static async Task WriteUpcomingEventsMessagePackAsync(string outputPath = "data.msgpack")
         {
-            GoogleCalService GCS = new GoogleCalService(new GoogleCalOptions());
-            Dictionary<string, bool> sourceList = await SettingsRetriever.getActiveSources(GCS);
+            sourceList = await SettingsRetriever.getActiveSources(GCS);
             List<CalEventDto> calendarData = [];
             if (sourceList["google"])
             {
@@ -25,7 +47,6 @@ namespace GCaLink.Services
                 await GCS.FetchUpcomingEventsAsync(service, calendarData);
             }
             
-
             byte[] bytes = MessagePackSerializer.Serialize(calendarData);
             await File.WriteAllBytesAsync(outputPath, bytes);
         }

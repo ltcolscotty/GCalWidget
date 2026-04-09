@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -29,6 +30,9 @@ namespace GCaLink
     /// </summary>
     public sealed partial class WidgetWindow : Window
     {
+
+        private EventAggService eventAggService = new EventAggService();
+
         public WidgetWindow()
         {
             InitializeComponent();
@@ -65,7 +69,7 @@ namespace GCaLink
         
         private void UpdateRefreshButton()
         {
-            RefreshGoogleSourcesButton.Visibility = true
+            RefreshGoogleSourcesButton.Visibility = SettingsRetriever
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }

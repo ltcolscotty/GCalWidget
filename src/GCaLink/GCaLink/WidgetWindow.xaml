@@ -55,20 +55,42 @@
                 <Grid Padding="16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <muxc:RadioButtons Header="Background Style"
-                                       FontSize="20"
-                                       FontWeight="Bold"
-                                       SelectedIndex="0"
-                                       SelectionChanged="BkgStyle_changed"
-                                       Grid.Row="0"
-                                       >
-                        <x:String>Solid</x:String>
-                        <x:String>Mica</x:String>
-                        <x:String>Arcrylic</x:String>
-                    </muxc:RadioButtons>
-                    <Grid Grid.Row="1" Padding="0,10">
+                    <Grid Grid.Row="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row ="0" Text="Sources" FontSize="20" FontWeight="Bold"/>
+                        <StackPanel Grid.Row="1">
+                            <CheckBox x:Name="EnableGoogle" Content="Google Calendar" Margin="24,0,0,0" Checked="GoogleEnabled" Unchecked="GoogleDisabled"/>
+                            <CheckBox x:Name="EnableCanvas" Content="Canvas Calendar" Margin="24,0,0,0" Checked="CanvasEnabled" Unchecked="CanvasDisabled"/>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row ="0" Text="Background Style" FontSize="20" FontWeight="Bold"/>
+                        <muxc:RadioButtons FontSize="20"
+                                           SelectedIndex="0"
+                                           SelectionChanged="BkgStyle_changed"
+                                           Grid.Row="1">
+                            <x:String>Solid</x:String>
+                            <x:String>Mica</x:String>
+                            <x:String>Arcrylic</x:String>
+                        </muxc:RadioButtons>
+                    </Grid>
+                    <Grid Grid.Row="2" Padding="0,10">
                         <muxc:Button Content="Save" Click="Main_Save_Click"/>
                     </Grid>
                     
@@ -78,6 +100,9 @@
             <muxc:TabViewItem Header="Google" IsClosable="False">
                 <Grid Padding="16">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
@@ -95,6 +120,12 @@
                                    VerticalAlignment="Center" />
                         </Button>
                     </Grid>
+                    <Grid Grid.Row="1" Padding="0,10">
+                        <muxc:Button x:Name="RefreshGoogleSourcesButton"
+                                     Content="Refresh Google Sources"
+                                     Click="Refresh_Google_Sources"
+                                     Visibility="Collapsed"/>
+                    </Grid>
                 </Grid>
             </muxc:TabViewItem>
 
@@ -102,13 +133,21 @@
                 <Grid Padding="16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Padding="0,10">
+                        <muxc:Button Content="Refresh Canvas Sources" Click="Refresh_Canvas_Sources"/>
+                    </Grid>
                     <muxc:TextBox Header="Canvas calendar link"
+                                  HorizontalAlignment="Left"
                                   PlaceholderText="https://canvas.asu.edu/feeds/calendars/---.ics"
                                   Width="300"
-                                  Grid.Row="0"/>
-                    <Grid Grid.Row="1" Padding="0,10">
+                                  Grid.Row="1"/>
+                    <Grid Grid.Row="2" Padding="0,10">
                         <muxc:Button Content="Save" Click="Canvas_Save_Click"/>
                     </Grid>
                 </Grid>

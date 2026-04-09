@@ -48,8 +48,43 @@ namespace GCaLink
         {
 
         }
-
+        
         private void Canvas_Save_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Refresh_Canvas_Sources(object sender, RoutedEventArgs e)
+        {
+
+        }
+        private void Refresh_Google_Sources(object sender, RoutedEventArgs e)
+        {
+
+        }
+        
+        private void UpdateRefreshButton()
+        {
+            RefreshGoogleSourcesButton.Visibility = true
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        private void GoogleEnabled(object sender, RoutedEventArgs e)
+        {
+
+        }
+        private void GoogleDisabled(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void CanvasEnabled(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void CanvasDisabled(object sender, RoutedEventArgs e)
         {
 
         }

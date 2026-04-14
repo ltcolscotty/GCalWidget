@@ -3,9 +3,9 @@ using Windows.UI;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
 
-namespace GCaLink.Models
+namespace GCaLink.Services
 {
-    public static class ColorHelper
+    public static class ColorHelperService
     {
         public static Color HexToColor(string hex)
         {

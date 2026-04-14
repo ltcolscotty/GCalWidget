@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 
 using GCaLink.Models;
 using Ical.Net.CalendarComponents;
+using System.Collections;
 
 namespace GCaLink.Services
 {
@@ -50,7 +51,7 @@ namespace GCaLink.Services
             return eventObj;
         }
 
-        public async Task FetchUpcomingEventsAsync(string sourceLink, List<CalEventDto> eventList)
+        public async Task FetchUpcomingEventsAsync(string sourceLink, List<CalEventDto> eventList, Dictionary<string, EventTypeConfig> sourceList)
         {
             // May need to check that folder exists
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);

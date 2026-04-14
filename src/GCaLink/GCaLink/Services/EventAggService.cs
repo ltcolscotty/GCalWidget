@@ -66,7 +66,7 @@ namespace GCaLink.Services
 
             if (sourceList.TryGetValue("canvas", out var cEnabled) && cEnabled)
             {
-                await CanvasServ.FetchUpcomingEventsAsync(SettingsRetriever.GetCanvasICSLink(), calendarData);
+                await CanvasServ.FetchUpcomingEventsAsync(SettingsRetriever.GetCanvasICSLink(), calendarData, sourceConfig);
             }
 
             byte[] bytes = MessagePackSerializer.Serialize(calendarData);

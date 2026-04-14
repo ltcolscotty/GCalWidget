@@ -14,39 +14,45 @@ namespace GCaLink.Services
 {
     internal static class EventAggService
     {
-        private static GoogleCalService GCS = new GoogleCalService(new GoogleCalOptions());
+        private static readonly GoogleCalService GCS = new GoogleCalService(new GoogleCalOptions());
         private static Dictionary<string, bool>? sourceList;
+        private static Task? _initTask;
 
-        static  EventAggService()
+        public static Task InitializeAsync()
         {
-
+            return _initTask ??= LoadSourcesAsync();
         }
 
-        private static async Task AsyncInitialize()
+        private static async Task LoadSourcesAsync()
         {
             sourceList = await SettingsRetriever.getActiveSources(GCS);
         }
 
-        public static bool GetGoogleStatus()
+        public static async Task<bool> GetGoogleStatusAsync()
         {
-            if (sourceList == null)
+            await InitializeAsync();
+
+            if (sourceList == null || !sourceList.TryGetValue("google", out var enabled))
             {
-                LoggerService.LogWarning("EventAggService: Attempted to get google status when sourceList not initialized");
+                LoggerService.LogWarning("EventAggService: google status missing or sourceList not initialized");
                 return false;
             }
-            return sourceList["google"];
+
+            return enabled;
         }
 
         public static async Task WriteUpcomingEventsMessagePackAsync(string outputPath = "data.msgpack")
         {
-            sourceList = await SettingsRetriever.getActiveSources(GCS);
-            List<CalEventDto> calendarData = [];
-            if (sourceList["google"])
+            await InitializeAsync();
+
+            var calendarData = new List<CalEventDto>();
+
+            if (sourceList != null && sourceList.TryGetValue("google", out var enabled) && enabled)
             {
                 CalendarService service = await GCS.CreateCalendarServiceAsync();
                 await GCS.FetchUpcomingEventsAsync(service, calendarData);
             }
-            
+
             byte[] bytes = MessagePackSerializer.Serialize(calendarData);
             await File.WriteAllBytesAsync(outputPath, bytes);
         }

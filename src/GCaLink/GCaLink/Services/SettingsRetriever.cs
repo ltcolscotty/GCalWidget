@@ -46,8 +46,11 @@ namespace GCaLink.Services
 
         public static async Task InitializeAsync()
         {
-            List<EventTypeConfig> sourceConfigs = await LoadEventTypeConfigs(ETCSettingsFile);
-            initializedAsyncStatus = true;
+            if (!initializedAsyncStatus)
+            {
+                List<EventTypeConfig> sourceConfigs = await LoadEventTypeConfigs(ETCSettingsFile);
+                initializedAsyncStatus = true;
+            }
         }
 
         public static void SetCanvasICSLink(string newLink)
@@ -61,6 +64,10 @@ namespace GCaLink.Services
         }
 
         public static string GetCanvasICSLink() { return options.CanvasICSLink; }
+
+        public static void SetCanvasEnabled(bool enabled) { options.CanvasEnabled = enabled; }
+
+        public static void SetGoogleEnabled(bool enabled) { options.GoogleEnabled = enabled; }
 
         public static string GetSchoolName()
         {

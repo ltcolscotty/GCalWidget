@@ -15,24 +15,24 @@ namespace GCaLink.Services
     internal static class EventAggService
     {
         private static readonly GoogleCalService GCS = new GoogleCalService(new GoogleCalOptions());
+        private static readonly CanvasService CanvasServ = new CanvasService();
         private static Dictionary<string, bool>? sourceList;
         private static Task? _initTask;
 
-        public static GoogleCalService GetGoogleCalService() { return GCS; }
-
-        public static Task InitializeAsync()
+        static EventAggService()
         {
-            return _initTask ??= LoadSourcesAsync();
+            LoadSourcesAsync();
         }
 
-        private static async Task LoadSourcesAsync()
+        public static GoogleCalService GetGoogleCalService() { return GCS; }
+
+        private static async void LoadSourcesAsync()
         {
             sourceList = await SettingsRetriever.GetActiveSources(GCS);
         }
 
-        public static async Task<bool> GetGoogleStatusAsync()
+        public static bool GetGoogleStatusAsync()
         {
-            await InitializeAsync();
 
             if (sourceList == null || !sourceList.TryGetValue("google", out var enabled))
             {
@@ -45,14 +45,24 @@ namespace GCaLink.Services
 
         public static async Task WriteUpcomingEventsMessagePackAsync(string outputPath = "data.msgpack")
         {
-            await InitializeAsync();
 
-            var calendarData = new List<CalEventDto>();
+            List<CalEventDto> calendarData = [];
 
-            if (sourceList != null && sourceList.TryGetValue("google", out var enabled) && enabled)
+            if (sourceList == null) 
+            {
+                LoggerService.LogWarning("EventAggService: Attempted to get events on empty source list");
+                return; 
+            }
+
+            if (sourceList.TryGetValue("google", out var gEnabled) && gEnabled)
             {
                 CalendarService service = await GCS.CreateCalendarServiceAsync();
                 await GCS.FetchUpcomingEventsAsync(service, calendarData);
+            }
+
+            if (sourceList.TryGetValue("canvas", out var cEnabled) && cEnabled)
+            {
+                await CanvasServ.FetchUpcomingEventsAsync(SettingsRetriever.GetCanvasICSLink(), calendarData);
             }
 
             byte[] bytes = MessagePackSerializer.Serialize(calendarData);

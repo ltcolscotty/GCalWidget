@@ -90,21 +90,21 @@ namespace GCaLink
 
         private void GoogleEnabled(object sender, RoutedEventArgs e)
         {
-
+            SettingsRetriever.SetGoogleEnabled(true);
         }
         private void GoogleDisabled(object sender, RoutedEventArgs e)
         {
-
+            SettingsRetriever.SetGoogleEnabled(false);
         }
 
         private void CanvasEnabled(object sender, RoutedEventArgs e)
         {
-
+            SettingsRetriever.SetCanvasEnabled(true);
         }
 
         private void CanvasDisabled(object sender, RoutedEventArgs e)
         {
-
+            SettingsRetriever.SetCanvasEnabled(false);
         }
     }
 }

@@ -81,13 +81,14 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row ="0" Text="Background Style" FontSize="20" FontWeight="Bold"/>
-                        <muxc:RadioButtons FontSize="20"
+                        <muxc:RadioButtons x:Name="BkgStyleRadioSettings"
+                                           FontSize="20"
                                            SelectedIndex="0"
                                            SelectionChanged="BkgStyle_changed"
                                            Grid.Row="1">
                             <x:String>Solid</x:String>
                             <x:String>Mica</x:String>
-                            <x:String>Arcrylic</x:String>
+                            <x:String>Acrylic</x:String>
                         </muxc:RadioButtons>
                     </Grid>
                     <Grid Grid.Row="2" Padding="0,10">
@@ -142,7 +143,8 @@
                     <Grid Grid.Row="0" Padding="0,10">
                         <muxc:Button Content="Refresh Canvas Sources" Click="Refresh_Canvas_Sources"/>
                     </Grid>
-                    <muxc:TextBox Header="Canvas calendar link"
+                    <muxc:TextBox x:Name="CanvasCalLinkInput"
+                                  Header="Canvas calendar link"
                                   HorizontalAlignment="Left"
                                   PlaceholderText="https://canvas.asu.edu/feeds/calendars/---.ics"
                                   Width="300"

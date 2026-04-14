@@ -30,12 +30,26 @@ namespace GCaLink
     /// </summary>
     public sealed partial class WidgetWindow : Window
     {
-
-        private EventAggService eventAggService = new EventAggService();
-
         public WidgetWindow()
         {
             InitializeComponent();
+        }
+
+        private async void WidgetWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            await SettingsRetriever.InitializeAsync();
+
+            BkgStyleRadioSettings.SelectedIndex = SettingsRetriever.GetBackgroundSetting() switch
+            {
+                "Solid" => 0,
+                "Mica" => 1,
+                "Acrylic" => 2,
+                _ => 0
+            };
+
+
+
+            CanvasCalLinkInput.Text = SettingsRetriever.GetCanvasICSLink();
         }
 
         private void BkgStyle_changed(object sender, SelectionChangedEventArgs e)
@@ -69,7 +83,7 @@ namespace GCaLink
         
         private void UpdateRefreshButton()
         {
-            RefreshGoogleSourcesButton.Visibility = SettingsRetriever
+            RefreshGoogleSourcesButton.Visibility = SettingsRetriever.
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }

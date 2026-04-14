@@ -18,7 +18,7 @@ namespace GCaLink.Services
         UniRegexService uniRegexService;
         public CanvasService() { 
             downloader = new IcsDownloader();
-            uniRegexService = new UniRegexService(SettingsRetriever.getSchoolName());
+            uniRegexService = new UniRegexService(SettingsRetriever.GetSchoolName());
 
         }
 

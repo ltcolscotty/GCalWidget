@@ -18,6 +18,8 @@ namespace GCaLink.Services
         private static Dictionary<string, bool>? sourceList;
         private static Task? _initTask;
 
+        public static GoogleCalService GetGoogleCalService() { return GCS; }
+
         public static Task InitializeAsync()
         {
             return _initTask ??= LoadSourcesAsync();
@@ -25,7 +27,7 @@ namespace GCaLink.Services
 
         private static async Task LoadSourcesAsync()
         {
-            sourceList = await SettingsRetriever.getActiveSources(GCS);
+            sourceList = await SettingsRetriever.GetActiveSources(GCS);
         }
 
         public static async Task<bool> GetGoogleStatusAsync()

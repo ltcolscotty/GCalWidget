@@ -42,13 +42,15 @@ namespace GCaLink.Services
             }
         }
 
+        public static string GetBackgroundSetting() { return options.BackgroundSetting; }
+
         public static async Task InitializeAsync()
         {
             List<EventTypeConfig> sourceConfigs = await LoadEventTypeConfigs(ETCSettingsFile);
             initializedAsyncStatus = true;
         }
 
-        public static void setCanvasICSLink(string newLink)
+        public static void SetCanvasICSLink(string newLink)
         {
             bool isValid = Uri.TryCreate(newLink, UriKind.Absolute, out Uri? uriResult)
                 && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
@@ -58,12 +60,14 @@ namespace GCaLink.Services
             }
         }
 
-        public static string getSchoolName()
+        public static string GetCanvasICSLink() { return options.CanvasICSLink; }
+
+        public static string GetSchoolName()
         {
             return options.School;
         }
 
-        public static bool getInitializedStatus() { return initializedAsyncStatus; }
+        public static bool GetInitializedStatus() { return initializedAsyncStatus; }
 
         private static async Task<List<EventTypeConfig>> LoadEventTypeConfigs(string inputPath)
         {
@@ -82,13 +86,13 @@ namespace GCaLink.Services
             return MessagePackSerializer.Deserialize<List<EventTypeConfig>>(bytes);
         }
 
-        public static async Task<Dictionary<string, bool>> getActiveSources(GoogleCalService googleCalService)
+        public static async Task<Dictionary<string, bool>> GetActiveSources(GoogleCalService googleCalService)
         {
             bool googleActive = await googleCalService.IsAccountActiveAsync();
             return new Dictionary<string, bool>
             {
-                { "canvas", !string.IsNullOrEmpty(options.CanvasICSLink) },
-                { "google", googleActive}
+                { "canvas", !string.IsNullOrEmpty(options.CanvasICSLink) && options.CanvasEnabled },
+                { "google", googleActive && options.GoogleEnabled }
             };
         }
     }

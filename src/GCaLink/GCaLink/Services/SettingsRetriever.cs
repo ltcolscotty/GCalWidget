@@ -18,6 +18,8 @@ namespace GCaLink.Services
     {
         private static ConfigOptions options;
         private static string ETCSettingsFile;
+        private static string dataFile;
+        private static Dictionary<string, EventTypeConfig> sourceConfigs;
         private static bool initializedAsyncStatus = false;
 
         static SettingsRetriever() 
@@ -25,6 +27,7 @@ namespace GCaLink.Services
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
             string settingsFile = Path.Combine(appDataLocalFolder, "GCWConfig.json");
+            dataFile = Path.Combine(appDataLocalFolder, "GCWMainData.msgpack");
             ETCSettingsFile = Path.Combine(appDataLocalFolder, "ETCSettings.msgpack");
             Directory.CreateDirectory(appDataLocalFolder);
 
@@ -48,9 +51,14 @@ namespace GCaLink.Services
         {
             if (!initializedAsyncStatus)
             {
-                List<EventTypeConfig> sourceConfigs = await LoadEventTypeConfigs(ETCSettingsFile);
+                sourceConfigs = await LoadEventTypeConfigs(ETCSettingsFile);
                 initializedAsyncStatus = true;
             }
+        }
+
+        public static async Task<Dictionary<string, EventTypeConfig>> GetSourceConfigs() { 
+            await InitializeAsync();
+            return sourceConfigs; 
         }
 
         public static void SetCanvasICSLink(string newLink)
@@ -69,20 +77,19 @@ namespace GCaLink.Services
 
         public static void SetGoogleEnabled(bool enabled) { options.GoogleEnabled = enabled; }
 
-        public static string GetSchoolName()
-        {
-            return options.School;
-        }
+        public static string GetSchoolName() { return options.School; }
+
+        public static string GetMainDataPath() { return dataFile; }
 
         public static bool GetInitializedStatus() { return initializedAsyncStatus; }
 
-        private static async Task<List<EventTypeConfig>> LoadEventTypeConfigs(string inputPath)
+        private static async Task<Dictionary<string, EventTypeConfig>> LoadEventTypeConfigs(string inputPath)
         {
             byte[] bytes;
             if (!File.Exists(inputPath))
             {
-                List<EventTypeConfig> configList = [];
-                bytes = MessagePackSerializer.Serialize(configList);
+                Dictionary<string, EventTypeConfig> configDict = [];
+                bytes = MessagePackSerializer.Serialize(configDict);
                 await File.WriteAllBytesAsync(inputPath, bytes);
             }
             else
@@ -90,7 +97,7 @@ namespace GCaLink.Services
                 bytes = await File.ReadAllBytesAsync(inputPath);
             }
 
-            return MessagePackSerializer.Deserialize<List<EventTypeConfig>>(bytes);
+            return MessagePackSerializer.Deserialize<Dictionary<string, EventTypeConfig>>(bytes);
         }
 
         public static async Task<Dictionary<string, bool>> GetActiveSources(GoogleCalService googleCalService)

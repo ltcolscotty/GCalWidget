@@ -81,9 +81,11 @@ namespace GCaLink
 
         }
         
-        private void UpdateRefreshButton()
+        private async void UpdateRefreshButton()
         {
-            RefreshGoogleSourcesButton.Visibility = SettingsRetriever.
+            GoogleCalService GCS = EventAggService.GetGoogleCalService();
+            Dictionary<string, bool> sources = await SettingsRetriever.GetActiveSources(GCS);
+            RefreshGoogleSourcesButton.Visibility = sources["google"]
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }

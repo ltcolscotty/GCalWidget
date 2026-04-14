@@ -43,10 +43,14 @@ namespace GCaLink.Services
             return enabled;
         }
 
-        public static async Task WriteUpcomingEventsMessagePackAsync(string outputPath = "data.msgpack")
+        public static async void WriteUpcomingEventsMessagePackAsync(string? outputPath)
         {
-
+            if (outputPath == null)
+            {
+                outputPath = SettingsRetriever.GetMainDataPath();
+            }
             List<CalEventDto> calendarData = [];
+            Dictionary<string, EventTypeConfig> sourceConfig = await SettingsRetriever.GetSourceConfigs();
 
             if (sourceList == null) 
             {
@@ -69,8 +73,13 @@ namespace GCaLink.Services
             await File.WriteAllBytesAsync(outputPath, bytes);
         }
 
-        public static async Task<List<CalEventDto>> ReadUpcomingEventsMessagePackAsync(string inputPath = "data.msgpack")
+        public static async Task<List<CalEventDto>> ReadUpcomingEventsMessagePackAsync(string? inputPath)
         {
+            if (inputPath == null)
+            {
+                inputPath = SettingsRetriever.GetMainDataPath();
+            }
+
             byte[] bytes = await File.ReadAllBytesAsync(inputPath);
             return MessagePackSerializer.Deserialize<List<CalEventDto>>(bytes);
         }

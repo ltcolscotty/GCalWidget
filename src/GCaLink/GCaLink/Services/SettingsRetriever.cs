@@ -19,6 +19,7 @@ namespace GCaLink.Services
         private static ConfigOptions options;
         private static string ETCSettingsFile;
         private static string dataFile;
+        private static string imageDataFolder;
         private static Dictionary<string, EventTypeConfig> sourceConfigs;
         private static bool initializedAsyncStatus = false;
         private static List<string> activeSources = [];
@@ -28,6 +29,7 @@ namespace GCaLink.Services
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
             string settingsFile = Path.Combine(appDataLocalFolder, "GCWConfig.json");
+            imageDataFolder = Path.Combine(appDataLocalFolder, "Images");
             dataFile = Path.Combine(appDataLocalFolder, "GCWMainData.msgpack");
             ETCSettingsFile = Path.Combine(appDataLocalFolder, "ETCSettings.msgpack");
             Directory.CreateDirectory(appDataLocalFolder);
@@ -86,6 +88,7 @@ namespace GCaLink.Services
         public static string GetMainDataPath() { return dataFile; }
         public static bool GetInitializedStatus() { return initializedAsyncStatus; }
         public static int GetTrackedDays() { return options.TrackedDays; }
+        public static string GetImageDataFolder() { return imageDataFolder; }
 
         private static async Task<Dictionary<string, EventTypeConfig>> LoadEventTypeConfigs(string inputPath)
         {

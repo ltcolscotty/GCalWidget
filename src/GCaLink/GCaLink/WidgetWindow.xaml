@@ -121,7 +121,26 @@
                                    VerticalAlignment="Center" />
                         </Button>
                     </Grid>
-                    <Grid Grid.Row="1" Padding="0,10">
+                    <Grid Grid.Row="1" >
+                        <ListView ItemsSource="{Binding GSources}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="local:WidgetWindow">
+                                    <Border Background="{Binding BackgroundBrush}">
+                                        <StackPanel Spacing="12">
+                                            <TextBlock Text="{Binding SourceName}" FontSize="18" FontWeight="SemiBold"/>
+
+                                            <ColorPicker x:Name="SourceColorPicker" />
+
+                                            <Button Content="Choose background image" Click="ChooseBackgroundImage_Click" />
+
+                                            <TextBlock Text="{Binding BackgroundImageName}" Opacity="0.7" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                    <Grid Grid.Row="2" Padding="0,10">
                         <muxc:Button x:Name="RefreshGoogleSourcesButton"
                                      Content="Refresh Google Sources"
                                      Click="Refresh_Google_Sources"

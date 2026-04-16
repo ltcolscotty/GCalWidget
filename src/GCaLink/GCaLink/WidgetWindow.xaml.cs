@@ -11,6 +11,9 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using Windows.Storage;
+using Windows.Storage.Pickers;
+using WinRT.Interop;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.UI;
@@ -33,11 +36,8 @@ namespace GCaLink
         public WidgetWindow()
         {
             InitializeComponent();
-        }
 
-        private async void WidgetWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            await SettingsRetriever.InitializeAsync();
+            SettingsRetriever.InitializeAsync();
 
             BkgStyleRadioSettings.SelectedIndex = SettingsRetriever.GetBackgroundSetting() switch
             {
@@ -47,9 +47,27 @@ namespace GCaLink
                 _ => 0
             };
 
-
-
             CanvasCalLinkInput.Text = SettingsRetriever.GetCanvasICSLink();
+        }
+
+        private async void ChooseBackgroundImage_Click(object sender, RoutedEventArgs e)
+        {
+            var picker = new FileOpenPicker();
+            picker.ViewMode = PickerViewMode.Thumbnail;
+            picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
+            picker.FileTypeFilter.Add(".jpg");
+            picker.FileTypeFilter.Add(".jpeg");
+            picker.FileTypeFilter.Add(".png");
+
+            var hwnd = WindowNative.GetWindowHandle(App.Current);
+            InitializeWithWindow.Initialize(picker, hwnd);
+
+            StorageFile file = await picker.PickSingleFileAsync();
+            if (file != null)
+            {
+                // make copy of file, rename it, and store it in SettingsRetriever.GetImageDataFolder()
+                // will probably need to add file management to delete unused images
+            }
         }
 
         private void BkgStyle_changed(object sender, SelectionChangedEventArgs e)

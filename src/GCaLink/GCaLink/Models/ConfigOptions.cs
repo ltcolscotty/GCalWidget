@@ -28,8 +28,10 @@ namespace GCaLink.Models
         public string BackgroundType { get; set; } = "Solid";
         public string FontFamily {get; set; } = "Segoe UI";
         public int FontSize { get; set; } = 12;
-        public bool GoogleEnabled = false;
-        public bool CanvasEnabled = false;
+        public bool GoogleEnabled { get; set; } = false;
+        public bool CanvasEnabled { get; set; } = false;
+        public int TrackedDays { get; set; } = 3;
+        public List<string> PinnedEventsList { get; set; } = [];
 
         [JsonExtensionData]
         public Dictionary<string, JsonElement>? ExtraData { get; set; }

@@ -21,6 +21,7 @@ namespace GCaLink.Services
         private static string dataFile;
         private static Dictionary<string, EventTypeConfig> sourceConfigs;
         private static bool initializedAsyncStatus = false;
+        private static List<string> activeSources = [];
 
         static SettingsRetriever() 
         {
@@ -47,17 +48,24 @@ namespace GCaLink.Services
 
         public static string GetBackgroundSetting() { return options.BackgroundSetting; }
 
-        public static async Task InitializeAsync()
+        public static async void InitializeAsync(bool forceRefresh = false)
         {
-            if (!initializedAsyncStatus)
+            if (!initializedAsyncStatus && !forceRefresh) { return; }
+
+            sourceConfigs = await LoadEventTypeConfigs(ETCSettingsFile);
+            foreach (KeyValuePair<string, EventTypeConfig> source in sourceConfigs)
             {
-                sourceConfigs = await LoadEventTypeConfigs(ETCSettingsFile);
-                initializedAsyncStatus = true;
+                if (!source.Value.Enabled)
+                {
+                    sourceConfigs.Remove(source.Key);
+                }
             }
+
+            initializedAsyncStatus = true;
         }
 
-        public static async Task<Dictionary<string, EventTypeConfig>> GetSourceConfigs() { 
-            await InitializeAsync();
+        public static Dictionary<string, EventTypeConfig> GetSourceConfigs() { 
+            InitializeAsync();
             return sourceConfigs; 
         }
 
@@ -72,16 +80,12 @@ namespace GCaLink.Services
         }
 
         public static string GetCanvasICSLink() { return options.CanvasICSLink; }
-
         public static void SetCanvasEnabled(bool enabled) { options.CanvasEnabled = enabled; }
-
         public static void SetGoogleEnabled(bool enabled) { options.GoogleEnabled = enabled; }
-
         public static string GetSchoolName() { return options.School; }
-
         public static string GetMainDataPath() { return dataFile; }
-
         public static bool GetInitializedStatus() { return initializedAsyncStatus; }
+        public static int GetTrackedDays() { return options.TrackedDays; }
 
         private static async Task<Dictionary<string, EventTypeConfig>> LoadEventTypeConfigs(string inputPath)
         {
@@ -99,6 +103,8 @@ namespace GCaLink.Services
 
             return MessagePackSerializer.Deserialize<Dictionary<string, EventTypeConfig>>(bytes);
         }
+
+        public static List<string> GetActiveLongSources() { return activeSources; }
 
         public static async Task<Dictionary<string, bool>> GetActiveSources(GoogleCalService googleCalService)
         {

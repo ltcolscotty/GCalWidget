@@ -14,6 +14,7 @@ namespace GCaLink.Models
         [Key(1)] public int EventConfigVersion { get; } = 1;
         [Key(2)] public string BkgColor { get; set; } = "#ff00ff";
         [Key(3)] public string BkgImg { get; set; } = "";
+        [Key(4)] public bool Enabled { get; set; } = true;
 
         public void Normallize()
         {

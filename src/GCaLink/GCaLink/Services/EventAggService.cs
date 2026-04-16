@@ -43,6 +43,21 @@ namespace GCaLink.Services
             return enabled;
         }
 
+        public static async Task<List<CalEventDto>> GetFilteredDTO()
+        {
+            List<string> enabledSources = SettingsRetriever.GetActiveLongSources();
+            DateTimeOffset targetDay = DateTimeOffset.Now.AddDays(SettingsRetriever.GetTrackedDays());
+            List<CalEventDto> fullList = await ReadUpcomingEventsMessagePackAsync(null);
+            foreach (CalEventDto calEvent in fullList)
+            {
+                if (enabledSources.Contains(calEvent.LongSource) ||
+                    calEvent.Datetime <= targetDay)
+                { continue; }
+                fullList.Remove(calEvent);
+            }
+            return fullList;
+        }
+
         public static async void WriteUpcomingEventsMessagePackAsync(string? outputPath)
         {
             if (outputPath == null)
@@ -50,7 +65,7 @@ namespace GCaLink.Services
                 outputPath = SettingsRetriever.GetMainDataPath();
             }
             List<CalEventDto> calendarData = [];
-            Dictionary<string, EventTypeConfig> sourceConfig = await SettingsRetriever.GetSourceConfigs();
+            Dictionary<string, EventTypeConfig> sourceConfig = SettingsRetriever.GetSourceConfigs();
 
             if (sourceList == null) 
             {

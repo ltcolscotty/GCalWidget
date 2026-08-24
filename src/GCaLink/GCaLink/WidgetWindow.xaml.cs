@@ -50,6 +50,7 @@ namespace GCaLink
             CanvasCalLinkInput.Text = SettingsRetriever.GetCanvasICSLink();
         }
 
+        // Ideally a 1.0 feature, not of focus right now
         private async void ChooseBackgroundImage_Click(object sender, RoutedEventArgs e)
         {
             var picker = new FileOpenPicker();
@@ -67,6 +68,7 @@ namespace GCaLink
             {
                 // make copy of file, rename it, and store it in SettingsRetriever.GetImageDataFolder()
                 // will probably need to add file management to delete unused images
+                // cache up to n files in the folder in the case the user wants quick access?
             }
         }
 

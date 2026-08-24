@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace GCaLink.Services
 {
-    public enum LoggerStatus
+    public enum LoggerStatusEnum
     {
         INFO,
         WARNING,
@@ -39,7 +39,7 @@ namespace GCaLink.Services
             using var _ = File.Create(logFilePath);
         }
 
-        public static void LogWarning(string warningText, LoggerStatus statusType=LoggerStatus.INFO)
+        public static void LogWarning(string warningText, LoggerStatusEnum statusType=LoggerStatusEnum.INFO)
         {
             try
             {
@@ -52,19 +52,19 @@ namespace GCaLink.Services
                         Rotate();
                     }
 
-                    if (statusType == LoggerStatus.ERROR)
+                    if (statusType == LoggerStatusEnum.ERROR)
                     {
                         logType = "[ERROR]";
                     }
-                    else if (statusType == LoggerStatus.EXCEPTION)
+                    else if (statusType == LoggerStatusEnum.EXCEPTION)
                     {
                         logType = "[EXCEPTION]";
                     }
-                    else if (statusType == LoggerStatus.WARNING)
+                    else if (statusType == LoggerStatusEnum.WARNING)
                     {
                         logType = "[WARNING]";
                     }
-                    else if (statusType == LoggerStatus.INFO)
+                    else if (statusType == LoggerStatusEnum.INFO)
                     {
                         logType = "[INFO]";
                     }

@@ -33,7 +33,7 @@ namespace GCaLink.Services
             }
             catch (HttpRequestException ex)
             {
-                LoggerService.LogWarning($"Failed to download ICS from {icsUrl}: {ex.Message}", LoggerStatus.ERROR);
+                LoggerService.LogWarning($"Failed to download ICS from {icsUrl}: {ex.Message}", LoggerStatusEnum.ERROR);
                 throw new InvalidOperationException($"Failed to download ICS from {icsUrl}: {ex.Message}", ex);
             }
         }

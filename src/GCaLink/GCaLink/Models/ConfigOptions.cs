@@ -9,6 +9,20 @@ using System.Text.Json.Serialization;
 
 namespace GCaLink.Models
 {
+    public enum BackgroundTypeEnum
+    {
+        Solid,
+        Mica,
+        Acrylic,
+    }
+
+    public enum BackgroundSettingEnum
+    {
+        Color,
+        Image,
+    }
+
+    public enum BackgroundImageType;
     public class ConfigOptions
     {
         public int ConfigVersion { get; } = 1;
@@ -17,15 +31,8 @@ namespace GCaLink.Models
         public int BackgroundTransparency { get; set; } = 0;
         public string BackgroundColor { get; set; } = "#ff00ff";
         public string BackgroundImage { get; set; } = "";
-        /* color
-         * image
-         */
-        public string BackgroundSetting { get; set; } = "color";
-        /* Solid
-         * Mica
-         * Acrylic
-         */
-        public string BackgroundType { get; set; } = "Solid";
+        public BackgroundSettingEnum BackgroundSetting { get; set; } = BackgroundSettingEnum.Color;
+        public BackgroundTypeEnum BackgroundType { get; set; } = BackgroundTypeEnum.Solid;
         public string FontFamily {get; set; } = "Segoe UI";
         public int FontSize { get; set; } = 12;
         public bool GoogleEnabled { get; set; } = false;

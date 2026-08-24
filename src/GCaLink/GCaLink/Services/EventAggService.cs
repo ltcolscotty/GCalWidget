@@ -36,7 +36,7 @@ namespace GCaLink.Services
 
             if (sourceList == null || !sourceList.TryGetValue("google", out var enabled))
             {
-                LoggerService.LogWarning("EventAggService: google status missing or sourceList not initialized", LoggerStatus.EXCEPTION);
+                LoggerService.LogWarning("EventAggService: google status missing or sourceList not initialized", LoggerStatusEnum.EXCEPTION);
                 return false;
             }
 
@@ -69,7 +69,7 @@ namespace GCaLink.Services
 
             if (sourceList == null) 
             {
-                LoggerService.LogWarning("EventAggService: Attempted to get events on empty source list", LoggerStatus.ERROR);
+                LoggerService.LogWarning("EventAggService: Attempted to get events on empty source list", LoggerStatusEnum.ERROR);
                 return; 
             }
 

@@ -20,7 +20,6 @@ namespace GCaLink.Services
         public CanvasService() { 
             downloader = new IcsDownloader();
             uniRegexService = new UniRegexService(SettingsRetriever.GetSchoolName());
-
         }
 
         private CalEventDto? Normalize(CalendarEvent inputEvent)
@@ -29,7 +28,7 @@ namespace GCaLink.Services
                 (inputEvent.Uid == null) ||
                 (inputEvent.Start == null))
             {
-                LoggerService.LogWarning("CanvasService.Normalize(): Nonexistent Summary, Start, or Uid for event, skipping over", LoggerStatus.WARNING);
+                LoggerService.LogWarning("CanvasService.Normalize(): Nonexistent Summary, Start, or Uid for event, skipping over", LoggerStatusEnum.WARNING);
                 return null;
             }
 
@@ -58,7 +57,7 @@ namespace GCaLink.Services
 
             string expectedPath = await downloader.DownloadIcsAsync(sourceLink, calendarFile);
             if (expectedPath != calendarFile) {
-                LoggerService.LogWarning($"CanvasService: Unexpected handling of ics download: {expectedPath}", LoggerStatus.WARNING);
+                LoggerService.LogWarning($"CanvasService: Unexpected handling of ics download: {expectedPath}", LoggerStatusEnum.WARNING);
                 return;
             }
 

@@ -25,13 +25,11 @@ namespace GCaLink.Services
 
         private CalEventDto? Normalize(CalendarEvent inputEvent)
         {
-            // NOTE: LOG WHEN MISSING INFO
-
             if ((inputEvent.Summary == null) ||
                 (inputEvent.Uid == null) ||
                 (inputEvent.Start == null))
             {
-                LoggerService.LogWarning("CanvasService.Normalize(): Nonexistent Summary, Start, or Uid for event, skipping over");
+                LoggerService.LogWarning("CanvasService.Normalize(): Nonexistent Summary, Start, or Uid for event, skipping over", LoggerStatus.WARNING);
                 return null;
             }
 
@@ -60,8 +58,7 @@ namespace GCaLink.Services
 
             string expectedPath = await downloader.DownloadIcsAsync(sourceLink, calendarFile);
             if (expectedPath != calendarFile) {
-                // Make a proper error logger later
-                LoggerService.LogWarning($"CanvasService: Unexpected handling of ics download: {expectedPath}");
+                LoggerService.LogWarning($"CanvasService: Unexpected handling of ics download: {expectedPath}", LoggerStatus.WARNING);
                 return;
             }
 

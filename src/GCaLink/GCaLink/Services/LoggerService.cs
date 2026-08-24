@@ -31,32 +31,50 @@ namespace GCaLink.Services
 
             logFilePath = Path.Combine(appDataLocalFolder, "GCWLogs.txt");
 
-            if (!File.Exists(logFilePath))
+            if (File.Exists(logFilePath))
             {
-                using var _ = File.Create(logFilePath);
+                return;
             }
+
+            using var _ = File.Create(logFilePath);
         }
 
-        public static void LogWarning(string warningText, bool isException=false)
+        public static void LogWarning(string warningText, LoggerStatus statusType=LoggerStatus.INFO)
         {
             try
             {
                 lock (lockObj)
                 {
                     FileInfo? info = new FileInfo(logFilePath);
+                    string logType = "";
                     if (info.Exists && info.Length >= MaxFileSizeBytes)
                     {
                         Rotate();
                     }
 
-                    if (isException)
+                    if (statusType == LoggerStatus.ERROR)
                     {
-                        File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} [EXCEPTION] {warningText}{Environment.NewLine}");
-                    } 
+                        logType = "[ERROR]";
+                    }
+                    else if (statusType == LoggerStatus.EXCEPTION)
+                    {
+                        logType = "[EXCEPTION]";
+                    }
+                    else if (statusType == LoggerStatus.WARNING)
+                    {
+                        logType = "[WARNING]";
+                    }
+                    else if (statusType == LoggerStatus.INFO)
+                    {
+                        logType = "[INFO]";
+                    }
                     else
                     {
-                        File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} [WARN] {warningText}{Environment.NewLine}");
+                        logType = "[UNDEFINED]";
+                        File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} [LOGGERWARNING] invalid enum type recieved {Environment.NewLine}");
                     }
+
+                    File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} {logType} {warningText}{Environment.NewLine}");
                 }
             }
             catch
@@ -75,11 +93,14 @@ namespace GCaLink.Services
                 string src = i == 0 ? current : $"{current}.{i}";
                 next = $"{current}.{i + 1}";
 
-                if (File.Exists(src))
+                if (!File.Exists(src))
                 {
-                    if (File.Exists(next)) File.Delete(next);
-                    File.Move(src, next);
+                    continue;
                 }
+
+                if (File.Exists(next)) File.Delete(next);
+
+                File.Move(src, next);
             }
         }
     }

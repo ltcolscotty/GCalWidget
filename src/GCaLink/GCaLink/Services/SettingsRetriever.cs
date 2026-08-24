@@ -73,12 +73,16 @@ namespace GCaLink.Services
 
         public static void SetCanvasICSLink(string newLink)
         {
-            bool isValid = Uri.TryCreate(newLink, UriKind.Absolute, out Uri? uriResult)
-                && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-            if (isValid)
+            // NOTE: may need to change to only HTTPS? - Consider later
+            if  (!(Uri.TryCreate(newLink, UriKind.Absolute, out Uri? uriResult)
+               && (uriResult.Scheme == Uri.UriSchemeHttp 
+                    || uriResult.Scheme == Uri.UriSchemeHttps))
+                )
             {
-                options.CanvasICSLink = newLink;
+                LoggerService.LogWarning($"Invalid url {newLink}", LoggerStatus.WARNING);
+                return;
             }
+            options.CanvasICSLink = newLink;
         }
 
         public static string GetCanvasICSLink() { return options.CanvasICSLink; }

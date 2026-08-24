@@ -8,6 +8,14 @@ using System.Threading.Tasks;
 
 namespace GCaLink.Services
 {
+    public enum LoggerStatus
+    {
+        INFO,
+        WARNING,
+        EXCEPTION,
+        ERROR,
+    }
+
     internal static class LoggerService
     {
         private static readonly string logFilePath;

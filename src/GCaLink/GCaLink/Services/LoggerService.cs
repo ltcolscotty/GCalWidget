@@ -84,14 +84,15 @@ namespace GCaLink.Services
 
         private static void Rotate()
         {
+            // TODO: Fix the naming issue, currently it is name.txt1 which is a bit weird
             if (!File.Exists(logFilePath)) return;
             string current = logFilePath;
             string next;
 
             for (int i = MAXOLDFILES - 1; i >= 0; i--)
             {
-                string src = i == 0 ? current : $"{current}.{i}";
-                next = $"{current}.{i + 1}";
+                string src = i == 0 ? current : $"{current}{i}";
+                next = $"{current}{i + 1}";
 
                 if (!File.Exists(src))
                 {

@@ -99,7 +99,7 @@ namespace GCaLink.Services
             });
         }
 
-        public async Task FetchUpcomingEventsAsync(CalendarService service, List<CalEventDto> calendarData)
+        public async Task<List<CalEventDto>> FetchUpcomingEventsAsync(CalendarService service, List<CalEventDto> calendarData)
         {
             DateTimeOffset now = DateTimeOffset.UtcNow;
             DateTimeOffset end = now.AddDays(7);
@@ -116,13 +116,15 @@ namespace GCaLink.Services
 
             Events events = await eventsRequest.ExecuteAsync();
 
-            if (events.Items == null) return;
+            if (events.Items == null) return calendarData;
 
             foreach (Event ev in events.Items)
             {
                 CalEventDto normalized = NormalizeEvent(ev, colors, _options.DefaultColor);
                 calendarData.Add(normalized);
             }
+
+            return calendarData;
         }
 
         private static CalEventDto NormalizeEvent(Event ev, Colors colors, string defaultColor)

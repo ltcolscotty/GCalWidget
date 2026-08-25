@@ -84,7 +84,7 @@
                         <muxc:RadioButtons x:Name="BkgStyleRadioSettings"
                                            FontSize="20"
                                            SelectedIndex="0"
-                                           SelectionChanged="BkgStyle_changed"
+                                           SelectionChanged="BkgStyleChanged"
                                            Grid.Row="1">
                             <x:String>Solid</x:String>
                             <x:String>Mica</x:String>
@@ -131,7 +131,7 @@
 
                                             <ColorPicker x:Name="SourceColorPicker" />
 
-                                            <Button Content="Choose background image" Click="ChooseBackgroundImage_Click" />
+                                            <Button Content="Choose background image" Click="ChooseBackgroundImageClick" />
 
                                             <TextBlock Text="{Binding BackgroundImageName}" Opacity="0.7" />
                                         </StackPanel>
@@ -143,7 +143,7 @@
                     <Grid Grid.Row="2" Padding="0,10">
                         <muxc:Button x:Name="RefreshGoogleSourcesButton"
                                      Content="Refresh Google Sources"
-                                     Click="Refresh_Google_Sources"
+                                     Click="RefreshGoogleSources"
                                      Visibility="Collapsed"/>
                     </Grid>
                 </Grid>
@@ -160,7 +160,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0" Padding="0,10">
-                        <muxc:Button Content="Refresh Canvas Sources" Click="Refresh_Canvas_Sources"/>
+                        <muxc:Button Content="Refresh Canvas Sources" Click="RefreshCanvasSources"/>
                     </Grid>
                     <muxc:TextBox x:Name="CanvasCalLinkInput"
                                   Header="Canvas calendar link"

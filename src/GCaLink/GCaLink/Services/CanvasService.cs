@@ -48,7 +48,7 @@ namespace GCaLink.Services
             return eventObj;
         }
 
-        public async Task FetchUpcomingEventsAsync(string sourceLink, List<CalEventDto> eventList, Dictionary<string, EventTypeConfig> sourceList)
+        public async Task<List<CalEventDto>> FetchUpcomingEventsAsync(string sourceLink, List<CalEventDto> eventList, Dictionary<string, EventTypeConfig> sourceList)
         {
             // May need to check that folder exists
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -58,13 +58,13 @@ namespace GCaLink.Services
             string expectedPath = await downloader.DownloadIcsAsync(sourceLink, calendarFile);
             if (expectedPath != calendarFile) {
                 LoggerService.LogWarning($"CanvasService: Unexpected handling of ics download: {expectedPath}", LoggerStatusEnum.WARNING);
-                return;
+                return eventList;
             }
 
             string icsContent = File.ReadAllText(expectedPath);
             var calendar = Calendar.Load(icsContent);
 
-            if (calendar == null) return;
+            if (calendar == null) return eventList;
 
             foreach (CalendarEvent? calendarEvent in calendar.Events)
             {
@@ -73,6 +73,8 @@ namespace GCaLink.Services
                 if (newCED == null) continue;
                 eventList.Add(newCED);
             }
+
+            return eventList;
         }
     }
 }

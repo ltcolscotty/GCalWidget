@@ -51,7 +51,7 @@ namespace GCaLink
         }
 
         // Ideally a 1.0 feature, not of focus right now
-        private async void ChooseBackgroundImage_Click(object sender, RoutedEventArgs e)
+        private async void ChooseBackgroundImageClick(object sender, RoutedEventArgs e)
         {
             var picker = new FileOpenPicker();
             picker.ViewMode = PickerViewMode.Thumbnail;
@@ -72,33 +72,37 @@ namespace GCaLink
             }
         }
 
-        private void BkgStyle_changed(object sender, SelectionChangedEventArgs e)
+        private void BkgStyleChanged(object sender, SelectionChangedEventArgs e)
+        {
+        }
+
+        private void GoogleSIClick(object sender, RoutedEventArgs e)
         {
 
         }
 
-        private void GoogleSI_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void Main_Save_Click(object sender, RoutedEventArgs e)
+        private void MainSaveClick(object sender, RoutedEventArgs e)
         {
 
         }
         
-        private void Canvas_Save_Click(object sender, RoutedEventArgs e)
+        private void CanvasSaveClick(object sender, RoutedEventArgs e)
         {
 
         }
 
-        private void Refresh_Canvas_Sources(object sender, RoutedEventArgs e)
+        private void RefreshCanvasSources(object sender, RoutedEventArgs e)
+        {
+            
+        }
+        private void RefreshGoogleSources(object sender, RoutedEventArgs e)
         {
 
         }
-        private void Refresh_Google_Sources(object sender, RoutedEventArgs e)
-        {
 
+        private void RefreshAll(object sender, RoutedEventArgs e)
+        {
+            EventAggService.WriteUpcomingEventsMessagePackAsync(null);
         }
         
         private async void UpdateRefreshButton()

@@ -9,6 +9,8 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading.Tasks;
+using MessagePack.Formatters;
+using System.ComponentModel;
 
 namespace GCaLink.Services
 {
@@ -58,6 +60,16 @@ namespace GCaLink.Services
             return fullList;
         }
 
+        public static async Task<bool> RefreshCanvas()
+        {
+            return false;
+        }
+
+        public static async Task<bool> RefreshGoogle()
+        {
+            return false;
+        }
+
         public static async void WriteUpcomingEventsMessagePackAsync(string? outputPath)
         {
             if (outputPath == null)
@@ -76,12 +88,12 @@ namespace GCaLink.Services
             if (sourceList.TryGetValue("google", out var gEnabled) && gEnabled)
             {
                 CalendarService service = await GCS.CreateCalendarServiceAsync();
-                await GCS.FetchUpcomingEventsAsync(service, calendarData);
+                calendarData = await GCS.FetchUpcomingEventsAsync(service, calendarData);
             }
 
             if (sourceList.TryGetValue("canvas", out var cEnabled) && cEnabled)
             {
-                await CanvasServ.FetchUpcomingEventsAsync(SettingsRetriever.GetCanvasICSLink(), calendarData, sourceConfig);
+                calendarData = await CanvasServ.FetchUpcomingEventsAsync(SettingsRetriever.GetCanvasICSLink(), calendarData, sourceConfig);
             }
 
             byte[] bytes = MessagePackSerializer.Serialize(calendarData);

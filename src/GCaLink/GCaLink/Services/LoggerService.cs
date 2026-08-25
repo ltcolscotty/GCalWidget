@@ -20,8 +20,8 @@ namespace GCaLink.Services
     {
         private static readonly string logFilePath;
         private static readonly object lockObj = new();
-        private static readonly long MaxFileSizeBytes = 1 * 1024 * 1024;
-        private static readonly int MaxOldFiles = 3;
+        private static readonly long MAXFILESIZEBYTES = 1 * 1024 * 1024;
+        private static readonly int MAXOLDFILES = 3;
 
         static LoggerService()
         {
@@ -47,7 +47,7 @@ namespace GCaLink.Services
                 {
                     FileInfo? info = new FileInfo(logFilePath);
                     string logType = "";
-                    if (info.Exists && info.Length >= MaxFileSizeBytes)
+                    if (info.Exists && info.Length >= MAXFILESIZEBYTES)
                     {
                         Rotate();
                     }
@@ -88,7 +88,7 @@ namespace GCaLink.Services
             string current = logFilePath;
             string next;
 
-            for (int i = MaxOldFiles - 1; i >= 0; i--)
+            for (int i = MAXOLDFILES - 1; i >= 0; i--)
             {
                 string src = i == 0 ? current : $"{current}.{i}";
                 next = $"{current}.{i + 1}";

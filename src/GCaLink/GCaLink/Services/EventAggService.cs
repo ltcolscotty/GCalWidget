@@ -20,7 +20,6 @@ namespace GCaLink.Services
         private static readonly CanvasService CanvasServ = new CanvasService();
         private static Dictionary<string, bool>? sourceList;
         private static Dictionary<string, List<IDHelper.EventID>> sourceIDs = new();
-        private static Task? _initTask;
 
         static EventAggService()
         {

@@ -26,11 +26,11 @@ using System.Diagnostics.Contracts;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace GCaLink
+namespace GCaLink.ViewWindows.WidgetWindow
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
+    // <summary>
+    // An empty window that can be used on its own or navigated to within a Frame.
+    // </summary>
     public sealed partial class WidgetWindow : Window
     {
         public WidgetWindow()
@@ -39,11 +39,11 @@ namespace GCaLink
 
             SettingsRetriever.InitializeAsync();
 
-            BkgStyleRadioSettings.SelectedIndex = SettingsRetriever.GetBackgroundSetting() switch
+            BkgStyleRadioSettings.SelectedIndex = SettingsRetriever.GetBackgroundType() switch
             {
-                "Solid" => 0,
-                "Mica" => 1,
-                "Acrylic" => 2,
+                BackgroundTypeEnum.Solid => 0,
+                BackgroundTypeEnum.Mica => 1,
+                BackgroundTypeEnum.Acrylic => 2,
                 _ => 0
             };
 
@@ -88,16 +88,50 @@ namespace GCaLink
         
         private void CanvasSaveClick(object sender, RoutedEventArgs e)
         {
+            bool response = SettingsRetriever.SetCanvasICSLink(CanvasCalLinkInput.Text);
+            if (!response)
+            {
+                // Notification - Unsuccessful
+                return;
+            }
+
+            // Notification - Successful
 
         }
 
-        private void RefreshCanvasSources(object sender, RoutedEventArgs e)
+        private async void RefreshCanvasSources(object sender, RoutedEventArgs e)
         {
+            bool? response = await EventAggService.RefreshCanvas();
+            if (response == null)
+            {
+                // do something here - Notification
+                return;
+            }
             
-        }
-        private void RefreshGoogleSources(object sender, RoutedEventArgs e)
-        {
+            if ((bool) !response)
+            {
+                // Notification - Unsuccessful
+                return;
+            }
 
+            // Notification - Successful
+        }
+        private async void RefreshGoogleSources(object sender, RoutedEventArgs e)
+        {
+            bool? response = await EventAggService.RefreshGoogle();
+            if (response == null)
+            {
+                // do something here - Notification
+                return;
+            }
+
+            if ((bool)!response)
+            {
+                // Notification - Unsuccessful
+                return;
+            }
+
+            // Notification - Successful
         }
 
         private void RefreshAll(object sender, RoutedEventArgs e)

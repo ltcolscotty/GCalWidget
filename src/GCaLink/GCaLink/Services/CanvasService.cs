@@ -22,7 +22,7 @@ namespace GCaLink.Services
             uniRegexService = new UniRegexService(SettingsRetriever.GetSchoolName());
         }
 
-        private CalEventDto? Normalize(CalendarEvent inputEvent)
+        private CalEventDto? Normalize(CalendarEvent inputEvent, IDHelper.EventID id)
         {
             if ((inputEvent.Summary == null) ||
                 (inputEvent.Uid == null) ||
@@ -38,7 +38,7 @@ namespace GCaLink.Services
             string sectionName = uniRegexService.GetSectionName(sectionInfo);
 
             CalEventDto eventObj = new CalEventDto();
-            eventObj.Id = inputEvent.Uid;
+            eventObj.Id = id;
             eventObj.Source = className;
             eventObj.LongSource = className + "_" + sectionName;
             eventObj.Title = assignmentName;
@@ -48,33 +48,39 @@ namespace GCaLink.Services
             return eventObj;
         }
 
-        public async Task<List<CalEventDto>> FetchUpcomingEventsAsync(string sourceLink, List<CalEventDto> eventList, Dictionary<string, EventTypeConfig> sourceList)
+        public async Task<(Dictionary<IDHelper.EventID, CalEventDto>, List<IDHelper.EventID>)> FetchUpcomingEventsAsync(
+            string sourceLink, 
+            Dictionary<IDHelper.EventID, CalEventDto> events, 
+            Dictionary<string, EventTypeConfig> sourceList)
         {
             // May need to check that folder exists
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
             string calendarFile = Path.Combine(appDataLocalFolder, "CanvasData.ics");
+            List<IDHelper.EventID> sourceKeys = new();
 
             string expectedPath = await downloader.DownloadIcsAsync(sourceLink, calendarFile);
             if (expectedPath != calendarFile) {
                 LoggerService.LogWarning($"CanvasService: Unexpected handling of ics download: {expectedPath}", LoggerStatusEnum.WARNING);
-                return eventList;
+                return (events, sourceKeys);
             }
 
             string icsContent = File.ReadAllText(expectedPath);
             var calendar = Calendar.Load(icsContent);
 
-            if (calendar == null) return eventList;
+            if (calendar == null) return (events, sourceKeys);
 
             foreach (CalendarEvent? calendarEvent in calendar.Events)
             {
                 if (calendarEvent == null) continue;
-                CalEventDto? newCED = Normalize(calendarEvent);
+                IDHelper.EventID id = IDHelper.GetEventID();
+                CalEventDto? newCED = Normalize(calendarEvent, id);
                 if (newCED == null) continue;
-                eventList.Add(newCED);
+                sourceKeys.Add(id);
+                events[id] = newCED;
             }
 
-            return eventList;
+            return (events, sourceKeys);
         }
     }
 }

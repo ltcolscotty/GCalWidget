@@ -20,7 +20,7 @@ namespace GCaLink.Services
         private static string ETCSettingsFile;
         private static string dataFile;
         private static string imageDataFolder;
-        private static Dictionary<string, EventTypeConfig> sourceConfigs;
+        private static Dictionary<string, EventTypeConfig> sourceConfigs = new();
         private static bool initializedAsyncStatus = false;
         private static List<string> activeSources = [];
 
@@ -42,13 +42,14 @@ namespace GCaLink.Services
             else
             {
                 string jsonStr = File.ReadAllText(settingsFile);
-                // should exist, but vs still complains about possiblity of empty literal
                 options = JsonSerializer.Deserialize<ConfigOptions>(jsonStr) ?? new ConfigOptions();
                 options.Normalize();
             }
         }
 
-        public static string GetBackgroundSetting() { return options.BackgroundSetting; }
+        public static BackgroundSettingEnum GetBackgroundSetting() { return options.BackgroundSetting; }
+
+        public static BackgroundTypeEnum GetBackgroundType() { return options.BackgroundType; }
 
         public static async void InitializeAsync(bool forceRefresh = false)
         {
@@ -71,7 +72,7 @@ namespace GCaLink.Services
             return sourceConfigs; 
         }
 
-        public static void SetCanvasICSLink(string newLink)
+        public static bool SetCanvasICSLink(string newLink)
         {
             // NOTE: may need to change to only HTTPS? - Consider later
             if  (!(Uri.TryCreate(newLink, UriKind.Absolute, out Uri? uriResult)
@@ -79,10 +80,11 @@ namespace GCaLink.Services
                     || uriResult.Scheme == Uri.UriSchemeHttps))
                 )
             {
-                LoggerService.LogWarning($"Invalid url {newLink}", LoggerStatus.WARNING);
-                return;
+                LoggerService.LogWarning($"Invalid url {newLink}", LoggerStatusEnum.WARNING);
+                return false;
             }
             options.CanvasICSLink = newLink;
+            return true;
         }
 
         public static string GetCanvasICSLink() { return options.CanvasICSLink; }

@@ -1,4 +1,5 @@
-﻿using MessagePack;
+﻿using GCaLink.Services;
+using MessagePack;
 using System;
 
 namespace GCaLink.Models
@@ -6,7 +7,7 @@ namespace GCaLink.Models
     [MessagePackObject]
     public class CalEventDto
     {
-        [Key(0)] public string Id { get; set; } = "";
+        [Key(0)] public IDHelper.EventID Id { get; set; } = IDHelper.GetEventID();
         [Key(1)] public string Title { get; set; } = "";
         [Key(2)] public DateTimeOffset Datetime { get; set; } = DateTimeOffset.Now;
         [Key(3)] public string Link { get; set; } = "";

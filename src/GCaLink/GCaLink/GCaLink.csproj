@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+	  <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>GCaLink</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x86;x64;ARM64</Platforms>
@@ -13,12 +13,30 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="ViewModels\**" />
+    <Compile Remove="Views\**" />
+    <EmbeddedResource Remove="ViewModels\**" />
+    <EmbeddedResource Remove="Views\**" />
+    <None Remove="ViewModels\**" />
+    <None Remove="Views\**" />
+    <Page Remove="ViewModels\**" />
+    <Page Remove="Views\**" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Remove="Assets\google-si-dark.png" />
     <Content Remove="Assets\google-si-light.png" />
     <Content Remove="Assets\google-si-neutral.png" />
   </ItemGroup>
   <ItemGroup>
-    <Page Remove="SettingsWindow.xaml" />
+	<Compile Update="ViewWindows\WidgetWindow\WidgetWindow.xaml.cs">
+		<DependentUpon>WidgetWindow.xaml</DependentUpon>
+	</Compile>
+	<Compile Update="ViewWindows\SettingsWindow\SettingsWindow.xaml.cs">
+		<DependentUpon>SettingsWindow.xaml</DependentUpon>
+	</Compile>
+	<Compile Update="ViewWindows\DayView\DayViewWindow.xaml.cs">
+		<DependentUpon>DayViewWindow.xaml</DependentUpon>
+	</Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -49,16 +67,15 @@
     <PackageReference Include="Google.Apis.Calendar.v3" Version="1.75.0.4206" />
     <PackageReference Include="Ical.Net" Version="5.2.3" />
     <PackageReference Include="MessagePack" Version="3.1.8" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2526" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.4.0" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.11" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="ViewModels\" />
-    <Folder Include="Views\" />
-  </ItemGroup>
-  <ItemGroup>
     <None Update="SettingsWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="ViewWindows\DayView\DayViewWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>
   </ItemGroup>
@@ -79,4 +96,14 @@
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
+  <ItemGroup>
+    <PRIResource Remove="Views\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Remove="ViewModels\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ViewWindows\TodoView\" />
+    <Folder Include="ViewWindows\WeekView\" />
+  </ItemGroup>
 </Project>

@@ -99,10 +99,13 @@ namespace GCaLink.Services
             });
         }
 
-        public async Task<List<CalEventDto>> FetchUpcomingEventsAsync(CalendarService service, List<CalEventDto> calendarData)
+        public async Task<(Dictionary<IDHelper.EventID, CalEventDto>, List<IDHelper.EventID>)> FetchUpcomingEventsAsync(
+            CalendarService service, 
+            Dictionary<IDHelper.EventID, CalEventDto> calendarData)
         {
             DateTimeOffset now = DateTimeOffset.UtcNow;
             DateTimeOffset end = now.AddDays(7);
+            List<IDHelper.EventID> sourceKeys = new();
 
             ColorsResource.GetRequest colorsRequest = service.Colors.Get();
             Colors colors = await colorsRequest.ExecuteAsync();
@@ -116,18 +119,20 @@ namespace GCaLink.Services
 
             Events events = await eventsRequest.ExecuteAsync();
 
-            if (events.Items == null) return calendarData;
+            if (events.Items == null) return (calendarData, sourceKeys);
 
             foreach (Event ev in events.Items)
             {
-                CalEventDto normalized = NormalizeEvent(ev, colors, _options.DefaultColor);
-                calendarData.Add(normalized);
+                IDHelper.EventID id = IDHelper.GetEventID("");
+                sourceKeys.Add(id);
+                CalEventDto normalized = NormalizeEvent(ev, colors, _options.DefaultColor, id);
+                calendarData[id] = normalized;
             }
 
-            return calendarData;
+            return (calendarData, sourceKeys);
         }
 
-        private static CalEventDto NormalizeEvent(Event ev, Colors colors, string defaultColor)
+        private static CalEventDto NormalizeEvent(Event ev, Colors colors, string defaultColor, IDHelper.EventID evId)
         {
             DateTimeOffset start = ParseEventStart(ev);
             string color = GetEventColor(ev, colors, defaultColor);
@@ -135,7 +140,7 @@ namespace GCaLink.Services
 
             return new CalEventDto
             {
-                Id = ev.Id,
+                Id = evId,
                 Title = ev.Summary ?? "",
                 Datetime = start.ToUniversalTime(),
                 Link = ev.HtmlLink ?? "",

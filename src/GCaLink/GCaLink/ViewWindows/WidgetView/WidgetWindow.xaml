@@ -92,7 +92,7 @@
                         </muxc:RadioButtons>
                     </Grid>
                     <Grid Grid.Row="2" Padding="0,10">
-                        <muxc:Button Content="Save" Click="Main_Save_Click"/>
+                        <muxc:Button Content="Save" Click="MainSaveClick"/>
                     </Grid>
                     
                 </Grid>
@@ -109,7 +109,7 @@
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0">
                         <Button x:Name="GoogleSI" 
-                                Click="GoogleSI_Click"
+                                Click="GoogleSIClick"
                                 Padding="0"
                                 Margin="0">
                             <!--Image not showing for some reason, this needs to be fixed-->
@@ -124,7 +124,7 @@
                     <Grid Grid.Row="1" >
                         <ListView ItemsSource="{Binding GSources}">
                             <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="WidgetWindow">
+                                <DataTemplate x:DataType="local:WidgetWindow">
                                     <Border Background="{Binding BackgroundBrush}">
                                         <StackPanel Spacing="12">
                                             <TextBlock Text="{Binding SourceName}" FontSize="18" FontWeight="SemiBold"/>
@@ -169,7 +169,7 @@
                                   Width="300"
                                   Grid.Row="1"/>
                     <Grid Grid.Row="2" Padding="0,10">
-                        <muxc:Button Content="Save" Click="Canvas_Save_Click"/>
+                        <muxc:Button Content="Save" Click="CanvasSaveClick"/>
                     </Grid>
                 </Grid>
             </muxc:TabViewItem>

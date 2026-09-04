@@ -5,11 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 
+using MessagePack;
+
 namespace GCaLink.Services
 {
     public interface IDHelper
     {
-        public readonly record struct EventID(string Value);
+        [MessagePackObject]
+        public readonly record struct EventID( [property: Key(0)] string Value );
 
         public static EventID GetEventID
             (

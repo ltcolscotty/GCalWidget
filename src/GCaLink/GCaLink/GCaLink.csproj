@@ -28,10 +28,10 @@
     <Content Remove="Assets\google-si-neutral.png" />
   </ItemGroup>
   <ItemGroup>
-	<Compile Update="ViewWindows\WidgetWindow\WidgetWindow.xaml.cs">
+  <Compile Update="ViewWindows\WidgetView\WidgetWindow.xaml.cs">
 		<DependentUpon>WidgetWindow.xaml</DependentUpon>
 	</Compile>
-	<Compile Update="ViewWindows\SettingsWindow\SettingsWindow.xaml.cs">
+  <Compile Update="ViewWindows\SettingsView\SettingsWindow.xaml.cs">
 		<DependentUpon>SettingsWindow.xaml</DependentUpon>
 	</Compile>
 	<Compile Update="ViewWindows\DayView\DayViewWindow.xaml.cs">

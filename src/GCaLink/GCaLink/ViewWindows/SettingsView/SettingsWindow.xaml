@@ -9,7 +9,24 @@
     mc:Ignorable="d"
     Title="GCaLink Settings">
 
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
-    </StackPanel>
+    <ScrollViewer>
+        <StackPanel Spacing="16" Padding="32" MaxWidth="560">
+            <TextBlock Text="Google Calendar" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock Text="Connect a Google Calendar account to show upcoming events in the widget."
+                       TextWrapping="Wrap" />
+
+            <Button Content="Choose credentials.json" Click="ChooseCredentialsClick" HorizontalAlignment="Left" />
+            <TextBlock x:Name="CredentialsStatusText" Text="No OAuth client configured."
+                       TextWrapping="Wrap" Opacity="0.75" />
+
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Button x:Name="SignInButton" Content="Sign in with Google" Click="SignInClick" />
+                <Button x:Name="SignOutButton" Content="Sign out" Click="SignOutClick" IsEnabled="False" />
+            </StackPanel>
+
+            <TextBlock x:Name="ConnectionStatusText" Text="Not connected" TextWrapping="Wrap" />
+            <CheckBox x:Name="GoogleEnabledCheckBox" Content="Use Google Calendar in the widget"
+                      Checked="GoogleEnabledChecked" Unchecked="GoogleEnabledUnchecked" />
+        </StackPanel>
+    </ScrollViewer>
 </Window>

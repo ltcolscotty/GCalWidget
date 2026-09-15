@@ -31,6 +31,9 @@ namespace GCaLink.Services
 
         private GoogleAuthorizationCodeFlow CreateFlow()
         {
+            if (!_options.HasClientCredentials)
+                throw new InvalidOperationException("Google OAuth client credentials are not configured.");
+
             var secrets = new ClientSecrets
             {
                 ClientId = _options.ClientId,
@@ -76,8 +79,51 @@ namespace GCaLink.Services
             }
         }
 
+        public async Task<bool> AuthorizeAsync(CancellationToken cancellationToken = default)
+        {
+            if (!_options.HasClientCredentials)
+                return false;
+
+            try
+            {
+                using GoogleAuthorizationCodeFlow flow = CreateFlow();
+                TokenResponse? token = await flow.LoadTokenAsync("user", cancellationToken);
+                if (token == null)
+                {
+                    UserCredential credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                        flow.ClientSecrets,
+                        Scopes,
+                        "user",
+                        cancellationToken,
+                        flow.DataStore);
+                    return credential.Token != null &&
+                        (!credential.Token.IsStale || await credential.RefreshTokenAsync(cancellationToken));
+                }
+
+                UserCredential existingCredential = new UserCredential(flow, "user", token);
+                return !existingCredential.Token.IsStale ||
+                    await existingCredential.RefreshTokenAsync(cancellationToken);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task SignOutAsync()
+        {
+            if (!_options.HasClientCredentials)
+                return;
+
+            using GoogleAuthorizationCodeFlow flow = CreateFlow();
+            await flow.DataStore.ClearAsync();
+        }
+
         public async Task<CalendarService> CreateCalendarServiceAsync()
         {
+            if (!_options.HasClientCredentials)
+                throw new InvalidOperationException("Google OAuth client credentials are not configured.");
+
             ClientSecrets secrets = new ClientSecrets
             {
                 ClientId = _options.ClientId,

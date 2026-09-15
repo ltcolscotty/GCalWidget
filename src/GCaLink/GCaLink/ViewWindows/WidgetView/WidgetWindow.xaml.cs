@@ -19,6 +19,7 @@ using Windows.Foundation.Collections;
 using Microsoft.UI;
 using GCaLink.Models;
 using GCaLink.Services;
+using GCaLink.ViewWindows.SettingsView;
 using Windows.ApplicationModel.UserDataTasks;
 using System.Security.Cryptography.X509Certificates;
 using System.Diagnostics.Contracts;
@@ -33,6 +34,8 @@ namespace GCaLink.ViewWindows.WidgetView
     // </summary>
     public sealed partial class WidgetWindow : Window
     {
+        private SettingsWindow? _settingsWindow;
+
         public WidgetWindow()
         {
             InitializeComponent();
@@ -79,6 +82,12 @@ namespace GCaLink.ViewWindows.WidgetView
         private void GoogleSIClick(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void OpenSettingsClick(object sender, RoutedEventArgs e)
+        {
+            _settingsWindow ??= new SettingsWindow();
+            _settingsWindow.Activate();
         }
 
         private void MainSaveClick(object sender, RoutedEventArgs e)

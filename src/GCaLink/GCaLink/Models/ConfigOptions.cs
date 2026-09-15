@@ -36,6 +36,8 @@ namespace GCaLink.Models
         public string FontFamily {get; set; } = "Segoe UI";
         public int FontSize { get; set; } = 12;
         public bool GoogleEnabled { get; set; } = false;
+        public string GoogleClientId { get; set; } = "";
+        public string GoogleClientSecret { get; set; } = "";
         public bool CanvasEnabled { get; set; } = false;
         public int TrackedDays { get; set; } = 3;
         public List<string> PinnedEventsList { get; set; } = [];

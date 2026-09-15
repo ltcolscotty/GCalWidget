@@ -23,12 +23,13 @@ namespace GCaLink.Services
         private static Dictionary<string, EventTypeConfig> sourceConfigs = new();
         private static bool initializedAsyncStatus = false;
         private static List<string> activeSources = [];
+        private static readonly string settingsFile;
 
         static SettingsRetriever() 
         {
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
-            string settingsFile = Path.Combine(appDataLocalFolder, "GCWConfig.json");
+            settingsFile = Path.Combine(appDataLocalFolder, "GCWConfig.json");
             imageDataFolder = Path.Combine(appDataLocalFolder, "Images");
             dataFile = Path.Combine(appDataLocalFolder, "GCWMainData.msgpack");
             ETCSettingsFile = Path.Combine(appDataLocalFolder, "ETCSettings.msgpack");
@@ -89,7 +90,38 @@ namespace GCaLink.Services
 
         public static string GetCanvasICSLink() { return options.CanvasICSLink; }
         public static void SetCanvasEnabled(bool enabled) { options.CanvasEnabled = enabled; }
-        public static void SetGoogleEnabled(bool enabled) { options.GoogleEnabled = enabled; }
+        public static void SetGoogleEnabled(bool enabled)
+        {
+            options.GoogleEnabled = enabled;
+            SaveOptions();
+        }
+        public static bool GetGoogleEnabled() { return options.GoogleEnabled; }
+        public static GoogleCalOptions GetGoogleCalOptions()
+        {
+            return new GoogleCalOptions
+            {
+                ClientId = options.GoogleClientId,
+                ClientSecret = options.GoogleClientSecret,
+                TokenPath = Path.Combine(Path.GetDirectoryName(settingsFile)!, "GoogleToken", "token.json"),
+                DefaultColor = options.BackgroundColor
+            };
+        }
+
+        public static void SetGoogleCredentials(string clientId, string clientSecret)
+        {
+            options.GoogleClientId = clientId.Trim();
+            options.GoogleClientSecret = clientSecret.Trim();
+            SaveOptions();
+        }
+
+        public static void SaveOptions()
+        {
+            File.WriteAllText(settingsFile, JsonSerializer.Serialize(options, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }));
+        }
+
         public static string GetSchoolName() { return options.School; }
         public static string GetMainDataPath() { return dataFile; }
         public static bool GetInitializedStatus() { return initializedAsyncStatus; }

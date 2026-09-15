@@ -28,6 +28,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <!-- Logo -->
@@ -43,6 +44,9 @@
                    Margin="10,10,10,0"
                    FontSize="30"
                    FontWeight="SemiBold"/>
+
+                <Button Grid.Column="2" Content="Settings" Click="OpenSettingsClick"
+                    HorizontalAlignment="Right" VerticalAlignment="Center" />
         </Grid>
 
         <!-- Tabs -->

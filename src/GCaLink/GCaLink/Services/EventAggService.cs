@@ -16,19 +16,25 @@ namespace GCaLink.Services
 {
     internal static class EventAggService
     {
-        private static readonly GoogleCalService GCS = new GoogleCalService(new GoogleCalOptions());
+        private static GoogleCalService GCS = new(SettingsRetriever.GetGoogleCalOptions());
         private static readonly CanvasService CanvasServ = new CanvasService();
         private static Dictionary<string, bool>? sourceList;
         private static Dictionary<string, List<IDHelper.EventID>> sourceIDs = new();
 
         static EventAggService()
         {
-            LoadSourcesAsync();
+            _ = LoadSourcesAsync();
         }
 
         public static GoogleCalService GetGoogleCalService() { return GCS; }
 
-        private static async void LoadSourcesAsync()
+        public static async Task ReloadGoogleServiceAsync()
+        {
+            GCS = new GoogleCalService(SettingsRetriever.GetGoogleCalOptions());
+            await LoadSourcesAsync();
+        }
+
+        private static async Task LoadSourcesAsync()
         {
             sourceList = await SettingsRetriever.GetActiveSources(GCS);
             foreach (var(source, active) in sourceList)

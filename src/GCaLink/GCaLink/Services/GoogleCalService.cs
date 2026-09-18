@@ -29,16 +29,22 @@ namespace GCaLink.Services
             _options = options;
         }
 
+        private static ClientSecrets LoadClientSecrets()
+        {
+#if DEBUG
+            string? credentialsPath = Environment.GetEnvironmentVariable("GOOGLE_CREDENTIALS_DEV_PATH");
+            if (string.IsNullOrWhiteSpace(credentialsPath))
+                throw new InvalidOperationException("GOOGLE_CREDENTIALS_DEV_PATH is not configured.");
+#else
+            string credentialsPath = Path.Combine(AppContext.BaseDirectory, "credentials.json");
+#endif
+
+            return GoogleClientSecrets.FromFile(credentialsPath).Secrets;
+        }
+
         private GoogleAuthorizationCodeFlow CreateFlow()
         {
-            if (!_options.HasClientCredentials)
-                throw new InvalidOperationException("Google OAuth client credentials are not configured.");
-
-            var secrets = new ClientSecrets
-            {
-                ClientId = _options.ClientId,
-                ClientSecret = _options.ClientSecret
-            };
+            ClientSecrets secrets = LoadClientSecrets();
 
             return new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
             {
@@ -81,9 +87,6 @@ namespace GCaLink.Services
 
         public async Task<bool> AuthorizeAsync(CancellationToken cancellationToken = default)
         {
-            if (!_options.HasClientCredentials)
-                return false;
-
             try
             {
                 using GoogleAuthorizationCodeFlow flow = CreateFlow();
@@ -112,23 +115,13 @@ namespace GCaLink.Services
 
         public async Task SignOutAsync()
         {
-            if (!_options.HasClientCredentials)
-                return;
-
             using GoogleAuthorizationCodeFlow flow = CreateFlow();
             await flow.DataStore.ClearAsync();
         }
 
         public async Task<CalendarService> CreateCalendarServiceAsync()
         {
-            if (!_options.HasClientCredentials)
-                throw new InvalidOperationException("Google OAuth client credentials are not configured.");
-
-            ClientSecrets secrets = new ClientSecrets
-            {
-                ClientId = _options.ClientId,
-                ClientSecret = _options.ClientSecret
-            };
+            ClientSecrets secrets = LoadClientSecrets();
 
             UserCredential credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                 secrets,

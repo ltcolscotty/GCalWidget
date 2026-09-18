@@ -15,8 +15,7 @@
             <TextBlock Text="Connect a Google Calendar account to show upcoming events in the widget."
                        TextWrapping="Wrap" />
 
-            <Button Content="Choose credentials.json" Click="ChooseCredentialsClick" HorizontalAlignment="Left" />
-            <TextBlock x:Name="CredentialsStatusText" Text="No OAuth client configured."
+            <TextBlock x:Name="CredentialsStatusText" Text="OAuth client is included with the app."
                        TextWrapping="Wrap" Opacity="0.75" />
 
             <StackPanel Orientation="Horizontal" Spacing="12">

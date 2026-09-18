@@ -52,6 +52,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="credentials.json" Condition="Exists('credentials.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="..\..\..\env\credentials.json" Link="credentials.json" Condition="!Exists('credentials.json') and Exists('..\..\..\env\credentials.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 

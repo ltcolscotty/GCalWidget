@@ -19,7 +19,6 @@ using Windows.Foundation.Collections;
 using Microsoft.UI;
 using GCaLink.Models;
 using GCaLink.Services;
-using GCaLink.ViewWindows.SettingsView;
 using Windows.ApplicationModel.UserDataTasks;
 using System.Security.Cryptography.X509Certificates;
 using System.Diagnostics.Contracts;
@@ -34,8 +33,6 @@ namespace GCaLink.ViewWindows.WidgetView
     // </summary>
     public sealed partial class WidgetWindow : Window
     {
-        private SettingsWindow? _settingsWindow;
-
         public WidgetWindow()
         {
             InitializeComponent();
@@ -51,6 +48,10 @@ namespace GCaLink.ViewWindows.WidgetView
             };
 
             CanvasCalLinkInput.Text = SettingsRetriever.GetCanvasICSLink();
+            EnableGoogle.IsChecked = SettingsRetriever.GetGoogleEnabled();
+            EnableCanvas.IsChecked = SettingsRetriever.GetCanvasEnabled();
+            ApplyBackgroundType();
+            _ = UpdateConnectionStatusAsync();
         }
 
         // Ideally a 1.0 feature, not of focus right now
@@ -77,84 +78,150 @@ namespace GCaLink.ViewWindows.WidgetView
 
         private void BkgStyleChanged(object sender, SelectionChangedEventArgs e)
         {
+            SaveBackgroundType();
+            ApplyBackgroundType();
         }
 
-        private void GoogleSIClick(object sender, RoutedEventArgs e)
+        private async void GoogleSIClick(object sender, RoutedEventArgs e)
         {
+            GoogleSI.IsEnabled = false;
+            GoogleConnectionStatus.Text = "Waiting for Google sign-in...";
+            try
+            {
+                bool connected = await EventAggService.GetGoogleCalService().AuthorizeAsync();
+                GoogleConnectionStatus.Text = connected
+                    ? "Connected to Google Calendar."
+                    : "Google sign-in did not complete.";
 
-        }
-
-        private void OpenSettingsClick(object sender, RoutedEventArgs e)
-        {
-            _settingsWindow ??= new SettingsWindow();
-            _settingsWindow.Activate();
+                if (connected)
+                {
+                    SettingsRetriever.SetGoogleEnabled(true);
+                    EnableGoogle.IsChecked = true;
+                    await EventAggService.ReloadGoogleServiceAsync();
+                    await UpdateRefreshButton();
+                }
+            }
+            finally
+            {
+                GoogleSI.IsEnabled = true;
+            }
         }
 
         private void MainSaveClick(object sender, RoutedEventArgs e)
         {
+            SaveBackgroundType();
+        }
 
+        private void SaveBackgroundType()
+        {
+            if (BkgStyleRadioSettings.SelectedItem is not string selectedStyle)
+            {
+                return;
+            }
+
+            BackgroundTypeEnum backgroundType = selectedStyle switch
+            {
+                "Mica" => BackgroundTypeEnum.Mica,
+                "Acrylic" => BackgroundTypeEnum.Acrylic,
+                _ => BackgroundTypeEnum.Solid
+            };
+
+            SettingsRetriever.SetBackgroundType(backgroundType);
         }
         
-        private void CanvasSaveClick(object sender, RoutedEventArgs e)
+        private async void CanvasSaveClick(object sender, RoutedEventArgs e)
         {
             bool response = SettingsRetriever.SetCanvasICSLink(CanvasCalLinkInput.Text);
             if (!response)
             {
                 // Notification - Unsuccessful
+                CanvasSaveStatus.Text = "Enter a valid calendar URL.";
                 return;
             }
 
-            // Notification - Successful
+            CanvasSaveStatus.Text = "Canvas calendar link saved.";
+            await EventAggService.ReloadSourcesAsync();
 
         }
 
         private async void RefreshCanvasSources(object sender, RoutedEventArgs e)
         {
-            bool? response = await EventAggService.RefreshCanvas();
-            if (response == null)
+            try
             {
-                // do something here - Notification
-                return;
+                bool? response = await EventAggService.RefreshCanvas();
+                CanvasSaveStatus.Text = response == true
+                    ? "Canvas events refreshed."
+                    : "Canvas events could not be refreshed.";
             }
-            
-            if ((bool) !response)
+            catch (Exception exception)
             {
-                // Notification - Unsuccessful
-                return;
+                LoggerService.LogException("WidgetWindow.RefreshCanvasSources", exception);
+                CanvasSaveStatus.Text = "Canvas refresh failed. See GCWLogs.txt for details.";
             }
-
-            // Notification - Successful
         }
         private async void RefreshGoogleSources(object sender, RoutedEventArgs e)
         {
-            bool? response = await EventAggService.RefreshGoogle();
-            if (response == null)
+            try
             {
-                // do something here - Notification
-                return;
-            }
+                string mainDataPath = SettingsRetriever.GetMainDataPath();
+                if (!File.Exists(mainDataPath))
+                {
+                    LoggerService.LogWarning(
+                        $"WidgetWindow.RefreshGoogleSources: Could not find '{mainDataPath}'. Creating a default file.",
+                        LoggerStatusEnum.WARNING);
+                    await EventAggService.WriteUpcomingEventsMessagePackAsync(mainDataPath);
+                }
 
-            if ((bool)!response)
+                bool? response = await EventAggService.RefreshGoogle();
+                GoogleConnectionStatus.Text = response == true
+                    ? "Google Calendar events refreshed."
+                    : "Google Calendar events could not be refreshed.";
+            }
+            catch (Exception exception)
             {
-                // Notification - Unsuccessful
-                return;
+                LoggerService.LogException("WidgetWindow.RefreshGoogleSources", exception);
+                GoogleConnectionStatus.Text = "Google refresh failed. See GCWLogs.txt for details.";
             }
-
-            // Notification - Successful
         }
 
-        private void RefreshAll(object sender, RoutedEventArgs e)
+        private async void RefreshAll(object sender, RoutedEventArgs e)
         {
-            EventAggService.WriteUpcomingEventsMessagePackAsync(null);
+            try
+            {
+                await EventAggService.WriteUpcomingEventsMessagePackAsync(null);
+            }
+            catch (Exception exception)
+            {
+                LoggerService.LogException("WidgetWindow.RefreshAll", exception);
+            }
         }
         
-        private async void UpdateRefreshButton()
+        private async Task UpdateRefreshButton()
         {
             GoogleCalService GCS = EventAggService.GetGoogleCalService();
             Dictionary<string, bool> sources = await SettingsRetriever.GetActiveSources(GCS);
             RefreshGoogleSourcesButton.Visibility = sources["google"]
                 ? Visibility.Visible
                 : Visibility.Collapsed;
+        }
+
+        private async Task UpdateConnectionStatusAsync()
+        {
+            bool connected = await EventAggService.GetGoogleCalService().IsAccountActiveAsync();
+            GoogleConnectionStatus.Text = connected ? "Connected to Google Calendar." : "Not connected";
+            RefreshGoogleSourcesButton.Visibility = connected && SettingsRetriever.GetGoogleEnabled()
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        private void ApplyBackgroundType()
+        {
+            SystemBackdrop = SettingsRetriever.GetBackgroundType() switch
+            {
+                BackgroundTypeEnum.Mica => new MicaBackdrop(),
+                BackgroundTypeEnum.Acrylic => new DesktopAcrylicBackdrop(),
+                _ => null
+            };
         }
 
         private void GoogleEnabled(object sender, RoutedEventArgs e)

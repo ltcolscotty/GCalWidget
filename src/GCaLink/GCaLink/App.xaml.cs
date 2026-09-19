@@ -16,6 +16,7 @@ using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using GCaLink.ViewWindows.WidgetView;
+using GCaLink.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -36,6 +37,12 @@ namespace GCaLink
         public App()
         {
             InitializeComponent();
+            UnhandledException += OnUnhandledException;
+        }
+
+        private void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+        {
+            LoggerService.LogException("Unhandled application exception", e.Exception);
         }
 
         /// <summary>

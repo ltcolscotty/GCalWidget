@@ -31,6 +31,11 @@ namespace GCaLink.Services
         public static async Task ReloadGoogleServiceAsync()
         {
             GCS = new GoogleCalService(SettingsRetriever.GetGoogleCalOptions());
+            await ReloadSourcesAsync();
+        }
+
+        public static async Task ReloadSourcesAsync()
+        {
             await LoadSourcesAsync();
         }
 
@@ -70,7 +75,7 @@ namespace GCaLink.Services
             return MessagePackSerializer.Deserialize<Dictionary<IDHelper.EventID, CalEventDto>>(bytes);
         }
 
-        private static async void SaveCalData(Dictionary<IDHelper.EventID, CalEventDto> calendarData, string? outputPath)
+        private static async Task SaveCalDataAsync(Dictionary<IDHelper.EventID, CalEventDto> calendarData, string? outputPath)
         {
             if (outputPath == null)
             {
@@ -111,17 +116,19 @@ namespace GCaLink.Services
             Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadUpcomingEventsMessagePackAsync(null);
             Dictionary<string, EventTypeConfig> sourceConfig = SettingsRetriever.GetSourceConfigs();
 
-            foreach (IDHelper.EventID id in sourceIDs["canvas"])
+            if (sourceIDs.TryGetValue("canvas", out List<IDHelper.EventID>? canvasIds))
             {
-                calendarData.Remove(id);
-                sourceIDs["canvas"].Remove(id);
+                foreach (IDHelper.EventID id in canvasIds)
+                {
+                    calendarData.Remove(id);
+                }
             }
 
             var (tCalendarData, keyList) = await CanvasServ.FetchUpcomingEventsAsync(SettingsRetriever.GetCanvasICSLink(), calendarData, sourceConfig);
             calendarData = tCalendarData;
             sourceIDs["canvas"] = keyList;
 
-            SaveCalData(calendarData, null);
+            await SaveCalDataAsync(calendarData, null);
             return true;
         }
 
@@ -141,20 +148,22 @@ namespace GCaLink.Services
             Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadUpcomingEventsMessagePackAsync(null);
             CalendarService service = await GCS.CreateCalendarServiceAsync();
 
-            foreach (IDHelper.EventID id in sourceIDs["google"])
+            if (sourceIDs.TryGetValue("google", out List<IDHelper.EventID>? googleIds))
             {
-                calendarData.Remove(id);
-                sourceIDs["google"].Remove(id);
+                foreach (IDHelper.EventID id in googleIds)
+                {
+                    calendarData.Remove(id);
+                }
             }
             var (tCalendarData, keyList) = await GCS.FetchUpcomingEventsAsync(service, calendarData);
             calendarData = tCalendarData;
             sourceIDs["google"] = keyList;
 
-            SaveCalData(calendarData, null);
+            await SaveCalDataAsync(calendarData, null);
             return true;
         }
 
-        public static async void WriteUpcomingEventsMessagePackAsync(string? outputPath)
+        public static async Task WriteUpcomingEventsMessagePackAsync(string? outputPath)
         {
             if (sourceList == null)
             {
@@ -185,7 +194,7 @@ namespace GCaLink.Services
                 sourceIDs["canvas"] = keyList;
             }
 
-            SaveCalData(calendarData, null);
+            await SaveCalDataAsync(calendarData, outputPath);
         }
     }
 }

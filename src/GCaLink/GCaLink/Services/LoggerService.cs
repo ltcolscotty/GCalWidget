@@ -82,6 +82,11 @@ namespace GCaLink.Services
             }
         }
 
+        public static void LogException(string context, Exception exception)
+        {
+            LogWarning($"{context}: {exception}", LoggerStatusEnum.EXCEPTION);
+        }
+
         private static void Rotate()
         {
             // TODO: Fix the naming issue, currently it is name.txt1 which is a bit weird

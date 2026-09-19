@@ -31,13 +31,17 @@ namespace GCaLink.Services
 
         private static ClientSecrets LoadClientSecrets()
         {
-#if DEBUG
-            string? credentialsPath = Environment.GetEnvironmentVariable("GOOGLE_CREDENTIALS_DEV_PATH");
-            if (string.IsNullOrWhiteSpace(credentialsPath))
-                throw new InvalidOperationException("GOOGLE_CREDENTIALS_DEV_PATH is not configured.");
-#else
-            string credentialsPath = Path.Combine(AppContext.BaseDirectory, "credentials.json");
-#endif
+            string? configuredPath = Environment.GetEnvironmentVariable("GOOGLE_CREDENTIALS_DEV_PATH");
+            string credentialsPath = string.IsNullOrWhiteSpace(configuredPath)
+                ? Path.Combine(AppContext.BaseDirectory, "credentials.json")
+                : configuredPath;
+
+            if (!File.Exists(credentialsPath))
+            {
+                throw new FileNotFoundException(
+                    "Google OAuth credentials were not found. Set GOOGLE_CREDENTIALS_DEV_PATH or include credentials.json with the app.",
+                    credentialsPath);
+            }
 
             return GoogleClientSecrets.FromFile(credentialsPath).Secrets;
         }

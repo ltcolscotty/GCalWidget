@@ -57,12 +57,12 @@ namespace GCaLink.Services
             if (!initializedAsyncStatus && !forceRefresh) { return; }
 
             sourceConfigs = await LoadEventTypeConfigs(ETCSettingsFile);
-            foreach (KeyValuePair<string, EventTypeConfig> source in sourceConfigs)
+            foreach (string sourceKey in sourceConfigs
+                .Where(source => !source.Value.Enabled)
+                .Select(source => source.Key)
+                .ToList())
             {
-                if (!source.Value.Enabled)
-                {
-                    sourceConfigs.Remove(source.Key);
-                }
+                sourceConfigs.Remove(sourceKey);
             }
 
             initializedAsyncStatus = true;
@@ -85,17 +85,29 @@ namespace GCaLink.Services
                 return false;
             }
             options.CanvasICSLink = newLink;
+            SaveOptions();
             return true;
         }
 
         public static string GetCanvasICSLink() { return options.CanvasICSLink; }
-        public static void SetCanvasEnabled(bool enabled) { options.CanvasEnabled = enabled; }
+        public static bool GetCanvasEnabled() { return options.CanvasEnabled; }
+        public static void SetCanvasEnabled(bool enabled)
+        {
+            options.CanvasEnabled = enabled;
+            SaveOptions();
+        }
         public static void SetGoogleEnabled(bool enabled)
         {
             options.GoogleEnabled = enabled;
             SaveOptions();
         }
         public static bool GetGoogleEnabled() { return options.GoogleEnabled; }
+
+        public static void SetBackgroundType(BackgroundTypeEnum backgroundType)
+        {
+            options.BackgroundType = backgroundType;
+            SaveOptions();
+        }
         public static GoogleCalOptions GetGoogleCalOptions()
         {
             return new GoogleCalOptions

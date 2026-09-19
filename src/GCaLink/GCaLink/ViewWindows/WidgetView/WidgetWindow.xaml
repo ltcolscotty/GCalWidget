@@ -45,8 +45,6 @@
                    FontSize="30"
                    FontWeight="SemiBold"/>
 
-                <Button Grid.Column="2" Content="Settings" Click="OpenSettingsClick"
-                    HorizontalAlignment="Right" VerticalAlignment="Center" />
         </Grid>
 
         <!-- Tabs -->
@@ -112,6 +110,10 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
                         <Button x:Name="GoogleSI" 
                                 Click="GoogleSIClick"
                                 Padding="0"
@@ -124,6 +126,11 @@
                                    HorizontalAlignment="Center" 
                                    VerticalAlignment="Center" />
                         </Button>
+                        <TextBlock x:Name="GoogleConnectionStatus"
+                                   Grid.Row="1"
+                                   Margin="0,32,0,0"
+                                   Text="Not connected"
+                                   TextWrapping="Wrap" />
                     </Grid>
                     <Grid Grid.Row="1" >
                         <ListView ItemsSource="{Binding GSources}">
@@ -175,6 +182,7 @@
                     <Grid Grid.Row="2" Padding="0,10">
                         <muxc:Button Content="Save" Click="CanvasSaveClick"/>
                     </Grid>
+                    <TextBlock x:Name="CanvasSaveStatus" Grid.Row="3" TextWrapping="Wrap" />
                 </Grid>
             </muxc:TabViewItem>
 

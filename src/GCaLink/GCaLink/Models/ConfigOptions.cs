@@ -47,8 +47,11 @@ namespace GCaLink.Models
         public string GoogleClientId { get; set; } = "";
         public string GoogleClientSecret { get; set; } = "";
         public bool CanvasEnabled { get; set; } = false;
+        public bool PrimaryViewEnabled { get; set; } = false;
         public bool PinnedViewEnabled { get; set; } = false;
         public PrimaryViewEnum PrimaryView { get; set; } = PrimaryViewEnum.Todo;
+        public WindowPosition? PrimaryViewPosition { get; set; }
+        public WindowPosition? PinnedViewPosition { get; set; }
         public int TrackedDays { get; set; } = 3;
         public List<string> PinnedEventsList { get; set; } = [];
 
@@ -59,5 +62,11 @@ namespace GCaLink.Models
         {
             // Keep this for later if settings config gets updated in released version
         }
+    }
+
+    public class WindowPosition
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
     }
 }

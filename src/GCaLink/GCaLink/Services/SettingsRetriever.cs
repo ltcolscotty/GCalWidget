@@ -102,10 +102,34 @@ namespace GCaLink.Services
             options.PinnedViewEnabled = enabled;
             SaveOptions();
         }
+        public static bool GetPrimaryViewEnabled() { return options.PrimaryViewEnabled; }
+        public static void SetPrimaryViewEnabled(bool enabled)
+        {
+            options.PrimaryViewEnabled = enabled;
+            SaveOptions();
+        }
         public static PrimaryViewEnum GetPrimaryView() { return options.PrimaryView; }
         public static void SetPrimaryView(PrimaryViewEnum primaryView)
         {
             options.PrimaryView = primaryView;
+            SaveOptions();
+        }
+        public static WindowPosition? GetWindowPosition(bool pinned)
+        {
+            return pinned ? options.PinnedViewPosition : options.PrimaryViewPosition;
+        }
+        public static void SetWindowPosition(bool pinned, int x, int y)
+        {
+            WindowPosition position = new() { X = x, Y = y };
+            if (pinned)
+            {
+                options.PinnedViewPosition = position;
+            }
+            else
+            {
+                options.PrimaryViewPosition = position;
+            }
+
             SaveOptions();
         }
         public static void SetGoogleEnabled(bool enabled)

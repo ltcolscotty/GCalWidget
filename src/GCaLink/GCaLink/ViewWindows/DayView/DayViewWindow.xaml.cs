@@ -19,7 +19,7 @@ public sealed partial class DayViewWindow : Window
     public DayViewWindow()
     {
         InitializeComponent();
-        WindowConfiguration.Configure(this, isWidgetViewActive: false);
+        WindowConfiguration.Configure(this, isWidgetViewActive: false, ManagedWindowKind.Primary);
 
         int width = 300;
         int height = 500;

@@ -54,76 +54,49 @@
         TabWidthMode="SizeToContent">
 
             <muxc:TabViewItem Header="Main" IsClosable="False">
-                <Grid Padding="16">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <Grid Grid.Row="0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row ="0" Text="Sources" FontSize="20" FontWeight="Bold"/>
-                        <StackPanel Grid.Row="1">
-                            <CheckBox x:Name="EnableGoogle" Content="Google Calendar" Margin="24,0,0,0" Checked="GoogleEnabled" Unchecked="GoogleDisabled"/>
-                            <CheckBox x:Name="EnableCanvas" Content="Canvas Calendar" Margin="24,0,0,0" Checked="CanvasEnabled" Unchecked="CanvasDisabled"/>
-                        </StackPanel>
-                    </Grid>
-                    <Grid Grid.Row="1" Margin="0,16,0,0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Text="Views" FontSize="20" FontWeight="Bold"/>
-                        <ComboBox x:Name="PrimaryViewSelector"
-                                  Grid.Row="1"
-                                  Header="Primary view"
-                                  SelectedIndex="1"
-                                  SelectionChanged="PrimaryViewChanged"
-                                  Margin="24,4,0,0"
-                                  Width="220"
-                                  HorizontalAlignment="Left">
-                            <ComboBoxItem Content="TodoView"/>
-                            <ComboBoxItem Content="DayView"/>
-                            <ComboBoxItem Content="WeekView"/>
-                        </ComboBox>
-                        <CheckBox x:Name="EnablePinnedView"
-                                  Grid.Row="2"
-                                  Content="PinnedView"
-                                  Margin="24,4,0,0"
-                                  Checked="PinnedViewEnabled"
-                                  Unchecked="PinnedViewDisabled"/>
-                    </Grid>
-                    <Grid Grid.Row="2">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row ="0" Text="Background Style" FontSize="20" FontWeight="Bold"/>
-                        <muxc:RadioButtons x:Name="BkgStyleRadioSettings"
-                                           FontSize="20"
-                                           SelectedIndex="0"
-                                           SelectionChanged="BkgStyleChanged"
-                                           Grid.Row="1">
-                            <x:String>Solid</x:String>
-                            <x:String>Mica</x:String>
-                            <x:String>Acrylic</x:String>
-                        </muxc:RadioButtons>
-                    </Grid>
-                    <Grid Grid.Row="3" Padding="0,10">
-                        <muxc:Button Content="Save" Click="MainSaveClick"/>
-                    </Grid>
-                    
-                </Grid>
+                <ScrollViewer>
+                    <StackPanel Padding="16" Spacing="8">
+                        <muxc:Expander Header="Sources" IsExpanded="False">
+                            <StackPanel Spacing="8" Padding="8,4,8,8">
+                                <CheckBox x:Name="EnableGoogle" Content="Google Calendar" Checked="GoogleEnabled" Unchecked="GoogleDisabled"/>
+                                <CheckBox x:Name="EnableCanvas" Content="Canvas Calendar" Checked="CanvasEnabled" Unchecked="CanvasDisabled"/>
+                            </StackPanel>
+                        </muxc:Expander>
+                        <muxc:Expander Header="Views" IsExpanded="False">
+                            <StackPanel Spacing="8" Padding="8,4,8,8">
+                                <ComboBox x:Name="PrimaryViewSelector"
+                                          Header="Calendar view"
+                                          SelectedIndex="1"
+                                          SelectionChanged="PrimaryViewChanged"
+                                          Width="220"
+                                          HorizontalAlignment="Left">
+                                    <ComboBoxItem Content="TodoView"/>
+                                    <ComboBoxItem Content="DayView"/>
+                                    <ComboBoxItem Content="WeekView"/>
+                                </ComboBox>
+                                <CheckBox x:Name="EnablePrimaryView"
+                                          Content="Enable calendar view"
+                                          Checked="PrimaryViewEnabled"
+                                          Unchecked="PrimaryViewDisabled"/>
+                                <CheckBox x:Name="EnablePinnedView"
+                                          Content="Pin calendar view"
+                                          Checked="PinnedViewEnabled"
+                                          Unchecked="PinnedViewDisabled"/>
+                            </StackPanel>
+                        </muxc:Expander>
+                        <muxc:Expander Header="Background style" IsExpanded="False">
+                            <muxc:RadioButtons x:Name="BkgStyleRadioSettings"
+                                               FontSize="20"
+                                               SelectedIndex="0"
+                                               SelectionChanged="BkgStyleChanged"
+                                               Padding="8,4,8,8">
+                                <x:String>Solid</x:String>
+                                <x:String>Mica</x:String>
+                                <x:String>Acrylic</x:String>
+                            </muxc:RadioButtons>
+                        </muxc:Expander>
+                    </StackPanel>
+                </ScrollViewer>
             </muxc:TabViewItem>
 
             <muxc:TabViewItem Header="Google" IsClosable="False">

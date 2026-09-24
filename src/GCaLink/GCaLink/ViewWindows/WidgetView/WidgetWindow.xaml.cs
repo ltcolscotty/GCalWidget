@@ -52,6 +52,7 @@ namespace GCaLink.ViewWindows.WidgetView
             CanvasCalLinkInput.Text = SettingsRetriever.GetCanvasICSLink();
             EnableGoogle.IsChecked = SettingsRetriever.GetGoogleEnabled();
             EnableCanvas.IsChecked = SettingsRetriever.GetCanvasEnabled();
+            EnablePrimaryView.IsChecked = SettingsRetriever.GetPrimaryViewEnabled();
             EnablePinnedView.IsChecked = SettingsRetriever.GetPinnedViewEnabled();
             PrimaryViewSelector.SelectedIndex = SettingsRetriever.GetPrimaryView() switch
             {
@@ -60,6 +61,7 @@ namespace GCaLink.ViewWindows.WidgetView
                 _ => 1
             };
             ApplyBackgroundType();
+            ViewWindowManager.SyncWithSettings();
             _ = UpdateConnectionStatusAsync();
         }
 
@@ -114,11 +116,6 @@ namespace GCaLink.ViewWindows.WidgetView
             {
                 GoogleSI.IsEnabled = true;
             }
-        }
-
-        private void MainSaveClick(object sender, RoutedEventArgs e)
-        {
-            SaveBackgroundType();
         }
 
         private void SaveBackgroundType()
@@ -225,12 +222,7 @@ namespace GCaLink.ViewWindows.WidgetView
 
         private void ApplyBackgroundType()
         {
-            SystemBackdrop = SettingsRetriever.GetBackgroundType() switch
-            {
-                BackgroundTypeEnum.Mica => new MicaBackdrop(),
-                BackgroundTypeEnum.Acrylic => new DesktopAcrylicBackdrop(),
-                _ => null
-            };
+            WindowConfiguration.ApplyBackground(this);
         }
 
         private void GoogleEnabled(object sender, RoutedEventArgs e)
@@ -260,16 +252,34 @@ namespace GCaLink.ViewWindows.WidgetView
             }
 
             SettingsRetriever.SetPrimaryView((PrimaryViewEnum)PrimaryViewSelector.SelectedIndex);
+            if (SettingsRetriever.GetPrimaryViewEnabled())
+            {
+                ViewWindowManager.OpenPrimaryView();
+            }
+        }
+
+        private void PrimaryViewEnabled(object sender, RoutedEventArgs e)
+        {
+            SettingsRetriever.SetPrimaryViewEnabled(true);
+            ViewWindowManager.OpenPrimaryView();
+        }
+
+        private void PrimaryViewDisabled(object sender, RoutedEventArgs e)
+        {
+            SettingsRetriever.SetPrimaryViewEnabled(false);
+            ViewWindowManager.ClosePrimaryView();
         }
 
         private void PinnedViewEnabled(object sender, RoutedEventArgs e)
         {
             SettingsRetriever.SetPinnedViewEnabled(true);
+            ViewWindowManager.OpenPinnedView();
         }
 
         private void PinnedViewDisabled(object sender, RoutedEventArgs e)
         {
             SettingsRetriever.SetPinnedViewEnabled(false);
+            ViewWindowManager.ClosePinnedView();
         }
     }
 }

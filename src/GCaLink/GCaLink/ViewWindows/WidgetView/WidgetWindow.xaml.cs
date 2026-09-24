@@ -19,6 +19,7 @@ using Windows.Foundation.Collections;
 using Microsoft.UI;
 using GCaLink.Models;
 using GCaLink.Services;
+using GCaLink.ViewWindows;
 using Windows.ApplicationModel.UserDataTasks;
 using System.Security.Cryptography.X509Certificates;
 using System.Diagnostics.Contracts;
@@ -36,6 +37,7 @@ namespace GCaLink.ViewWindows.WidgetView
         public WidgetWindow()
         {
             InitializeComponent();
+            WindowConfiguration.Configure(this, isWidgetViewActive: true);
 
             SettingsRetriever.InitializeAsync();
 
@@ -50,6 +52,13 @@ namespace GCaLink.ViewWindows.WidgetView
             CanvasCalLinkInput.Text = SettingsRetriever.GetCanvasICSLink();
             EnableGoogle.IsChecked = SettingsRetriever.GetGoogleEnabled();
             EnableCanvas.IsChecked = SettingsRetriever.GetCanvasEnabled();
+            EnablePinnedView.IsChecked = SettingsRetriever.GetPinnedViewEnabled();
+            PrimaryViewSelector.SelectedIndex = SettingsRetriever.GetPrimaryView() switch
+            {
+                PrimaryViewEnum.Day => 0,
+                PrimaryViewEnum.Week => 2,
+                _ => 1
+            };
             ApplyBackgroundType();
             _ = UpdateConnectionStatusAsync();
         }
@@ -241,6 +250,26 @@ namespace GCaLink.ViewWindows.WidgetView
         private void CanvasDisabled(object sender, RoutedEventArgs e)
         {
             SettingsRetriever.SetCanvasEnabled(false);
+        }
+
+        private void PrimaryViewChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (PrimaryViewSelector.SelectedIndex is < 0 or > 2)
+            {
+                return;
+            }
+
+            SettingsRetriever.SetPrimaryView((PrimaryViewEnum)PrimaryViewSelector.SelectedIndex);
+        }
+
+        private void PinnedViewEnabled(object sender, RoutedEventArgs e)
+        {
+            SettingsRetriever.SetPinnedViewEnabled(true);
+        }
+
+        private void PinnedViewDisabled(object sender, RoutedEventArgs e)
+        {
+            SettingsRetriever.SetPinnedViewEnabled(false);
         }
     }
 }

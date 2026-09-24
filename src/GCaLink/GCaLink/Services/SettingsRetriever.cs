@@ -96,6 +96,18 @@ namespace GCaLink.Services
             options.CanvasEnabled = enabled;
             SaveOptions();
         }
+        public static bool GetPinnedViewEnabled() { return options.PinnedViewEnabled; }
+        public static void SetPinnedViewEnabled(bool enabled)
+        {
+            options.PinnedViewEnabled = enabled;
+            SaveOptions();
+        }
+        public static PrimaryViewEnum GetPrimaryView() { return options.PrimaryView; }
+        public static void SetPrimaryView(PrimaryViewEnum primaryView)
+        {
+            options.PrimaryView = primaryView;
+            SaveOptions();
+        }
         public static void SetGoogleEnabled(bool enabled)
         {
             options.GoogleEnabled = enabled;

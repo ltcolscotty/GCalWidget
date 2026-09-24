@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 
 using GCaLink.Models;
+using GCaLink.ViewWindows;
 
 namespace GCaLink.ViewWindows.DayView
 {
@@ -18,6 +19,7 @@ public sealed partial class DayViewWindow : Window
     public DayViewWindow()
     {
         InitializeComponent();
+        WindowConfiguration.Configure(this, isWidgetViewActive: false);
 
         int width = 300;
         int height = 500;

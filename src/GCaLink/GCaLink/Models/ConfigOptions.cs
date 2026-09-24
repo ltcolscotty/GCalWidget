@@ -23,6 +23,14 @@ namespace GCaLink.Models
     }
 
     public enum BackgroundImageType;
+
+    public enum PrimaryViewEnum
+    {
+        Day,
+        Todo,
+        Week,
+    }
+
     public class ConfigOptions
     {
         public int ConfigVersion { get; } = 1;
@@ -39,6 +47,8 @@ namespace GCaLink.Models
         public string GoogleClientId { get; set; } = "";
         public string GoogleClientSecret { get; set; } = "";
         public bool CanvasEnabled { get; set; } = false;
+        public bool PinnedViewEnabled { get; set; } = false;
+        public PrimaryViewEnum PrimaryView { get; set; } = PrimaryViewEnum.Todo;
         public int TrackedDays { get; set; } = 3;
         public List<string> PinnedEventsList { get; set; } = [];
 

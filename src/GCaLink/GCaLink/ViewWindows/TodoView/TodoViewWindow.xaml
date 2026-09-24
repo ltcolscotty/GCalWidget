@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="GCaLink.ViewWindows.TodoView.TodoViewWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="GCaLink Todo View">
+    <Grid Padding="16">
+        <TextBlock Text="Todo list" FontSize="24" FontWeight="SemiBold" />
+    </Grid>
+</Window>

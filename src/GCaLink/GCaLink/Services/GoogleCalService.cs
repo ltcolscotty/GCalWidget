@@ -13,7 +13,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,7 +24,13 @@ namespace GCaLink.Services
     public sealed class GoogleCalService
     {
         private readonly GoogleCalOptions _options;
-        private static readonly string[] Scopes = { CalendarService.Scope.CalendarReadonly };
+        private static readonly string[] Scopes =
+        {
+            CalendarService.Scope.CalendarReadonly,
+            "openid",
+            "email",
+            "profile"
+        };
 
         public GoogleCalService(GoogleCalOptions options)
         {
@@ -114,6 +122,53 @@ namespace GCaLink.Services
             catch
             {
                 return false;
+            }
+        }
+
+        public async Task<GoogleAccountProfile?> GetAccountProfileAsync()
+        {
+            const string userId = "user";
+
+            try
+            {
+                using GoogleAuthorizationCodeFlow flow = CreateFlow();
+                TokenResponse? token = await flow.LoadTokenAsync(userId, CancellationToken.None);
+                if (token == null)
+                    return null;
+
+                UserCredential credential = new UserCredential(flow, userId, token);
+                if (credential.Token.IsStale && !await credential.RefreshTokenAsync(CancellationToken.None))
+                    return null;
+
+                using HttpClient client = new();
+                using HttpRequestMessage request = new(
+                    HttpMethod.Get,
+                    "https://openidconnect.googleapis.com/v1/userinfo");
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
+                    "Bearer",
+                    credential.Token.AccessToken);
+
+                using HttpResponseMessage response = await client.SendAsync(request);
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                JsonElement profile = document.RootElement;
+                string name = profile.TryGetProperty("name", out JsonElement nameElement)
+                    ? nameElement.GetString() ?? string.Empty
+                    : string.Empty;
+                string email = profile.TryGetProperty("email", out JsonElement emailElement)
+                    ? emailElement.GetString() ?? string.Empty
+                    : string.Empty;
+                string picture = profile.TryGetProperty("picture", out JsonElement pictureElement)
+                    ? pictureElement.GetString() ?? string.Empty
+                    : string.Empty;
+
+                return new GoogleAccountProfile(name, email, picture);
+            }
+            catch
+            {
+                return null;
             }
         }
 

@@ -26,11 +26,6 @@
     <Page Remove="Views\**" />
   </ItemGroup>
   <ItemGroup>
-    <Content Remove="Assets\google-si-dark.png" />
-    <Content Remove="Assets\google-si-light.png" />
-    <Content Remove="Assets\google-si-neutral.png" />
-  </ItemGroup>
-  <ItemGroup>
   <Compile Update="ViewWindows\WidgetView\WidgetWindow.xaml.cs">
 		<DependentUpon>WidgetWindow.xaml</DependentUpon>
 	</Compile>
@@ -43,6 +38,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Assets\google-si-dark.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Assets\google-si-light.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Assets\google-si-neutral.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Assets\canvas-lms.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />

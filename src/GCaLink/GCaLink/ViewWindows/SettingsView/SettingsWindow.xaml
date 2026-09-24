@@ -18,10 +18,42 @@
             <TextBlock x:Name="CredentialsStatusText" Text="OAuth client is included with the app."
                        TextWrapping="Wrap" Opacity="0.75" />
 
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <Button x:Name="SignInButton" Content="Sign in with Google" Click="SignInClick" />
-                <Button x:Name="SignOutButton" Content="Sign out" Click="SignOutClick" IsEnabled="False" />
+            <StackPanel x:Name="SignedOutPanel" Orientation="Horizontal" Spacing="12">
+                <Button x:Name="SignInButton" Click="SignInClick" Padding="0">
+                    <Image Source="ms-appx:///Assets/google-si-dark.png"
+                           Width="108"
+                           Height="24"
+                           Stretch="UniformToFill" />
+                </Button>
             </StackPanel>
+
+            <Border x:Name="AccountCard" Visibility="Collapsed" Padding="16"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="8">
+                <Grid RowSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="56" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <Border Width="48" Height="48" CornerRadius="24">
+                        <Image x:Name="ProfileImage" Stretch="UniformToFill" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Spacing="2">
+                        <TextBlock x:Name="ProfileNameText" FontWeight="SemiBold" />
+                        <TextBlock x:Name="ProfileEmailText" Opacity="0.7" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal"
+                                HorizontalAlignment="Right" Spacing="8">
+                        <Button Content="Sign out" Click="SignOutClick" />
+                        <Button Content="Switch account" Click="SwitchAccountClick" />
+                    </StackPanel>
+                </Grid>
+            </Border>
 
             <TextBlock x:Name="ConnectionStatusText" Text="Not connected" TextWrapping="Wrap" />
             <CheckBox x:Name="GoogleEnabledCheckBox" Content="Use Google Calendar in the widget"

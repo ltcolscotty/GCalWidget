@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
@@ -96,22 +97,41 @@ namespace GCaLink.ViewWindows.WidgetView
 
         private async void GoogleSIClick(object sender, RoutedEventArgs e)
         {
+            await GoogleSignInAsync();
+        }
+
+        private async void GoogleSignOutClick(object sender, RoutedEventArgs e)
+        {
+            await EventAggService.GetGoogleCalService().SignOutAsync();
+            SettingsRetriever.SetGoogleEnabled(false);
+            EnableGoogle.IsChecked = false;
+            await UpdateConnectionStatusAsync(false);
+        }
+
+        private async void GoogleSwitchAccountClick(object sender, RoutedEventArgs e)
+        {
+            await EventAggService.GetGoogleCalService().SignOutAsync();
+            SettingsRetriever.SetGoogleEnabled(false);
+            EnableGoogle.IsChecked = false;
+            await GoogleSignInAsync();
+        }
+
+        private async Task GoogleSignInAsync()
+        {
             GoogleSI.IsEnabled = false;
             GoogleConnectionStatus.Text = "Waiting for Google sign-in...";
             try
             {
                 bool connected = await EventAggService.GetGoogleCalService().AuthorizeAsync();
-                GoogleConnectionStatus.Text = connected
-                    ? "Connected to Google Calendar."
-                    : "Google sign-in did not complete.";
-
                 if (connected)
                 {
                     SettingsRetriever.SetGoogleEnabled(true);
                     EnableGoogle.IsChecked = true;
                     await EventAggService.ReloadGoogleServiceAsync();
-                    await UpdateRefreshButton();
                 }
+
+                await UpdateConnectionStatusAsync(connected);
+                await UpdateRefreshButton();
             }
             finally
             {
@@ -212,13 +232,27 @@ namespace GCaLink.ViewWindows.WidgetView
                 : Visibility.Collapsed;
         }
 
-        private async Task UpdateConnectionStatusAsync()
+        private async Task UpdateConnectionStatusAsync(bool? connectedOverride = null)
         {
-            bool connected = await EventAggService.GetGoogleCalService().IsAccountActiveAsync();
+            bool connected = connectedOverride ?? await EventAggService.GetGoogleCalService().IsAccountActiveAsync();
             GoogleConnectionStatus.Text = connected ? "Connected to Google Calendar." : "Not connected";
+            GoogleSignedOutPanel.Visibility = connected ? Visibility.Collapsed : Visibility.Visible;
+            GoogleAccountCard.Visibility = connected ? Visibility.Visible : Visibility.Collapsed;
             RefreshGoogleSourcesButton.Visibility = connected && SettingsRetriever.GetGoogleEnabled()
                 ? Visibility.Visible
                 : Visibility.Collapsed;
+
+            if (connected)
+            {
+                GoogleAccountProfile? profile = await EventAggService.GetGoogleCalService().GetAccountProfileAsync();
+                if (profile != null)
+                {
+                    GoogleProfileNameText.Text = string.IsNullOrWhiteSpace(profile.Name) ? profile.Email : profile.Name;
+                    GoogleProfileEmailText.Text = profile.Email;
+                    if (Uri.TryCreate(profile.PictureUrl, UriKind.Absolute, out Uri? pictureUri))
+                        GoogleProfileImage.Source = new BitmapImage(pictureUri);
+                }
+            }
         }
 
         private void ApplyBackgroundType()

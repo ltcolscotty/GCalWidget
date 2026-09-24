@@ -132,18 +132,48 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <Button x:Name="GoogleSI" 
-                                Click="GoogleSIClick"
-                                Padding="0"
-                                Margin="0">
-                            <!--Image not showing for some reason, this needs to be fixed-->
-                            <Image Source="ms-appx:///Assets/google-si-neutral.png" 
-                                   Width="108" 
-                                   Height="24" 
-                                   Stretch="UniformToFill" 
-                                   HorizontalAlignment="Center" 
-                                   VerticalAlignment="Center" />
-                        </Button>
+                        <StackPanel x:Name="GoogleSignedOutPanel">
+                            <Button x:Name="GoogleSI"
+                                    Click="GoogleSIClick"
+                                    Padding="0"
+                                    Margin="0">
+                                <Image Source="ms-appx:///Assets/google-si-neutral.png"
+                                       Width="108"
+                                       Height="24"
+                                       Stretch="UniformToFill"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                            </Button>
+                        </StackPanel>
+                        <Border x:Name="GoogleAccountCard"
+                                Visibility="Collapsed"
+                                Padding="12"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                            <Grid ColumnSpacing="12" RowSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="40" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <Border Width="40" Height="40" CornerRadius="20">
+                                    <Image x:Name="GoogleProfileImage" Stretch="UniformToFill" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                    <TextBlock x:Name="GoogleProfileNameText" FontWeight="SemiBold" />
+                                    <TextBlock x:Name="GoogleProfileEmailText" Opacity="0.7" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal"
+                                            HorizontalAlignment="Right" Spacing="8">
+                                    <Button Content="Sign out" Click="GoogleSignOutClick" />
+                                    <Button Content="Switch account" Click="GoogleSwitchAccountClick" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
                         <TextBlock x:Name="GoogleConnectionStatus"
                                    Grid.Row="1"
                                    Margin="0,32,0,0"
@@ -198,7 +228,16 @@
                                   Width="300"
                                   Grid.Row="1"/>
                     <Grid Grid.Row="2" Padding="0,10">
-                        <muxc:Button Content="Save" Click="CanvasSaveClick"/>
+                        <muxc:Button Click="CanvasSaveClick">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Image Source="ms-appx:///Assets/canvas-lms.png"
+                                       Width="20"
+                                       Height="20"
+                                       Stretch="Uniform" />
+                                <TextBlock Text="Link canvas calendar"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </muxc:Button>
                     </Grid>
                     <TextBlock x:Name="CanvasSaveStatus" Grid.Row="3" TextWrapping="Wrap" />
                 </Grid>

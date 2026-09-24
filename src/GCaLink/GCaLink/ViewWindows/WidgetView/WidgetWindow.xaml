@@ -16,6 +16,14 @@
     </Window.SystemBackdrop>
 
     <Grid>
+        <Grid.Resources>
+            <DataTemplate x:Key="SettingsSectionHeaderTemplate">
+                <TextBlock Text="{Binding}"
+                           FontSize="18"
+                           FontWeight="Bold" />
+            </DataTemplate>
+        </Grid.Resources>
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <!-- Header -->
@@ -54,22 +62,29 @@
         TabWidthMode="SizeToContent">
 
             <muxc:TabViewItem Header="Main" IsClosable="False">
-                <ScrollViewer>
-                    <StackPanel Padding="16" Spacing="8">
-                        <muxc:Expander Header="Sources" IsExpanded="False">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Padding="16" Spacing="8" HorizontalAlignment="Stretch">
+                        <muxc:Expander Header="Sources"
+                                      HeaderTemplate="{StaticResource SettingsSectionHeaderTemplate}"
+                                      IsExpanded="False"
+                                      HorizontalAlignment="Stretch"
+                                      HorizontalContentAlignment="Stretch">
                             <StackPanel Spacing="8" Padding="8,4,8,8">
                                 <CheckBox x:Name="EnableGoogle" Content="Google Calendar" Checked="GoogleEnabled" Unchecked="GoogleDisabled"/>
                                 <CheckBox x:Name="EnableCanvas" Content="Canvas Calendar" Checked="CanvasEnabled" Unchecked="CanvasDisabled"/>
                             </StackPanel>
                         </muxc:Expander>
-                        <muxc:Expander Header="Views" IsExpanded="False">
+                        <muxc:Expander Header="Views"
+                                      HeaderTemplate="{StaticResource SettingsSectionHeaderTemplate}"
+                                      IsExpanded="False"
+                                      HorizontalAlignment="Stretch"
+                                      HorizontalContentAlignment="Stretch">
                             <StackPanel Spacing="8" Padding="8,4,8,8">
                                 <ComboBox x:Name="PrimaryViewSelector"
                                           Header="Calendar view"
-                                          SelectedIndex="1"
+                                          HeaderTemplate="{StaticResource SettingsSectionHeaderTemplate}"
                                           SelectionChanged="PrimaryViewChanged"
-                                          Width="220"
-                                          HorizontalAlignment="Left">
+                                          HorizontalAlignment="Stretch">
                                     <ComboBoxItem Content="TodoView"/>
                                     <ComboBoxItem Content="DayView"/>
                                     <ComboBoxItem Content="WeekView"/>
@@ -84,7 +99,11 @@
                                           Unchecked="PinnedViewDisabled"/>
                             </StackPanel>
                         </muxc:Expander>
-                        <muxc:Expander Header="Background style" IsExpanded="False">
+                        <muxc:Expander Header="Background style"
+                                      HeaderTemplate="{StaticResource SettingsSectionHeaderTemplate}"
+                                      IsExpanded="False"
+                                      HorizontalAlignment="Stretch"
+                                      HorizontalContentAlignment="Stretch">
                             <muxc:RadioButtons x:Name="BkgStyleRadioSettings"
                                                FontSize="20"
                                                SelectedIndex="0"

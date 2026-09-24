@@ -56,9 +56,10 @@ namespace GCaLink.ViewWindows.WidgetView
             EnablePinnedView.IsChecked = SettingsRetriever.GetPinnedViewEnabled();
             PrimaryViewSelector.SelectedIndex = SettingsRetriever.GetPrimaryView() switch
             {
-                PrimaryViewEnum.Day => 0,
+                PrimaryViewEnum.Todo => 0,
+                PrimaryViewEnum.Day => 1,
                 PrimaryViewEnum.Week => 2,
-                _ => 1
+                _ => 0
             };
             ApplyBackgroundType();
             ViewWindowManager.SyncWithSettings();
@@ -251,35 +252,42 @@ namespace GCaLink.ViewWindows.WidgetView
                 return;
             }
 
-            SettingsRetriever.SetPrimaryView((PrimaryViewEnum)PrimaryViewSelector.SelectedIndex);
+            PrimaryViewEnum selectedView = PrimaryViewSelector.SelectedIndex switch
+            {
+                0 => PrimaryViewEnum.Todo,
+                1 => PrimaryViewEnum.Day,
+                2 => PrimaryViewEnum.Week,
+                _ => PrimaryViewEnum.Todo
+            };
+            SettingsRetriever.SetPrimaryView(selectedView);
             if (SettingsRetriever.GetPrimaryViewEnabled())
             {
-                ViewWindowManager.OpenPrimaryView();
+                ViewWindowManager.SyncWithSettings();
             }
         }
 
         private void PrimaryViewEnabled(object sender, RoutedEventArgs e)
         {
             SettingsRetriever.SetPrimaryViewEnabled(true);
-            ViewWindowManager.OpenPrimaryView();
+            ViewWindowManager.SyncWithSettings();
         }
 
         private void PrimaryViewDisabled(object sender, RoutedEventArgs e)
         {
             SettingsRetriever.SetPrimaryViewEnabled(false);
-            ViewWindowManager.ClosePrimaryView();
+            ViewWindowManager.SyncWithSettings();
         }
 
         private void PinnedViewEnabled(object sender, RoutedEventArgs e)
         {
             SettingsRetriever.SetPinnedViewEnabled(true);
-            ViewWindowManager.OpenPinnedView();
+            ViewWindowManager.SyncWithSettings();
         }
 
         private void PinnedViewDisabled(object sender, RoutedEventArgs e)
         {
             SettingsRetriever.SetPinnedViewEnabled(false);
-            ViewWindowManager.ClosePinnedView();
+            ViewWindowManager.SyncWithSettings();
         }
     }
 }

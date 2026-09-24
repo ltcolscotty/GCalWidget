@@ -52,6 +52,8 @@ namespace GCaLink.Models
         public PrimaryViewEnum PrimaryView { get; set; } = PrimaryViewEnum.Todo;
         public WindowPosition? PrimaryViewPosition { get; set; }
         public WindowPosition? PinnedViewPosition { get; set; }
+        public WindowSize? PrimaryViewSize { get; set; }
+        public WindowSize? PinnedViewSize { get; set; }
         public int TrackedDays { get; set; } = 3;
         public List<string> PinnedEventsList { get; set; } = [];
 
@@ -68,5 +70,11 @@ namespace GCaLink.Models
     {
         public int X { get; set; }
         public int Y { get; set; }
+    }
+
+    public class WindowSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }

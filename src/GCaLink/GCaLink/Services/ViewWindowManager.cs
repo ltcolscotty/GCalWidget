@@ -34,7 +34,7 @@ namespace GCaLink.Services
             }
         }
 
-        public static void OpenPrimaryView()
+        private static void OpenPrimaryView()
         {
             PrimaryViewEnum selectedView = SettingsRetriever.GetPrimaryView();
             if (primaryViewWindow is not null && primaryViewType == selectedView)
@@ -55,7 +55,7 @@ namespace GCaLink.Services
             primaryViewWindow.Activate();
         }
 
-        public static void ClosePrimaryView()
+        private static void ClosePrimaryView()
         {
             Window? window = primaryViewWindow;
             primaryViewWindow = null;
@@ -63,7 +63,7 @@ namespace GCaLink.Services
             window?.Close();
         }
 
-        public static void OpenPinnedView()
+        private static void OpenPinnedView()
         {
             if (pinnedViewWindow is null)
             {
@@ -74,7 +74,7 @@ namespace GCaLink.Services
             pinnedViewWindow.Activate();
         }
 
-        public static void ClosePinnedView()
+        private static void ClosePinnedView()
         {
             PinnedViewWindow? window = pinnedViewWindow;
             pinnedViewWindow = null;

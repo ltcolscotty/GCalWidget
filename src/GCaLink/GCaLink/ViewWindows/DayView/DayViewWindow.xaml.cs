@@ -19,12 +19,11 @@ public sealed partial class DayViewWindow : Window
     public DayViewWindow()
     {
         InitializeComponent();
-        WindowConfiguration.Configure(this, isWidgetViewActive: false, ManagedWindowKind.Primary);
-
-        int width = 300;
-        int height = 500;
-
-        this.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, height));
+        WindowConfiguration.Configure(
+            this,
+            isWidgetViewActive: false,
+            ManagedWindowKind.Primary,
+            new Windows.Graphics.SizeInt32(300, 500));
 
         var today = DateTime.Now;
 

@@ -9,8 +9,11 @@ namespace GCaLink.ViewWindows.PinnedView
         public PinnedViewWindow()
         {
             InitializeComponent();
-            WindowConfiguration.Configure(this, isWidgetViewActive: false, ManagedWindowKind.Pinned);
-            AppWindow.Resize(new Windows.Graphics.SizeInt32(360, 500));
+            WindowConfiguration.Configure(
+                this,
+                isWidgetViewActive: false,
+                ManagedWindowKind.Pinned,
+                new Windows.Graphics.SizeInt32(360, 500));
             PinnedListPane.Visibility = SettingsRetriever.GetPinnedViewEnabled()
                 ? Visibility.Visible
                 : Visibility.Collapsed;

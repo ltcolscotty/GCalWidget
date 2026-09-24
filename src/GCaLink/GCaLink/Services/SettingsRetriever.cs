@@ -132,6 +132,24 @@ namespace GCaLink.Services
 
             SaveOptions();
         }
+        public static WindowSize? GetWindowSize(bool pinned)
+        {
+            return pinned ? options.PinnedViewSize : options.PrimaryViewSize;
+        }
+        public static void SetWindowSize(bool pinned, int width, int height)
+        {
+            WindowSize size = new() { Width = width, Height = height };
+            if (pinned)
+            {
+                options.PinnedViewSize = size;
+            }
+            else
+            {
+                options.PrimaryViewSize = size;
+            }
+
+            SaveOptions();
+        }
         public static void SetGoogleEnabled(bool enabled)
         {
             options.GoogleEnabled = enabled;

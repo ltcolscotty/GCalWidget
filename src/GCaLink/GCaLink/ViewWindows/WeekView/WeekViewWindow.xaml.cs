@@ -8,8 +8,11 @@ namespace GCaLink.ViewWindows.WeekView
         public WeekViewWindow()
         {
             InitializeComponent();
-            WindowConfiguration.Configure(this, isWidgetViewActive: false, ManagedWindowKind.Primary);
-            AppWindow.Resize(new Windows.Graphics.SizeInt32(640, 500));
+                WindowConfiguration.Configure(
+                    this,
+                    isWidgetViewActive: false,
+                    ManagedWindowKind.Primary,
+                    new Windows.Graphics.SizeInt32(640, 500));
         }
     }
 }

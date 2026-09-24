@@ -8,8 +8,11 @@ namespace GCaLink.ViewWindows.TodoView
         public TodoViewWindow()
         {
             InitializeComponent();
-            WindowConfiguration.Configure(this, isWidgetViewActive: false, ManagedWindowKind.Primary);
-            AppWindow.Resize(new Windows.Graphics.SizeInt32(360, 500));
+                WindowConfiguration.Configure(
+                    this,
+                    isWidgetViewActive: false,
+                    ManagedWindowKind.Primary,
+                    new Windows.Graphics.SizeInt32(360, 500));
         }
     }
 }

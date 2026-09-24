@@ -17,11 +17,18 @@ namespace GCaLink.ViewWindows
         public static void Configure(
             Window window,
             bool isWidgetViewActive,
-            ManagedWindowKind? managedWindowKind = null)
+            ManagedWindowKind? managedWindowKind = null,
+            Windows.Graphics.SizeInt32? defaultSize = null)
         {
             if (window.AppWindow.Presenter is OverlappedPresenter presenter)
             {
-                presenter.IsResizable = isWidgetViewActive;
+                presenter.IsResizable = true;
+                if (!isWidgetViewActive)
+                {
+                    presenter.SetBorderAndTitleBar(hasBorder: true, hasTitleBar: false);
+                    presenter.IsMinimizable = false;
+                    presenter.IsMaximizable = false;
+                }
             }
 
             ApplyBackground(window);
@@ -32,6 +39,12 @@ namespace GCaLink.ViewWindows
             }
 
             bool pinned = kind == ManagedWindowKind.Pinned;
+            WindowSize? savedSize = SettingsRetriever.GetWindowSize(pinned);
+            Windows.Graphics.SizeInt32 size = savedSize is not null
+                ? new Windows.Graphics.SizeInt32(savedSize.Width, savedSize.Height)
+                : defaultSize ?? new Windows.Graphics.SizeInt32(360, 500);
+            window.AppWindow.Resize(size);
+
             WindowPosition? savedPosition = SettingsRetriever.GetWindowPosition(pinned);
             if (savedPosition is not null)
             {
@@ -44,12 +57,12 @@ namespace GCaLink.ViewWindows
 
             window.AppWindow.Changed += (_, args) =>
             {
-                if (args.DidPositionChange)
+                if (args.DidPositionChange || args.DidSizeChange)
                 {
-                    SavePosition(window, pinned);
+                    SaveWindowState(window, pinned);
                 }
             };
-            window.Closed += (_, _) => SavePosition(window, pinned);
+            window.Closed += (_, _) => SaveWindowState(window, pinned);
         }
 
         public static void ApplyBackground(Window window)
@@ -62,10 +75,12 @@ namespace GCaLink.ViewWindows
             };
         }
 
-        private static void SavePosition(Window window, bool pinned)
+        private static void SaveWindowState(Window window, bool pinned)
         {
             Windows.Graphics.PointInt32 position = window.AppWindow.Position;
+            Windows.Graphics.SizeInt32 size = window.AppWindow.Size;
             SettingsRetriever.SetWindowPosition(pinned, position.X, position.Y);
+            SettingsRetriever.SetWindowSize(pinned, size.Width, size.Height);
         }
     }
 }

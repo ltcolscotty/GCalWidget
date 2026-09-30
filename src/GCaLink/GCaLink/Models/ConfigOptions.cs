@@ -44,6 +44,7 @@ namespace GCaLink.Models
         public string FontFamily {get; set; } = "Segoe UI";
         public int FontSize { get; set; } = 12;
         public bool GoogleEnabled { get; set; } = false;
+        public int GoogleMaxEventsPerRefresh { get; set; } = 200;
         public string GoogleClientId { get; set; } = "";
         public string GoogleClientSecret { get; set; } = "";
         public bool CanvasEnabled { get; set; } = false;

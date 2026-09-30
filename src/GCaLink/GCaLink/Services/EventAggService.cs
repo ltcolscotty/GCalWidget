@@ -21,6 +21,8 @@ namespace GCaLink.Services
         private static Dictionary<string, bool>? sourceList;
         private static Dictionary<string, List<IDHelper.EventID>> sourceIDs = new();
 
+        public static event EventHandler? EventsChanged;
+
         static EventAggService()
         {
             _ = LoadSourcesAsync();
@@ -110,6 +112,7 @@ namespace GCaLink.Services
 
             if (!(sourceList.TryGetValue("canvas", out var cEnabled) && cEnabled))
             {
+                LoggerService.LogWarning("EventAggService: Attempted to refresh canvas events without enabled source", LoggerStatusEnum.WARNING);
                 return false;
             }
 
@@ -129,6 +132,7 @@ namespace GCaLink.Services
             sourceIDs["canvas"] = keyList;
 
             await SaveCalDataAsync(calendarData, null);
+            EventsChanged?.Invoke(null, EventArgs.Empty);
             return true;
         }
 
@@ -142,25 +146,56 @@ namespace GCaLink.Services
 
             if (!(sourceList.TryGetValue("google", out var gEnabled) && gEnabled))
             {
+                LoggerService.LogWarning("EventAggService: Attempted to refresh google events without enabled source", LoggerStatusEnum.WARNING);
+                return false;
+            }
+
+            CalendarService service = await GCS.CreateCalendarServiceAsync();
+            var (googleEvents, googleIds, isComplete) = await GCS.FetchUpcomingEventsAsync(
+                service,
+                new Dictionary<IDHelper.EventID, CalEventDto>());
+            if (!isComplete)
+            {
                 return false;
             }
 
             Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadUpcomingEventsMessagePackAsync(null);
-            CalendarService service = await GCS.CreateCalendarServiceAsync();
-
-            if (sourceIDs.TryGetValue("google", out List<IDHelper.EventID>? googleIds))
+            foreach (IDHelper.EventID id in calendarData
+                .Where(pair => IsGooglePrimaryEvent(pair.Value))
+                .Select(pair => pair.Key)
+                .ToList())
             {
-                foreach (IDHelper.EventID id in googleIds)
-                {
-                    calendarData.Remove(id);
-                }
+                calendarData.Remove(id);
             }
-            var (tCalendarData, keyList) = await GCS.FetchUpcomingEventsAsync(service, calendarData);
-            calendarData = tCalendarData;
-            sourceIDs["google"] = keyList;
+
+            foreach ((IDHelper.EventID id, CalEventDto calendarEvent) in googleEvents)
+            {
+                calendarData[id] = calendarEvent;
+            }
 
             await SaveCalDataAsync(calendarData, null);
+            sourceIDs["google"] = googleIds;
+            EventsChanged?.Invoke(null, EventArgs.Empty);
             return true;
+        }
+
+        private static bool IsGooglePrimaryEvent(CalEventDto calendarEvent)
+        {
+            if (calendarEvent.Provider == GoogleCalService.ProviderName &&
+                calendarEvent.CalendarId == GoogleCalService.PrimaryCalendarId)
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(calendarEvent.Provider) ||
+                !Uri.TryCreate(calendarEvent.Link, UriKind.Absolute, out Uri? link))
+            {
+                return false;
+            }
+
+            bool isGoogleHost = link.Host.Equals("www.google.com", StringComparison.OrdinalIgnoreCase) ||
+                link.Host.Equals("calendar.google.com", StringComparison.OrdinalIgnoreCase);
+            return isGoogleHost && link.AbsolutePath.StartsWith("/calendar/event", StringComparison.OrdinalIgnoreCase);
         }
 
         public static async Task WriteUpcomingEventsMessagePackAsync(string? outputPath)
@@ -182,7 +217,11 @@ namespace GCaLink.Services
             if (sourceList.TryGetValue("google", out var gEnabled) && gEnabled)
             {
                 CalendarService service = await GCS.CreateCalendarServiceAsync();
-                var(tCalendarData, keyList) = await GCS.FetchUpcomingEventsAsync(service, calendarData);
+                var (tCalendarData, keyList, isComplete) = await GCS.FetchUpcomingEventsAsync(service, calendarData);
+                if (!isComplete)
+                {
+                    return;
+                }
                 calendarData = tCalendarData;
                 sourceIDs["google"] = keyList;
             }
@@ -195,6 +234,7 @@ namespace GCaLink.Services
             }
 
             await SaveCalDataAsync(calendarData, outputPath);
+            EventsChanged?.Invoke(null, EventArgs.Empty);
         }
     }
 }

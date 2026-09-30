@@ -12,6 +12,7 @@ namespace GCaLink.Models
         public string ClientSecret { get; init; } = "";
         public string TokenPath { get; init; } = "";
         public string DefaultColor { get; init; } = "#ff00ff";
+        public int MaximumEventsPerRefresh { get; init; } = 200;
 
         public bool HasClientCredentials =>
             !string.IsNullOrWhiteSpace(ClientId) &&

@@ -23,6 +23,10 @@ namespace GCaLink.Services
 {
     public sealed class GoogleCalService
     {
+        public const string ProviderName = "Google";
+        public const string PrimaryCalendarId = "primary";
+        private const int ApiPageSize = 100;
+
         private readonly GoogleCalOptions _options;
         private static readonly string[] Scopes =
         {
@@ -197,37 +201,62 @@ namespace GCaLink.Services
             });
         }
 
-        public async Task<(Dictionary<IDHelper.EventID, CalEventDto>, List<IDHelper.EventID>)> FetchUpcomingEventsAsync(
+        public async Task<(Dictionary<IDHelper.EventID, CalEventDto> Events, List<IDHelper.EventID> EventIds, bool IsComplete)> FetchUpcomingEventsAsync(
             CalendarService service, 
             Dictionary<IDHelper.EventID, CalEventDto> calendarData)
         {
             DateTimeOffset now = DateTimeOffset.UtcNow;
             DateTimeOffset end = now.AddDays(7);
             List<IDHelper.EventID> sourceKeys = new();
+            int maximumEvents = Math.Max(1, _options.MaximumEventsPerRefresh);
+            int fetchedCount = 0;
 
             ColorsResource.GetRequest colorsRequest = service.Colors.Get();
             Colors colors = await colorsRequest.ExecuteAsync();
 
-            EventsResource.ListRequest eventsRequest = service.Events.List("primary");
-            eventsRequest.TimeMinDateTimeOffset = now;
-            eventsRequest.TimeMaxDateTimeOffset = end;
-            eventsRequest.MaxResults = 15;
-            eventsRequest.SingleEvents = true;
-            eventsRequest.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
-
-            Events events = await eventsRequest.ExecuteAsync();
-
-            if (events.Items == null) return (calendarData, sourceKeys);
-
-            foreach (Event ev in events.Items)
+            string? pageToken = null;
+            do
             {
-                IDHelper.EventID id = IDHelper.GetEventID("");
-                sourceKeys.Add(id);
-                CalEventDto normalized = NormalizeEvent(ev, colors, _options.DefaultColor, id);
-                calendarData[id] = normalized;
-            }
+                EventsResource.ListRequest eventsRequest = service.Events.List(PrimaryCalendarId);
+                eventsRequest.TimeMinDateTimeOffset = now;
+                eventsRequest.TimeMaxDateTimeOffset = end;
+                eventsRequest.MaxResults = Math.Min(ApiPageSize, maximumEvents - fetchedCount);
+                eventsRequest.SingleEvents = true;
+                eventsRequest.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
+                eventsRequest.PageToken = pageToken;
 
-            return (calendarData, sourceKeys);
+                Events events = await eventsRequest.ExecuteAsync();
+                if (events.Items != null)
+                {
+                    foreach (Event ev in events.Items)
+                    {
+                        if (string.IsNullOrWhiteSpace(ev.Id))
+                        {
+                            throw new InvalidDataException("Google Calendar returned an event without an ID.");
+                        }
+
+                        IDHelper.EventID id = IDHelper.GetEventID(ev.Id, PrimaryCalendarId, ProviderName);
+                        sourceKeys.Add(id);
+                        calendarData[id] = NormalizeEvent(ev, colors, _options.DefaultColor, id);
+                        fetchedCount++;
+                    }
+                }
+
+                pageToken = events.NextPageToken;
+                if (fetchedCount >= maximumEvents)
+                {
+                    LoggerService.LogWarning(
+                        $"Google Calendar refresh reached the configured limit of {maximumEvents} events; results may be truncated.",
+                        LoggerStatusEnum.WARNING);
+                    if (!string.IsNullOrEmpty(pageToken))
+                    {
+                        return (calendarData, sourceKeys, false);
+                    }
+                }
+            }
+            while (!string.IsNullOrEmpty(pageToken));
+
+            return (calendarData, sourceKeys, true);
         }
 
         private static CalEventDto NormalizeEvent(Event ev, Colors colors, string defaultColor, IDHelper.EventID evId)
@@ -245,7 +274,9 @@ namespace GCaLink.Services
                 CustomConfig = false,
                 Image = "",
                 Color = color,
-                Source = source
+                Source = source,
+                Provider = ProviderName,
+                CalendarId = PrimaryCalendarId
             };
         }
 

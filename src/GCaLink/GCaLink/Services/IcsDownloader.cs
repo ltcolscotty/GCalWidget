@@ -17,15 +17,52 @@ namespace GCaLink.Services
             _client = new HttpClient();
         }
 
-        public async Task<string> DownloadIcsAsync(string icsUrl, string? filePath = null, CancellationToken cancellationToken = default)
+        public async Task<string> DownloadIcsAsync(
+            string icsUrl,
+            string? filePath = null,
+            CancellationToken cancellationToken = default)
         {
             try
             {
-                byte[] content = await _client.GetByteArrayAsync(icsUrl, cancellationToken);
+                using var request = new HttpRequestMessage(HttpMethod.Get, icsUrl);
+
+                // Some servers/CDNs reject requests without a User-Agent.
+                request.Headers.UserAgent.ParseAdd("GCaLink/1.0");
+                request.Headers.Accept.ParseAdd("text/calendar, text/plain, */*");
+
+                using HttpResponseMessage response =
+                    await _client.SendAsync(request, cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    string responseBody =
+                        await response.Content.ReadAsStringAsync(cancellationToken);
+
+                    LoggerService.LogWarning(
+                        $"Canvas ICS request failed. " +
+                        $"HTTP {(int)response.StatusCode} ({response.StatusCode}). " +
+                        $"Content-Type: {response.Content.Headers.ContentType}. " +
+                        $"Response: {responseBody}",
+                        LoggerStatusEnum.ERROR);
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                byte[] content =
+                    await response.Content.ReadAsByteArrayAsync(cancellationToken);
 
                 if (!string.IsNullOrEmpty(filePath))
                 {
-                    await File.WriteAllBytesAsync(filePath, content, cancellationToken);
+                    string? directory = Path.GetDirectoryName(filePath);
+
+                    if (!string.IsNullOrEmpty(directory))
+                        Directory.CreateDirectory(directory);
+
+                    await File.WriteAllBytesAsync(
+                        filePath,
+                        content,
+                        cancellationToken);
+
                     return filePath;
                 }
 
@@ -33,8 +70,18 @@ namespace GCaLink.Services
             }
             catch (HttpRequestException ex)
             {
-                LoggerService.LogWarning($"Failed to download ICS from {icsUrl}: {ex.Message}", LoggerStatusEnum.ERROR);
-                throw new InvalidOperationException($"Failed to download ICS from {icsUrl}: {ex.Message}", ex);
+                string statusCode =
+                    ex.StatusCode?.ToString() ?? "unknown";
+
+                LoggerService.LogWarning(
+                    $"Failed to download Canvas ICS " +
+                    $"(HTTP status: {statusCode}): {ex.Message}",
+                    LoggerStatusEnum.ERROR);
+
+                throw new InvalidOperationException(
+                    $"Failed to download Canvas ICS " +
+                    $"(HTTP status: {statusCode}): {ex.Message}",
+                    ex);
             }
         }
     }

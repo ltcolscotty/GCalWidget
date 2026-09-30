@@ -28,7 +28,9 @@ namespace GCaLink.Services
                 (inputEvent.Uid == null) ||
                 (inputEvent.Start == null))
             {
-                LoggerService.LogWarning("CanvasService.Normalize(): Nonexistent Summary, Start, or Uid for event, skipping over", LoggerStatusEnum.WARNING);
+                LoggerService.LogWarning(
+                    $"CanvasService.Normalize(): Skipping invalid event (UID: '{inputEvent.Uid ?? "<missing>"}', Summary: '{inputEvent.Summary ?? "<missing>"}', Start: '{inputEvent.Start?.ToString() ?? "<missing>"}').",
+                    LoggerStatusEnum.WARNING);
                 return null;
             }
 
@@ -61,24 +63,39 @@ namespace GCaLink.Services
 
             string expectedPath = await downloader.DownloadIcsAsync(sourceLink, calendarFile);
             if (expectedPath != calendarFile) {
-                LoggerService.LogWarning($"CanvasService: Unexpected handling of ics download: {expectedPath}", LoggerStatusEnum.WARNING);
-                return (events, sourceKeys);
+                string message = $"CanvasService: ICS download returned unexpected path '{expectedPath}' (expected '{calendarFile}').";
+                LoggerService.LogWarning(message, LoggerStatusEnum.ERROR);
+                throw new InvalidOperationException(message);
             }
 
             string icsContent = File.ReadAllText(expectedPath);
             var calendar = Calendar.Load(icsContent);
 
-            if (calendar == null) return (events, sourceKeys);
+            if (calendar == null)
+            {
+                const string message = "CanvasService: ICS download could not be parsed into a calendar; existing Canvas events were not updated.";
+                LoggerService.LogWarning(message, LoggerStatusEnum.ERROR);
+                throw new InvalidOperationException(message);
+            }
 
+            int skippedCount = 0;
             foreach (CalendarEvent? calendarEvent in calendar.Events)
             {
                 if (calendarEvent == null) continue;
-                IDHelper.EventID id = IDHelper.GetEventID();
+                IDHelper.EventID id = IDHelper.GetEventID(calendarEvent.Uid ?? "", "canvas");
                 CalEventDto? newCED = Normalize(calendarEvent, id);
-                if (newCED == null) continue;
+                if (newCED == null)
+                {
+                    skippedCount++;
+                    continue;
+                }
                 sourceKeys.Add(id);
                 events[id] = newCED;
             }
+
+            LoggerService.LogWarning(
+                $"CanvasService: Calendar refresh parsed {sourceKeys.Count} events and skipped {skippedCount} invalid events.",
+                skippedCount > 0 ? LoggerStatusEnum.WARNING : LoggerStatusEnum.INFO);
 
             return (events, sourceKeys);
         }

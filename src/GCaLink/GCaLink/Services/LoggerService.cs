@@ -1,6 +1,7 @@
 ﻿using GCaLink.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,16 +28,7 @@ namespace GCaLink.Services
         {
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
-            Directory.CreateDirectory(appDataLocalFolder);
-
             logFilePath = Path.Combine(appDataLocalFolder, "GCWLogs.txt");
-
-            if (File.Exists(logFilePath))
-            {
-                return;
-            }
-
-            using var _ = File.Create(logFilePath);
         }
 
         public static void LogWarning(string warningText, LoggerStatusEnum statusType=LoggerStatusEnum.INFO)
@@ -45,6 +37,7 @@ namespace GCaLink.Services
             {
                 lock (lockObj)
                 {
+                    Directory.CreateDirectory(Path.GetDirectoryName(logFilePath)!);
                     FileInfo? info = new FileInfo(logFilePath);
                     string logType = "";
                     if (info.Exists && info.Length >= MAXFILESIZEBYTES)
@@ -77,8 +70,9 @@ namespace GCaLink.Services
                     File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} {logType} {warningText}{Environment.NewLine}");
                 }
             }
-            catch
+            catch (Exception exception)
             {
+                Debug.WriteLine($"GCWidget could not write to '{logFilePath}': {exception}; original log entry: [{statusType}] {warningText}");
             }
         }
 

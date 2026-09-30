@@ -17,7 +17,7 @@
             Background="#2B2B2B"
             CornerRadius="16">
 
-            <StackPanel>
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
 
                 <TextBlock
                     x:Name="DayText"
@@ -27,12 +27,14 @@
 
                 <TextBlock
                     x:Name="DateText"
+                    Grid.Row="1"
                     Margin="0,2,0,18"
                     FontSize="30"
                     FontWeight="Bold"
                     Foreground="White"/>
 
                 <TextBlock
+                    Grid.Row="2"
                     Text="Today's Schedule"
                     FontSize="16"
                     FontWeight="SemiBold"
@@ -40,12 +42,14 @@
 
                 <TextBlock
                     x:Name="EmptyState"
+                    Grid.Row="3"
                     Margin="0,12,0,0"
                     Text="No events today"
                     Foreground="#BBBBBB"
                     Visibility="Collapsed"/>
 
                 <ScrollViewer
+                    Grid.Row="4"
                     Margin="0,12,0,0"
                     VerticalScrollBarVisibility="Auto">
                     <ItemsControl x:Name="ScheduleList">
@@ -88,7 +92,7 @@
                     </ItemsControl>
                 </ScrollViewer>
 
-            </StackPanel>
+            </Grid>
 
         </Border>
 

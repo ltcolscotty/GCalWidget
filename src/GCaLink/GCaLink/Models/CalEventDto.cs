@@ -16,5 +16,7 @@ namespace GCaLink.Models
         [Key(6)] public string Color { get; set; } = "";
         [Key(7)] public string Source { get; set; } = "";
         [Key(8)] public string LongSource { get; set; } = "";
+        [Key(9)] public string Provider { get; set; } = "";
+        [Key(10)] public string CalendarId { get; set; } = "";
     }
 }

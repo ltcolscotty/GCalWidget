@@ -87,6 +87,14 @@ namespace GCaLink.ViewWindows
             };
         }
 
+        public static void SetWindowDraggable(Window window, bool draggable)
+        {
+            if (window.AppWindow.Presenter is OverlappedPresenter presenter)
+            {
+                presenter.SetBorderAndTitleBar(hasBorder: true, hasTitleBar: draggable);
+            }
+        }
+
         private static void ApplyWindowTransparency(Window window, int transparencyPercentage)
         {
             int clampedPercentage = Math.Clamp(transparencyPercentage, 0, 100);

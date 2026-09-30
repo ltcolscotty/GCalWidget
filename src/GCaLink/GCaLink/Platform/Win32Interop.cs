@@ -14,6 +14,16 @@ namespace GCaLink.Platform
         private const int WS_EX_TRANSPARENT = 0x00000020;
         private const int WS_EX_LAYERED = 0x00080000;
         private const uint LWA_ALPHA = 0x00000002;
+        private const int SW_RESTORE = 9;
+
+        [DllImport("user32.dll", EntryPoint = "FindWindowW", CharSet = CharSet.Unicode, ExactSpelling = true)]
+        private static extern IntPtr FindWindow(string? className, string windowName);
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int command);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll", EntryPoint = "GetWindowLongW", ExactSpelling = true)]
         private static extern int GetWindowLong32(IntPtr hWnd, int nIndex);
@@ -87,6 +97,19 @@ namespace GCaLink.Platform
         {
             SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0,
                 SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        }
+
+        public static bool TryActivateWindowByTitle(string title)
+        {
+            IntPtr hwnd = FindWindow(null, title);
+            if (hwnd == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            ShowWindow(hwnd, SW_RESTORE);
+            SetForegroundWindow(hwnd);
+            return true;
         }
 
         public static void RemoveTopMost(IntPtr hwnd)

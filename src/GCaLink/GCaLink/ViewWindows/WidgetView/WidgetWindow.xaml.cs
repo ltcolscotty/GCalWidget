@@ -36,12 +36,19 @@ namespace GCaLink.ViewWindows.WidgetView
     public sealed partial class WidgetWindow : Window
     {
         private bool _isUpdatingTransparencyControls;
+        private bool _isUpdatingPrimaryViewControl;
 
         public WidgetWindow()
         {
             InitializeComponent();
             _isUpdatingTransparencyControls = true;
             WindowConfiguration.Configure(this, isWidgetViewActive: true);
+            ViewWindowManager.SetPrimaryViewDraggable(true);
+            Closed += (_, _) =>
+            {
+                ViewWindowManager.SetPrimaryViewDraggable(false);
+                ViewWindowManager.PrimaryViewClosedByUser -= OnPrimaryViewClosedByUser;
+            };
 
             SettingsRetriever.InitializeAsync();
 
@@ -69,6 +76,7 @@ namespace GCaLink.ViewWindows.WidgetView
             WindowTransparencySlider.Value = transparencyPercentage;
             WindowTransparencyInput.Text = transparencyPercentage.ToString();
             _isUpdatingTransparencyControls = false;
+            ViewWindowManager.PrimaryViewClosedByUser += OnPrimaryViewClosedByUser;
             ApplyBackgroundType();
             ViewWindowManager.SyncWithSettings();
             _ = UpdateConnectionStatusAsync();
@@ -349,20 +357,38 @@ namespace GCaLink.ViewWindows.WidgetView
             SettingsRetriever.SetPrimaryView(selectedView);
             if (SettingsRetriever.GetPrimaryViewEnabled())
             {
-                ViewWindowManager.SyncWithSettings();
+                ViewWindowManager.SyncWithSettings(replacePrimaryView: true);
             }
         }
 
         private void PrimaryViewEnabled(object sender, RoutedEventArgs e)
         {
+            if (_isUpdatingPrimaryViewControl)
+            {
+                return;
+            }
+
             SettingsRetriever.SetPrimaryViewEnabled(true);
             ViewWindowManager.SyncWithSettings();
         }
 
         private void PrimaryViewDisabled(object sender, RoutedEventArgs e)
         {
+            if (_isUpdatingPrimaryViewControl)
+            {
+                return;
+            }
+
             SettingsRetriever.SetPrimaryViewEnabled(false);
             ViewWindowManager.SyncWithSettings();
+        }
+
+        private void OnPrimaryViewClosedByUser()
+        {
+            SettingsRetriever.SetPrimaryViewEnabled(false);
+            _isUpdatingPrimaryViewControl = true;
+            EnablePrimaryView.IsChecked = false;
+            _isUpdatingPrimaryViewControl = false;
         }
 
         private void PinnedViewEnabled(object sender, RoutedEventArgs e)

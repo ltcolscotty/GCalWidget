@@ -176,6 +176,12 @@ namespace GCaLink.ViewWindows.WidgetView
             try
             {
                 bool? response = await EventAggService.RefreshCanvas();
+                if (response != true)
+                {
+                    LoggerService.LogWarning(
+                        $"WidgetWindow.RefreshCanvasSources: Canvas refresh did not complete (result: {response?.ToString() ?? "null"}).",
+                        response == false ? LoggerStatusEnum.WARNING : LoggerStatusEnum.ERROR);
+                }
                 CanvasSaveStatus.Text = response == true
                     ? "Canvas events refreshed."
                     : "Canvas events could not be refreshed.";

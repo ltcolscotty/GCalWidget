@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using Microsoft.UI.Xaml;
 
 using GCaLink.Models;
+using GCaLink.Services;
 using GCaLink.ViewWindows;
+using System.Threading.Tasks;
 
 namespace GCaLink.ViewWindows.DayView
 {
@@ -25,40 +25,60 @@ public sealed partial class DayViewWindow : Window
             ManagedWindowKind.Primary,
             new Windows.Graphics.SizeInt32(300, 500));
 
-        var today = DateTime.Now;
+        Activated += DayViewWindow_Activated;
+        EventAggService.EventsChanged += OnEventsChanged;
+        Closed += OnClosed;
+        ScheduleList.ItemsSource = Events;
+    }
 
+    private async void DayViewWindow_Activated(object sender, WindowActivatedEventArgs e)
+    {
+        if (e.WindowActivationState == WindowActivationState.Deactivated)
+        {
+            return;
+        }
+
+        await LoadTodayEventsAsync();
+    }
+
+    private void OnEventsChanged(object? sender, EventArgs e)
+    {
+        DispatcherQueue.TryEnqueue(() => _ = LoadTodayEventsAsync());
+    }
+
+    private void OnClosed(object sender, WindowEventArgs e)
+    {
+        EventAggService.EventsChanged -= OnEventsChanged;
+    }
+
+    private async Task LoadTodayEventsAsync()
+    {
+        Events.Clear();
+
+        DateTime today = DateTime.Today;
         DayText.Text = today.ToString("dddd");
         DateText.Text = today.ToString("MMMM d");
 
-        Events.Add(new CalEventDisplay
+        string dataPath = SettingsRetriever.GetMainDataPath();
+        if (!File.Exists(dataPath))
         {
-            Time = "9:00",
-            Title = "Daily Standup",
-            Location = "Teams"
-        });
+            EmptyState.Visibility = Visibility.Visible;
+            return;
+        }
 
-        Events.Add(new CalEventDisplay
+        var storedEvents = await EventAggService.ReadUpcomingEventsMessagePackAsync(dataPath);
+        foreach (CalEventDto calendarEvent in storedEvents.Values
+            .Where(calendarEvent => calendarEvent.Datetime.ToLocalTime().Date == today)
+            .OrderBy(calendarEvent => calendarEvent.Datetime))
         {
-            Time = "11:30",
-            Title = "Design Review",
-            Location = "Conference Room A"
-        });
+            Events.Add(new CalEventDisplay
+            {
+                Time = calendarEvent.Datetime.ToLocalTime().ToString("h:mm tt"),
+                Title = calendarEvent.Title
+            });
+        }
 
-        Events.Add(new CalEventDisplay
-        {
-            Time = "2:00",
-            Title = "Project Planning",
-            Location = "Teams"
-        });
-
-        Events.Add(new CalEventDisplay
-        {
-            Time = "4:30",
-            Title = "Code Review",
-            Location = "GitHub"
-        });
-
-        ScheduleList.ItemsSource = Events;
+        EmptyState.Visibility = Events.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 }
 }

@@ -38,13 +38,18 @@
                     FontWeight="SemiBold"
                     Foreground="#DDDDDD"/>
 
-                <ListView
-                    x:Name="ScheduleList"
+                <TextBlock
+                    x:Name="EmptyState"
                     Margin="0,12,0,0"
-                    Background="Transparent"
-                    BorderThickness="0">
+                    Text="No events today"
+                    Foreground="#BBBBBB"
+                    Visibility="Collapsed"/>
 
-                    <ListView.ItemTemplate>
+                <ScrollViewer
+                    Margin="0,12,0,0"
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="ScheduleList">
+                    <ItemsControl.ItemTemplate>
                         <DataTemplate>
 
                             <Border
@@ -79,9 +84,9 @@
                             </Border>
 
                         </DataTemplate>
-                    </ListView.ItemTemplate>
-
-                </ListView>
+                    </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
 
             </StackPanel>
 

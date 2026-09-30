@@ -99,6 +99,34 @@
                                           Unchecked="PinnedViewDisabled"/>
                             </StackPanel>
                         </muxc:Expander>
+                        <muxc:Expander Header="Window transparency"
+                                      HeaderTemplate="{StaticResource SettingsSectionHeaderTemplate}"
+                                      IsExpanded="False"
+                                      HorizontalAlignment="Stretch"
+                                      HorizontalContentAlignment="Stretch">
+                            <StackPanel Spacing="8" Padding="8,4,8,8">
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Transparency" VerticalAlignment="Center" />
+                                    <TextBox x:Name="WindowTransparencyInput"
+                                             Grid.Column="1"
+                                             Width="72"
+                                             Text="0"
+                                             TextChanged="WindowTransparencyInputChanged"
+                                             LostFocus="WindowTransparencyInputLostFocus" />
+                                    <TextBlock Grid.Column="2" Text="%" VerticalAlignment="Center" />
+                                </Grid>
+                                <Slider x:Name="WindowTransparencySlider"
+                                        Minimum="0"
+                                        Maximum="100"
+                                        StepFrequency="1"
+                                        ValueChanged="WindowTransparencySliderChanged" />
+                            </StackPanel>
+                        </muxc:Expander>
                         <muxc:Expander Header="Background style"
                                       HeaderTemplate="{StaticResource SettingsSectionHeaderTemplate}"
                                       IsExpanded="False"

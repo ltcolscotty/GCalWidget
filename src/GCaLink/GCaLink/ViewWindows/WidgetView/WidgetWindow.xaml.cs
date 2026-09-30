@@ -35,9 +35,12 @@ namespace GCaLink.ViewWindows.WidgetView
     // </summary>
     public sealed partial class WidgetWindow : Window
     {
+        private bool _isUpdatingTransparencyControls;
+
         public WidgetWindow()
         {
             InitializeComponent();
+            _isUpdatingTransparencyControls = true;
             WindowConfiguration.Configure(this, isWidgetViewActive: true);
 
             SettingsRetriever.InitializeAsync();
@@ -62,6 +65,10 @@ namespace GCaLink.ViewWindows.WidgetView
                 PrimaryViewEnum.Week => 2,
                 _ => 0
             };
+            int transparencyPercentage = SettingsRetriever.GetWindowTransparency();
+            WindowTransparencySlider.Value = transparencyPercentage;
+            WindowTransparencyInput.Text = transparencyPercentage.ToString();
+            _isUpdatingTransparencyControls = false;
             ApplyBackgroundType();
             ViewWindowManager.SyncWithSettings();
             _ = UpdateConnectionStatusAsync();
@@ -93,6 +100,46 @@ namespace GCaLink.ViewWindows.WidgetView
         {
             SaveBackgroundType();
             ApplyBackgroundType();
+        }
+
+        private void WindowTransparencySliderChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            if (_isUpdatingTransparencyControls)
+            {
+                return;
+            }
+
+            int transparencyPercentage = (int)Math.Round(e.NewValue);
+            _isUpdatingTransparencyControls = true;
+            WindowTransparencyInput.Text = transparencyPercentage.ToString();
+            _isUpdatingTransparencyControls = false;
+            SettingsRetriever.SetWindowTransparency(transparencyPercentage);
+        }
+
+        private void WindowTransparencyInputChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isUpdatingTransparencyControls ||
+                !int.TryParse(WindowTransparencyInput.Text, out int transparencyPercentage) ||
+                transparencyPercentage is < 0 or > 100)
+            {
+                return;
+            }
+
+            WindowTransparencySlider.Value = transparencyPercentage;
+        }
+
+        private void WindowTransparencyInputLostFocus(object sender, RoutedEventArgs e)
+        {
+            if (_isUpdatingTransparencyControls)
+            {
+                return;
+            }
+
+            int transparencyPercentage = SettingsRetriever.GetWindowTransparency();
+            _isUpdatingTransparencyControls = true;
+            WindowTransparencyInput.Text = transparencyPercentage.ToString();
+            WindowTransparencySlider.Value = transparencyPercentage;
+            _isUpdatingTransparencyControls = false;
         }
 
         private async void GoogleSIClick(object sender, RoutedEventArgs e)

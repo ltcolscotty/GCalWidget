@@ -25,6 +25,8 @@ namespace GCaLink.Services
         private static List<string> activeSources = [];
         private static readonly string settingsFile;
 
+        public static event Action<int>? WindowTransparencyChanged;
+
         static SettingsRetriever() 
         {
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -51,6 +53,15 @@ namespace GCaLink.Services
         public static BackgroundSettingEnum GetBackgroundSetting() { return options.BackgroundSetting; }
 
         public static BackgroundTypeEnum GetBackgroundType() { return options.BackgroundType; }
+
+        public static int GetWindowTransparency() { return Math.Clamp(options.BackgroundTransparency, 0, 100); }
+
+        public static void SetWindowTransparency(int transparencyPercentage)
+        {
+            options.BackgroundTransparency = Math.Clamp(transparencyPercentage, 0, 100);
+            SaveOptions();
+            WindowTransparencyChanged?.Invoke(options.BackgroundTransparency);
+        }
 
         public static async void InitializeAsync(bool forceRefresh = false)
         {

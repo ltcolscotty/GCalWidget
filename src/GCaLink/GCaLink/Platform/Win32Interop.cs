@@ -13,12 +13,22 @@ namespace GCaLink.Platform
 
         private const int WS_EX_TRANSPARENT = 0x00000020;
         private const int WS_EX_LAYERED = 0x00080000;
+        private const uint LWA_ALPHA = 0x00000002;
+
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongW", ExactSpelling = true)]
+        private static extern int GetWindowLong32(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongW", ExactSpelling = true)]
+        private static extern int SetWindowLong32(IntPtr hWnd, int nIndex, int dwNewLong);
+
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", ExactSpelling = true)]
+        private static extern IntPtr GetWindowLong64(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", ExactSpelling = true)]
+        private static extern IntPtr SetWindowLong64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 
         [DllImport("user32.dll")]
-        private static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+        private static extern bool SetLayeredWindowAttributes(IntPtr hWnd, uint colorKey, byte alpha, uint flags);
 
         [DllImport("user32.dll")]
         private static extern bool SetWindowPos(
@@ -37,6 +47,20 @@ namespace GCaLink.Platform
         private const uint SWP_NOSIZE = 0x0001;
         private const uint SWP_SHOWWINDOW = 0x0040;
 
+        private static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
+        {
+            return IntPtr.Size == 8
+                ? GetWindowLong64(hWnd, nIndex)
+                : new IntPtr(GetWindowLong32(hWnd, nIndex));
+        }
+
+        private static IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr value)
+        {
+            return IntPtr.Size == 8
+                ? SetWindowLong64(hWnd, nIndex, value)
+                : new IntPtr(SetWindowLong32(hWnd, nIndex, value.ToInt32()));
+        }
+
         public static void EnableClickThrough(IntPtr hwnd)
         {
             var styles = GetWindowLongPtr(hwnd, GWL_EXSTYLE).ToInt64();
@@ -49,6 +73,14 @@ namespace GCaLink.Platform
             var styles = GetWindowLongPtr(hwnd, GWL_EXSTYLE).ToInt64();
             styles &= ~WS_EX_TRANSPARENT;
             SetWindowLongPtr(hwnd, GWL_EXSTYLE, new IntPtr(styles));
+        }
+
+        public static bool SetWindowOpacity(IntPtr hwnd, byte opacity)
+        {
+            var styles = GetWindowLongPtr(hwnd, GWL_EXSTYLE).ToInt64();
+            styles |= WS_EX_LAYERED;
+            SetWindowLongPtr(hwnd, GWL_EXSTYLE, new IntPtr(styles));
+            return SetLayeredWindowAttributes(hwnd, 0, opacity, LWA_ALPHA);
         }
 
         public static void BringToFront(IntPtr hwnd)

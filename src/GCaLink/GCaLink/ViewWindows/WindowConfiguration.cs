@@ -1,8 +1,11 @@
+using System;
 using GCaLink.Models;
+using GCaLink.Platform;
 using GCaLink.Services;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using WinRT.Interop;
 
 namespace GCaLink.ViewWindows
 {
@@ -38,6 +41,11 @@ namespace GCaLink.ViewWindows
                 return;
             }
 
+            ApplyWindowTransparency(window, SettingsRetriever.GetWindowTransparency());
+            Action<int> transparencyChanged = transparencyPercentage =>
+                window.DispatcherQueue.TryEnqueue(() => ApplyWindowTransparency(window, transparencyPercentage));
+            SettingsRetriever.WindowTransparencyChanged += transparencyChanged;
+
             bool pinned = kind == ManagedWindowKind.Pinned;
             WindowSize? savedSize = SettingsRetriever.GetWindowSize(pinned);
             Windows.Graphics.SizeInt32 size = savedSize is not null
@@ -62,7 +70,11 @@ namespace GCaLink.ViewWindows
                     SaveWindowState(window, pinned);
                 }
             };
-            window.Closed += (_, _) => SaveWindowState(window, pinned);
+            window.Closed += (_, _) =>
+            {
+                SettingsRetriever.WindowTransparencyChanged -= transparencyChanged;
+                SaveWindowState(window, pinned);
+            };
         }
 
         public static void ApplyBackground(Window window)
@@ -73,6 +85,13 @@ namespace GCaLink.ViewWindows
                 BackgroundTypeEnum.Acrylic => new DesktopAcrylicBackdrop(),
                 _ => null
             };
+        }
+
+        private static void ApplyWindowTransparency(Window window, int transparencyPercentage)
+        {
+            int clampedPercentage = Math.Clamp(transparencyPercentage, 0, 100);
+            byte opacity = (byte)Math.Round((100 - clampedPercentage) * byte.MaxValue / 100d);
+            Win32Interop.SetWindowOpacity(WindowNative.GetWindowHandle(window), opacity);
         }
 
         private static void SaveWindowState(Window window, bool pinned)

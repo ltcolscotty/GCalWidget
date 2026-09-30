@@ -169,7 +169,8 @@ namespace GCaLink.Services
                 ClientId = options.GoogleClientId,
                 ClientSecret = options.GoogleClientSecret,
                 TokenPath = Path.Combine(Path.GetDirectoryName(settingsFile)!, "GoogleToken", "token.json"),
-                DefaultColor = options.BackgroundColor
+                DefaultColor = options.BackgroundColor,
+                MaximumEventsPerRefresh = options.GoogleMaxEventsPerRefresh
             };
         }
 

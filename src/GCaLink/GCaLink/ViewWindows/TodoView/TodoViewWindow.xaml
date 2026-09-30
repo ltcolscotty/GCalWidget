@@ -10,10 +10,12 @@
             <ListView x:Name="EventsList" ItemsSource="{x:Bind Events}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <Grid Padding="0,8" ColumnDefinitions="88,*">
-                            <TextBlock Text="{Binding Time}" />
-                            <TextBlock Grid.Column="1" Text="{Binding Title}" TextWrapping="Wrap" />
-                        </Grid>
+                        <Border Margin="0,0,0,8" Padding="12" Background="{Binding BackgroundBrush}" CornerRadius="8">
+                            <Grid ColumnDefinitions="88,*">
+                                <TextBlock Text="{Binding Time}" Foreground="#7BCBFF" />
+                                <TextBlock Grid.Column="1" Text="{Binding Title}" Foreground="White" TextWrapping="Wrap" />
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

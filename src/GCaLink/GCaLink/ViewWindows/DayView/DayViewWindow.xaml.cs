@@ -15,6 +15,7 @@ namespace GCaLink.ViewWindows.DayView
 public sealed partial class DayViewWindow : Window
 {
     public ObservableCollection<CalEventDisplay> Events { get; } = new();
+    private DateTime _loadedDate = DateTime.MinValue;
 
     public DayViewWindow()
     {
@@ -27,13 +28,14 @@ public sealed partial class DayViewWindow : Window
 
         Activated += DayViewWindow_Activated;
         EventAggService.EventsChanged += OnEventsChanged;
+        SourceImageService.Instance.SourceImagesChanged += OnSourceImagesChanged;
         Closed += OnClosed;
         ScheduleList.ItemsSource = Events;
     }
 
     private async void DayViewWindow_Activated(object sender, WindowActivatedEventArgs e)
     {
-        if (e.WindowActivationState == WindowActivationState.Deactivated)
+        if (e.WindowActivationState == WindowActivationState.Deactivated || _loadedDate == DateTime.Today)
         {
             return;
         }
@@ -46,13 +48,20 @@ public sealed partial class DayViewWindow : Window
         DispatcherQueue.TryEnqueue(() => _ = LoadTodayEventsAsync());
     }
 
+    private void OnSourceImagesChanged(object? sender, EventArgs e)
+    {
+        DispatcherQueue.TryEnqueue(() => _ = LoadTodayEventsAsync());
+    }
+
     private void OnClosed(object sender, WindowEventArgs e)
     {
         EventAggService.EventsChanged -= OnEventsChanged;
+        SourceImageService.Instance.SourceImagesChanged -= OnSourceImagesChanged;
     }
 
     private async Task LoadTodayEventsAsync()
     {
+        _loadedDate = DateTime.Today;
         Events.Clear();
 
         DateTime today = DateTime.Today;
@@ -71,11 +80,9 @@ public sealed partial class DayViewWindow : Window
             .Where(calendarEvent => calendarEvent.Datetime.ToLocalTime().Date == today)
             .OrderBy(calendarEvent => calendarEvent.Datetime))
         {
-            Events.Add(new CalEventDisplay
-            {
-                Time = calendarEvent.Datetime.ToLocalTime().ToString("h:mm tt"),
-                Title = calendarEvent.Title
-            });
+            Events.Add(CalendarEventDisplayService.Create(
+                calendarEvent,
+                calendarEvent.Datetime.ToLocalTime().ToString("h:mm tt")));
         }
 
         EmptyState.Visibility = Events.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

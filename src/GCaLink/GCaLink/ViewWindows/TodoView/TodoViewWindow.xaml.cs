@@ -13,6 +13,7 @@ namespace GCaLink.ViewWindows.TodoView
     public sealed partial class TodoViewWindow : Window
     {
         public ObservableCollection<CalEventDisplay> Events { get; } = new();
+        private DateTime _loadedDate = DateTime.MinValue;
 
         public TodoViewWindow()
         {
@@ -24,12 +25,13 @@ namespace GCaLink.ViewWindows.TodoView
                 new Windows.Graphics.SizeInt32(360, 500));
             Activated += TodoViewWindow_Activated;
             EventAggService.EventsChanged += OnEventsChanged;
+            SourceImageService.Instance.SourceImagesChanged += OnSourceImagesChanged;
             Closed += OnClosed;
         }
 
         private async void TodoViewWindow_Activated(object sender, WindowActivatedEventArgs e)
         {
-            if (e.WindowActivationState == WindowActivationState.Deactivated)
+            if (e.WindowActivationState == WindowActivationState.Deactivated || _loadedDate == DateTime.Today)
             {
                 return;
             }
@@ -42,13 +44,20 @@ namespace GCaLink.ViewWindows.TodoView
             DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
         }
 
+        private void OnSourceImagesChanged(object? sender, EventArgs e)
+        {
+            DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
+        }
+
         private void OnClosed(object sender, WindowEventArgs e)
         {
             EventAggService.EventsChanged -= OnEventsChanged;
+            SourceImageService.Instance.SourceImagesChanged -= OnSourceImagesChanged;
         }
 
         private async Task LoadUpcomingEventsAsync()
         {
+            _loadedDate = DateTime.Today;
             Events.Clear();
             string dataPath = SettingsRetriever.GetMainDataPath();
             if (!File.Exists(dataPath))
@@ -65,11 +74,9 @@ namespace GCaLink.ViewWindows.TodoView
                 .Where(calendarEvent => calendarEvent.Datetime >= now && calendarEvent.Datetime <= end)
                 .OrderBy(calendarEvent => calendarEvent.Datetime))
             {
-                Events.Add(new CalEventDisplay
-                {
-                    Time = calendarEvent.Datetime.ToLocalTime().ToString("ddd, h:mm tt"),
-                    Title = calendarEvent.Title
-                });
+                Events.Add(CalendarEventDisplayService.Create(
+                    calendarEvent,
+                    calendarEvent.Datetime.ToLocalTime().ToString("ddd, h:mm tt")));
             }
 
             EmptyState.Visibility = Events.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

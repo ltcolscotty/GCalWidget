@@ -59,7 +59,7 @@
                             <Border
                                 Margin="0,0,0,10"
                                 Padding="12"
-                                Background="#3A3A3A"
+                                Background="{Binding BackgroundBrush}"
                                 CornerRadius="10">
 
                                 <Grid ColumnDefinitions="70,*">

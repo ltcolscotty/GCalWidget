@@ -209,19 +209,20 @@
                                    TextWrapping="Wrap" />
                     </Grid>
                     <Grid Grid.Row="1" >
-                        <ListView ItemsSource="{Binding GSources}">
+                        <ListView x:Name="GoogleSourceCardsList">
                             <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="local:WidgetWindow">
-                                    <Border Background="{Binding BackgroundBrush}">
-                                        <StackPanel Spacing="12">
-                                            <TextBlock Text="{Binding SourceName}" FontSize="18" FontWeight="SemiBold"/>
-
-                                            <ColorPicker x:Name="SourceColorPicker" />
-
-                                            <Button Content="Choose background image" Click="ChooseBackgroundImageClick" />
-
-                                            <TextBlock Text="{Binding BackgroundImageName}" Opacity="0.7" />
-                                        </StackPanel>
+                                <DataTemplate>
+                                    <Border Background="{Binding BackgroundBrush}" CornerRadius="12" Padding="12" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Text="{Binding DisplayName}" FontSize="18" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding StatusText}" Opacity="0.8" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                <Button Content="Pick image" Click="ChooseBackgroundImageClick" DataContext="{Binding}" />
+                                                <Button Content="Remove" Click="RemoveBackgroundImageClick" DataContext="{Binding}" />
+                                            </StackPanel>
+                                        </Grid>
                                     </Border>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
@@ -256,6 +257,26 @@
                                   Width="300"
                                   Grid.Row="1"/>
                     <Grid Grid.Row="2" Padding="0,10">
+                        <ListView x:Name="CanvasSourceCardsList">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding BackgroundBrush}" CornerRadius="12" Padding="12" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Text="{Binding DisplayName}" FontSize="18" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding StatusText}" Opacity="0.8" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                <Button Content="Pick image" Click="ChooseBackgroundImageClick" DataContext="{Binding}" />
+                                                <Button Content="Remove" Click="RemoveBackgroundImageClick" DataContext="{Binding}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                    <Grid Grid.Row="3" Padding="0,10">
                         <muxc:Button Click="CanvasSaveClick">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Image Source="ms-appx:///Assets/canvas-lms.png"

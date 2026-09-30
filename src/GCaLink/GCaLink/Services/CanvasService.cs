@@ -43,6 +43,7 @@ namespace GCaLink.Services
             eventObj.Id = id;
             eventObj.Source = className;
             eventObj.LongSource = className + "_" + sectionName;
+            eventObj.Provider = "Canvas";
             eventObj.Title = assignmentName;
             eventObj.Datetime = inputEvent.Start.AsUtc;
             eventObj.Link = inputEvent.Url?.ToString() ?? "";

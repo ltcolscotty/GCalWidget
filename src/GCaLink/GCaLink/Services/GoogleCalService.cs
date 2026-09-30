@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 
 namespace GCaLink.Services
 {
+    public sealed record GoogleCalendarSource(string AccountEmail, string CalendarId, string DisplayName);
+
     public sealed class GoogleCalService
     {
         public const string ProviderName = "Google";
@@ -201,6 +203,46 @@ namespace GCaLink.Services
             });
         }
 
+        public async Task<IReadOnlyList<GoogleCalendarSource>> GetCalendarSourcesAsync()
+        {
+            GoogleAccountProfile? profile = await GetAccountProfileAsync();
+            if (profile == null || string.IsNullOrWhiteSpace(profile.Email))
+            {
+                return Array.Empty<GoogleCalendarSource>();
+            }
+
+            CalendarService service = await CreateCalendarServiceAsync();
+            List<GoogleCalendarSource> sources = new();
+            string? pageToken = null;
+            do
+            {
+                CalendarListResource.ListRequest request = service.CalendarList.List();
+                request.MaxResults = ApiPageSize;
+                request.PageToken = pageToken;
+                CalendarList calendars = await request.ExecuteAsync();
+                if (calendars.Items != null)
+                {
+                    foreach (CalendarListEntry calendar in calendars.Items)
+                    {
+                        if (string.IsNullOrWhiteSpace(calendar.Id))
+                        {
+                            continue;
+                        }
+
+                        sources.Add(new GoogleCalendarSource(
+                            profile.Email,
+                            calendar.Primary == true ? PrimaryCalendarId : calendar.Id,
+                            string.IsNullOrWhiteSpace(calendar.Summary) ? calendar.Id : calendar.Summary));
+                    }
+                }
+
+                pageToken = calendars.NextPageToken;
+            }
+            while (!string.IsNullOrWhiteSpace(pageToken));
+
+            return sources;
+        }
+
         public async Task<(Dictionary<IDHelper.EventID, CalEventDto> Events, List<IDHelper.EventID> EventIds, bool IsComplete)> FetchUpcomingEventsAsync(
             CalendarService service, 
             Dictionary<IDHelper.EventID, CalEventDto> calendarData)
@@ -210,6 +252,7 @@ namespace GCaLink.Services
             List<IDHelper.EventID> sourceKeys = new();
             int maximumEvents = Math.Max(1, _options.MaximumEventsPerRefresh);
             int fetchedCount = 0;
+            string accountEmail = (await GetAccountProfileAsync())?.Email ?? string.Empty;
 
             ColorsResource.GetRequest colorsRequest = service.Colors.Get();
             Colors colors = await colorsRequest.ExecuteAsync();
@@ -237,7 +280,7 @@ namespace GCaLink.Services
 
                         IDHelper.EventID id = IDHelper.GetEventID(ev.Id, PrimaryCalendarId, ProviderName);
                         sourceKeys.Add(id);
-                        calendarData[id] = NormalizeEvent(ev, colors, _options.DefaultColor, id);
+                        calendarData[id] = NormalizeEvent(ev, colors, _options.DefaultColor, id, accountEmail);
                         fetchedCount++;
                     }
                 }
@@ -259,7 +302,7 @@ namespace GCaLink.Services
             return (calendarData, sourceKeys, true);
         }
 
-        private static CalEventDto NormalizeEvent(Event ev, Colors colors, string defaultColor, IDHelper.EventID evId)
+        private static CalEventDto NormalizeEvent(Event ev, Colors colors, string defaultColor, IDHelper.EventID evId, string accountEmail)
         {
             DateTimeOffset start = ParseEventStart(ev);
             string color = GetEventColor(ev, colors, defaultColor);
@@ -276,7 +319,8 @@ namespace GCaLink.Services
                 Color = color,
                 Source = source,
                 Provider = ProviderName,
-                CalendarId = PrimaryCalendarId
+                CalendarId = PrimaryCalendarId,
+                GoogleAccountEmail = accountEmail
             };
         }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
@@ -35,6 +36,9 @@ namespace GCaLink.ViewWindows.WidgetView
     // </summary>
     public sealed partial class WidgetWindow : Window
     {
+        public ObservableCollection<SourceCustomizationCard> GoogleSourceCards { get; } = new();
+        public ObservableCollection<SourceCustomizationCard> CanvasSourceCards { get; } = new();
+
         private bool _isUpdatingTransparencyControls;
         private bool _isUpdatingPrimaryViewControl;
 
@@ -80,10 +84,231 @@ namespace GCaLink.ViewWindows.WidgetView
             ApplyBackgroundType();
             ViewWindowManager.SyncWithSettings();
             _ = UpdateConnectionStatusAsync();
+            _ = RefreshCustomizationCardsAsync();
         }
 
-        // Ideally a 1.0 feature, not of focus right now
-        private async void ChooseBackgroundImageClick(object sender, RoutedEventArgs e)
+        private async Task RefreshCustomizationCardsAsync()
+        {
+            GoogleSourceCards.Clear();
+            CanvasSourceCards.Clear();
+
+            foreach (var sourceCard in await BuildSourceCardsAsync("Google"))
+            {
+                GoogleSourceCards.Add(sourceCard);
+            }
+
+            foreach (var sourceCard in await BuildSourceCardsAsync("Canvas"))
+            {
+                CanvasSourceCards.Add(sourceCard);
+            }
+
+            GoogleSourceCardsList.ItemsSource = GoogleSourceCards;
+            CanvasSourceCardsList.ItemsSource = CanvasSourceCards;
+        }
+
+        private async Task<List<SourceCustomizationCard>> BuildSourceCardsAsync(string provider)
+        {
+            var cards = new List<SourceCustomizationCard>();
+            var knownAssociations = SourceImageService.Instance.GetAllAssociations();
+            var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (provider == GoogleCalService.ProviderName)
+            {
+                try
+                {
+                    foreach (GoogleCalendarSource calendar in await EventAggService.GetGoogleCalService().GetCalendarSourcesAsync())
+                    {
+                        CalendarSourceIdentity identity = CalendarSourceIdentity.CreateGoogle(calendar.AccountEmail, calendar.CalendarId);
+                        if (!seenKeys.Add(identity.Key))
+                        {
+                            continue;
+                        }
+
+                        cards.Add(CreateSourceCustomizationCard(
+                            identity,
+                            $"{calendar.AccountEmail} - {calendar.DisplayName}"));
+                    }
+                }
+                catch (Exception exception)
+                {
+                    LoggerService.LogException("WidgetWindow: Failed to load Google calendar sources for customization cards.", exception);
+                }
+            }
+
+            if (File.Exists(SettingsRetriever.GetMainDataPath()))
+            {
+                Dictionary<IDHelper.EventID, CalEventDto> storedEvents = await EventAggService.ReadUpcomingEventsMessagePackAsync(SettingsRetriever.GetMainDataPath());
+                foreach (var calendarEvent in storedEvents.Values)
+                {
+                    string eventProvider = calendarEvent.Provider ?? string.Empty;
+                    bool isLegacyCanvasEvent = provider == "Canvas" &&
+                        string.IsNullOrWhiteSpace(eventProvider) &&
+                        !string.IsNullOrWhiteSpace(calendarEvent.LongSource);
+                    if (!string.Equals(eventProvider, provider, StringComparison.OrdinalIgnoreCase) && !isLegacyCanvasEvent)
+                    {
+                        continue;
+                    }
+
+                    CalendarSourceIdentity identity;
+                    string displayName;
+                    if (provider == GoogleCalService.ProviderName)
+                    {
+                        if (string.IsNullOrWhiteSpace(calendarEvent.GoogleAccountEmail) ||
+                            string.IsNullOrWhiteSpace(calendarEvent.CalendarId))
+                        {
+                            continue;
+                        }
+
+                        identity = CalendarSourceIdentity.CreateGoogle(
+                            calendarEvent.GoogleAccountEmail,
+                            calendarEvent.CalendarId);
+                        displayName = $"{calendarEvent.GoogleAccountEmail} - {calendarEvent.Source}";
+                    }
+                    else
+                    {
+                        string className = calendarEvent.Source?.Trim() ?? string.Empty;
+                        if (string.IsNullOrWhiteSpace(className))
+                        {
+                            continue;
+                        }
+
+                        identity = CalendarSourceIdentity.FromValues(provider, className);
+                        displayName = className;
+                    }
+
+                    if (!seenKeys.Add(identity.Key))
+                    {
+                        continue;
+                    }
+
+                    cards.Add(CreateSourceCustomizationCard(identity, displayName));
+                }
+            }
+
+            foreach (var association in knownAssociations)
+            {
+                if (!string.Equals(association.Provider, provider, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                string key = SourceImageService.BuildKey(association.Provider, association.SourceId);
+                if (!seenKeys.Add(key))
+                {
+                    continue;
+                }
+
+                var identity = CalendarSourceIdentity.FromValues(association.Provider, association.SourceId);
+                string displayName = association.SourceId;
+                if (provider == GoogleCalService.ProviderName &&
+                    CalendarSourceIdentity.TryGetGoogleComponents(association.SourceId, out string accountEmail, out string calendarId))
+                {
+                    displayName = $"{accountEmail} - {calendarId}";
+                }
+                else if (provider == GoogleCalService.ProviderName && association.SourceId == GoogleCalService.PrimaryCalendarId)
+                {
+                    displayName = "Google Calendar (unscoped)";
+                }
+
+                cards.Add(CreateSourceCustomizationCard(identity, displayName));
+            }
+
+            return cards.OrderBy(card => card.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
+        }
+
+        private SourceCustomizationCard CreateSourceCustomizationCard(CalendarSourceIdentity identity, string? fallbackName = null)
+        {
+            string displayName = fallbackName ?? identity.SourceId;
+            string imagePath = SourceImageService.Instance.GetSourceImagePath(identity) ?? string.Empty;
+            string backgroundColor = "#3A3A3A";
+
+            var config = SettingsRetriever.GetSourceConfigs().FirstOrDefault(pair =>
+                pair.Key.Equals(identity.Key, StringComparison.OrdinalIgnoreCase) ||
+                pair.Value.Source.Equals(identity.SourceId, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(config.Value?.BkgColor))
+            {
+                backgroundColor = config.Value.BkgColor;
+            }
+
+            var card = new SourceCustomizationCard
+            {
+                Provider = identity.Provider,
+                SourceId = identity.SourceId,
+                DisplayName = displayName,
+                ImagePath = imagePath,
+                HasImage = !string.IsNullOrWhiteSpace(imagePath),
+                BackgroundColor = backgroundColor,
+            };
+
+            card.BackgroundBrush = CreateBackgroundBrush(card);
+            card.StatusText = card.HasImage ? "Image configured" : "No image configured";
+            return card;
+        }
+
+        private static Brush CreateBackgroundBrush(SourceCustomizationCard card)
+        {
+            if (!string.IsNullOrWhiteSpace(card.ImagePath) && File.Exists(card.ImagePath))
+            {
+                var imageBrush = new ImageBrush
+                {
+                    ImageSource = new BitmapImage(new Uri(card.ImagePath, UriKind.Absolute)),
+                    Stretch = Stretch.UniformToFill,
+                    AlignmentX = AlignmentX.Center,
+                    AlignmentY = AlignmentY.Center,
+                };
+
+                return imageBrush;
+            }
+
+            if (TryParseColor(card.BackgroundColor, out var color))
+            {
+                return new SolidColorBrush(color);
+            }
+
+            return new SolidColorBrush(Windows.UI.Color.FromArgb(255, 58, 58, 58));
+        }
+
+        private static bool TryParseColor(string colorText, out Windows.UI.Color color)
+        {
+            color = Windows.UI.Color.FromArgb(255, 58, 58, 58);
+            if (string.IsNullOrWhiteSpace(colorText))
+            {
+                return false;
+            }
+
+            try
+            {
+                var trimmed = colorText.Trim();
+                if (trimmed.StartsWith("#"))
+                {
+                    trimmed = trimmed.Substring(1);
+                }
+
+                if (trimmed.Length == 6)
+                {
+                    trimmed = "FF" + trimmed;
+                }
+
+                if (trimmed.Length != 8)
+                {
+                    return false;
+                }
+
+                color = Windows.UI.Color.FromArgb(
+                    byte.Parse(trimmed.Substring(0, 2), System.Globalization.NumberStyles.HexNumber),
+                    byte.Parse(trimmed.Substring(2, 2), System.Globalization.NumberStyles.HexNumber),
+                    byte.Parse(trimmed.Substring(4, 2), System.Globalization.NumberStyles.HexNumber),
+                    byte.Parse(trimmed.Substring(6, 2), System.Globalization.NumberStyles.HexNumber));
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async Task PickImageForCardAsync(SourceCustomizationCard card)
         {
             var picker = new FileOpenPicker();
             picker.ViewMode = PickerViewMode.Thumbnail;
@@ -92,16 +317,70 @@ namespace GCaLink.ViewWindows.WidgetView
             picker.FileTypeFilter.Add(".jpeg");
             picker.FileTypeFilter.Add(".png");
 
-            var hwnd = WindowNative.GetWindowHandle(App.Current);
+            var hwnd = WindowNative.GetWindowHandle(this);
             InitializeWithWindow.Initialize(picker, hwnd);
 
             StorageFile file = await picker.PickSingleFileAsync();
-            if (file != null)
+            if (file == null)
             {
-                // make copy of file, rename it, and store it in SettingsRetriever.GetImageDataFolder()
-                // will probably need to add file management to delete unused images
-                // cache up to n files in the folder in the case the user wants quick access?
+                return;
             }
+
+            bool assigned = SourceImageService.Instance.TryAssignImageToSource(
+                card.Provider,
+                card.SourceId,
+                file.Path,
+                out string managedPath);
+
+            if (assigned)
+            {
+                await RefreshCustomizationCardsAsync();
+            }
+        }
+
+        private async Task RemoveImageForCardAsync(SourceCustomizationCard card)
+        {
+            bool removed = SourceImageService.Instance.RemoveSourceImage(card.Provider, card.SourceId);
+            if (removed)
+            {
+                await RefreshCustomizationCardsAsync();
+            }
+        }
+
+        private async void ChooseBackgroundImageClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.DataContext is SourceCustomizationCard card)
+            {
+                await PickImageForCardAsync(card);
+                return;
+            }
+
+            await PickImageForCardAsync(new SourceCustomizationCard
+            {
+                Provider = "Google",
+                SourceId = GoogleCalService.PrimaryCalendarId,
+                DisplayName = "Google Calendar"
+            });
+        }
+
+        private async void RemoveBackgroundImageClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.DataContext is SourceCustomizationCard card)
+            {
+                await RemoveImageForCardAsync(card);
+            }
+        }
+
+        public sealed class SourceCustomizationCard
+        {
+            public string Provider { get; set; } = string.Empty;
+            public string SourceId { get; set; } = string.Empty;
+            public string DisplayName { get; set; } = string.Empty;
+            public string ImagePath { get; set; } = string.Empty;
+            public bool HasImage { get; set; }
+            public string BackgroundColor { get; set; } = "#3A3A3A";
+            public string StatusText { get; set; } = "No image configured";
+            public Brush BackgroundBrush { get; set; } = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 58, 58, 58));
         }
 
         private void BkgStyleChanged(object sender, SelectionChangedEventArgs e)

@@ -18,5 +18,6 @@ namespace GCaLink.Models
         [Key(8)] public string LongSource { get; set; } = "";
         [Key(9)] public string Provider { get; set; } = "";
         [Key(10)] public string CalendarId { get; set; } = "";
+        [Key(11)] public string GoogleAccountEmail { get; set; } = "";
     }
 }

@@ -32,10 +32,11 @@ namespace GCaLink.Services
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
             settingsFile = Path.Combine(appDataLocalFolder, "GCWConfig.json");
-            imageDataFolder = Path.Combine(appDataLocalFolder, "Images");
+            imageDataFolder = Path.Combine(appDataLocalFolder, "SourceImages");
             dataFile = Path.Combine(appDataLocalFolder, "GCWMainData.msgpack");
             ETCSettingsFile = Path.Combine(appDataLocalFolder, "ETCSettings.msgpack");
             Directory.CreateDirectory(appDataLocalFolder);
+            Directory.CreateDirectory(imageDataFolder);
 
             if (!File.Exists(settingsFile))
             {
@@ -204,7 +205,7 @@ namespace GCaLink.Services
         public static string GetMainDataPath() { return dataFile; }
         public static bool GetInitializedStatus() { return initializedAsyncStatus; }
         public static int GetTrackedDays() { return options.TrackedDays; }
-        public static string GetImageDataFolder() { return imageDataFolder; }
+        public static string GetImageDataFolder() { return SourceImageService.Instance.ManagedImageDirectory; }
 
         private static async Task<Dictionary<string, EventTypeConfig>> LoadEventTypeConfigs(string inputPath)
         {

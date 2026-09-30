@@ -15,6 +15,7 @@ namespace GCaLink.ViewWindows.WeekView
     public sealed partial class WeekViewWindow : Window
     {
         public ObservableCollection<WeekDayDisplay> Days { get; } = new();
+        private DateTime _loadedDate = DateTime.MinValue;
 
         public WeekViewWindow()
         {
@@ -28,12 +29,13 @@ namespace GCaLink.ViewWindows.WeekView
             DaysList.ItemsSource = Days;
             Activated += WeekViewWindow_Activated;
             EventAggService.EventsChanged += OnEventsChanged;
+            SourceImageService.Instance.SourceImagesChanged += OnSourceImagesChanged;
             Closed += OnClosed;
         }
 
         private async void WeekViewWindow_Activated(object sender, WindowActivatedEventArgs e)
         {
-            if (e.WindowActivationState != WindowActivationState.Deactivated)
+            if (e.WindowActivationState != WindowActivationState.Deactivated && _loadedDate != DateTime.Today)
             {
                 await LoadUpcomingEventsAsync();
             }
@@ -44,13 +46,20 @@ namespace GCaLink.ViewWindows.WeekView
             DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
         }
 
+        private void OnSourceImagesChanged(object? sender, EventArgs e)
+        {
+            DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
+        }
+
         private void OnClosed(object sender, WindowEventArgs e)
         {
             EventAggService.EventsChanged -= OnEventsChanged;
+            SourceImageService.Instance.SourceImagesChanged -= OnSourceImagesChanged;
         }
 
         private async Task LoadUpcomingEventsAsync()
         {
+            _loadedDate = DateTime.Today;
             Days.Clear();
             DateTime today = DateTime.Today;
             for (int dayOffset = 0; dayOffset < 7; dayOffset++)
@@ -80,11 +89,9 @@ namespace GCaLink.ViewWindows.WeekView
             {
                 DateTime localDate = calendarEvent.Datetime.ToLocalTime().Date;
                 WeekDayDisplay day = Days[(localDate - today).Days];
-                day.Events.Add(new CalEventDisplay
-                {
-                    Time = calendarEvent.Datetime.ToLocalTime().ToString("h:mm tt"),
-                    Title = calendarEvent.Title
-                });
+                day.Events.Add(CalendarEventDisplayService.Create(
+                    calendarEvent,
+                    calendarEvent.Datetime.ToLocalTime().ToString("h:mm tt")));
             }
         }
     }

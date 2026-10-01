@@ -31,7 +31,7 @@ namespace GCaLink.Services
             logFilePath = Path.Combine(appDataLocalFolder, "GCWLogs.txt");
         }
 
-        public static void LogWarning(string warningText, LoggerStatusEnum statusType=LoggerStatusEnum.INFO)
+        public static void Log(string warningText, LoggerStatusEnum statusType=LoggerStatusEnum.INFO)
         {
             try
             {
@@ -67,7 +67,7 @@ namespace GCaLink.Services
                         File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} [LOGGERWARNING] invalid enum type recieved {Environment.NewLine}");
                     }
 
-                    File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} {logType} {warningText}{Environment.NewLine}");
+                    File.AppendAllText(logFilePath, $"{DateTimeOffset.UtcNow:O} {logType} [PID:{Environment.ProcessId}] {warningText}{Environment.NewLine}");
                 }
             }
             catch (Exception exception)
@@ -78,7 +78,7 @@ namespace GCaLink.Services
 
         public static void LogException(string context, Exception exception)
         {
-            LogWarning($"{context}: {exception}", LoggerStatusEnum.EXCEPTION);
+            Log($"{context}: {exception}", LoggerStatusEnum.EXCEPTION);
         }
 
         private static void Rotate()

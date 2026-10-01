@@ -2,24 +2,53 @@ name: Verify Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
+  # Always verify that the complete solution builds.
   build:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 10.0.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
 
-    - name: Restore dependencies
-      run: dotnet restore ./src/GCaLink/GCaLink.sln
+      - name: Restore dependencies
+        run: dotnet restore ./src/GCaLink/GCaLink.sln
 
-    - name: Build
-      run: dotnet build ./src/GCaLink/GCaLink.sln --no-restore --configuration Debug
+      - name: Build
+        run: dotnet build ./src/GCaLink/GCaLink.sln --no-restore --configuration Debug
+
+  # Run UniRegexService tests only when the service or its tests change.
+  test:
+    runs-on: windows-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for UniRegexService changes
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            src/GCaLink/GCaLink/Services/UniRegexService.cs
+            modtests/UniRegexService.Tests/**
+
+      - name: Setup .NET
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Run UniRegexService Tests
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: dotnet test ./modtests/UniRegexService.Tests/UniRegexService.Tests.csproj

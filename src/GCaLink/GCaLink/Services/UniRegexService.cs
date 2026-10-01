@@ -71,7 +71,7 @@ namespace GCaLink.Services
         private string GetAzStUniSN(string sectionInfo) => Regex.Match(sectionInfo, @"[0-9]{4}(.*?)[ABC]").Value.Trim();
 
         // Ohio State University
-        private string GetOhioStUniCN(string sectionInfo) => Regex.Match(sectionInfo, @"[A-Z]{3,} [0-9]{4}(?:\\.[0-9]{2})?(?:[A-Z])?").Value.Trim();
+        private string GetOhioStUniCN(string sectionInfo) => Regex.Match(sectionInfo,@"[A-Z]{3,} [0-9]{4}(?:\.[0-9]{2})?(?:[A-Z])?").Value.Trim();
         private string GetOhioStUniSN(string sectionInfo) => Regex.Match(sectionInfo, @"(?<=[.* .* ])[A-Z]{2}[0-9]{4}").Value.Trim();
 
     }

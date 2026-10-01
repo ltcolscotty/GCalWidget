@@ -40,7 +40,8 @@ This file contains JSON with the controller process ID, whether the primary view
 - Each process watches this file with the same 150 ms debounce.
 - A process ignores messages written by its own process ID.
 - The owning process marshals the update to its dispatcher, updates its local settings, then creates, replaces, or closes its local primary view.
-- When replacing a view it owns, the process closes the current window and creates the requested view directly. It does not search for the just-closed window by title.
+- When replacing a view it owns, the process creates and activates the requested view before closing the old one. This keeps the owner process from temporarily having no open calendar window when its controller is already closed.
+- A process without a local primary view can still locate an existing view by title and apply its native manager mode. The owning process handles primary-view changes and refreshes its own process-local event/customization state.
 
 The state file is a latest-value message, not a queue. If multiple selections happen quickly, the receiver reads the most recently written state after debounce.
 
@@ -77,14 +78,16 @@ An image association is keyed by provider and source ID (for example, `Canvas:CS
 
 Useful entries when investigating a reopen or view swap include:
 
-- `Published manager state` and `Received manager state`
-- `Published primary view state` and `Applying primary view state`
-- `Primary view state update enqueued` and `Applying manager mode`
-- `Close primary requested` and `Primary calendar view Closed event received`
-- `Applied widget manager mode ... positioned=...`
+- `Manager state changed`, `Published manager state`, and `Received manager state`
+- `Published primary view state`, `Primary view state update enqueued`, and `Applying primary view state`
+- `Replacing owned primary view directly` followed by `Created primary view` and `Closing primary view`; creation should precede closing during an owned replacement
+- `Managed existing window` with title, HWND, and `ownerProcess` to identify which process owns a matched calendar window
+- `No existing primary view was found` when title lookup does not find a usable window
+- `Failed to position hwnd` or `Found window ... but failed to apply` when native style changes fail
+- `Primary view=... closed outside manager replacement` when a still-owned window closes without a manager replacement
 - `SourceImageService: Reloaded ... image associations`
 - `CalendarEventDisplayService: ... identity=... imageMatched=...`
 - `TodoView`, `DayView`, or `WeekView` refresh and rebuilt-event messages
 - `Failed applying primary view state` or `Unhandled application exception` with exception details
 
-A manager-state update without a primary-view-state update can change native interaction mode but cannot switch the selected calendar view. A `Closed` event without a preceding manager-requested close may indicate a user close or another window-lifecycle path.
+A manager-state update without a primary-view-state update can change native interaction mode but cannot switch the selected calendar view. Manager-driven closes are logged as `Closing primary view` with a reason and are detached from the external-close handler first. A `Primary view=... closed outside manager replacement` entry instead means the manager did not initiate that close; the controller treats it as a user close and disables the primary-view setting.

@@ -11,6 +11,7 @@ using GCaLink.ViewWindows.TodoView;
 using GCaLink.ViewWindows.WeekView;
 using GCaLink.ViewWindows;
 using Microsoft.UI.Xaml;
+using WinRT.Interop;
 
 namespace GCaLink.Services
 {
@@ -70,8 +71,11 @@ namespace GCaLink.Services
         public static void SetPrimaryViewManagerActive(bool isActive)
         {
             bool stateChanged = primaryViewManagerActive != isActive;
-            LoggerService.Log(
-                $"ViewWindowManager: Manager activation requested; active={isActive}, previous={primaryViewManagerActive}, stateChanged={stateChanged}, hasLocalPrimaryView={primaryViewWindow is not null}.");
+            if (stateChanged)
+            {
+                LoggerService.Log(
+                    $"ViewWindowManager: Manager state changed to active={isActive}; previous={primaryViewManagerActive}, hasLocalPrimaryView={primaryViewWindow is not null}.");
+            }
             primaryViewManagerActive = isActive;
             if (stateChanged)
             {
@@ -170,7 +174,7 @@ namespace GCaLink.Services
             }
             else
             {
-                LoggerService.Log("ViewWindowManager: No local primary view was available for the published manager-state update.", LoggerStatusEnum.WARNING);
+                SetExistingPrimaryViewMode(isActive);
             }
         }
 
@@ -240,8 +244,16 @@ namespace GCaLink.Services
         private static void ReplaceOwnedPrimaryView(PrimaryViewEnum selectedView)
         {
             LoggerService.Log($"ViewWindowManager: Replacing owned primary view directly with {selectedView}.");
-            ClosePrimaryView($"replacing owned primary view with {selectedView}");
+            Window? previousWindow = primaryViewWindow;
+            PrimaryViewEnum? previousViewType = primaryViewType;
             CreatePrimaryViewWindow(selectedView);
+            if (previousWindow is not null)
+            {
+                ClosePrimaryViewWindow(
+                    previousWindow,
+                    previousViewType,
+                    $"replaced by {selectedView}");
+            }
         }
 
         private static void CreatePrimaryViewWindow(PrimaryViewEnum selectedView)
@@ -252,9 +264,12 @@ namespace GCaLink.Services
                 PrimaryViewEnum.Week => new WeekViewWindow(),
                 _ => new TodoViewWindow()
             };
+            IntPtr hwnd = WindowNative.GetWindowHandle(primaryViewWindow);
             DesktopWidgetWindowBehavior.SetWidgetManagerActive(primaryViewWindow, primaryViewManagerActive);
             primaryViewType = selectedView;
             primaryViewWindow.Closed += PrimaryViewClosed;
+            LoggerService.Log(
+                $"ViewWindowManager: Created primary view={selectedView}, hwnd=0x{hwnd.ToInt64():X}, process={Environment.ProcessId}, managerActive={primaryViewManagerActive}.");
             if (primaryViewManagerActive)
             {
                 primaryViewWindow.Activate();
@@ -264,12 +279,22 @@ namespace GCaLink.Services
         private static void ClosePrimaryView(string reason)
         {
             Window? window = primaryViewWindow;
-            LoggerService.Log(
-                $"ViewWindowManager: Close primary requested; reason='{reason}', hasLocalPrimaryView={window is not null}.",
-                window is null ? LoggerStatusEnum.INFO : LoggerStatusEnum.WARNING);
+            PrimaryViewEnum? viewType = primaryViewType;
             primaryViewWindow = null;
             primaryViewType = null;
-            window?.Close();
+            if (window is not null)
+            {
+                ClosePrimaryViewWindow(window, viewType, reason);
+            }
+        }
+
+        private static void ClosePrimaryViewWindow(Window window, PrimaryViewEnum? viewType, string reason)
+        {
+            IntPtr hwnd = WindowNative.GetWindowHandle(window);
+            LoggerService.Log(
+                $"ViewWindowManager: Closing primary view={viewType}, hwnd=0x{hwnd.ToInt64():X}, process={Environment.ProcessId}, reason='{reason}'.");
+            window.Closed -= PrimaryViewClosed;
+            window.Close();
         }
 
         private static void PublishPrimaryViewState(bool enabled, PrimaryViewEnum view)
@@ -386,9 +411,24 @@ namespace GCaLink.Services
 
         private static bool SetExistingPrimaryViewMode(bool widgetManagerActive)
         {
-            return Win32Interop.TrySetWidgetManagerActiveByTitle("GCaLink Day View", widgetManagerActive) ||
-                Win32Interop.TrySetWidgetManagerActiveByTitle("GCaLink Week View", widgetManagerActive) ||
-                Win32Interop.TrySetWidgetManagerActiveByTitle("GCaLink Todo View", widgetManagerActive);
+            string[] viewTitles =
+            {
+                "GCaLink Day View",
+                "GCaLink Week View",
+                "GCaLink Todo View"
+            };
+            foreach (string title in viewTitles)
+            {
+                if (Win32Interop.TrySetWidgetManagerActiveByTitle(title, widgetManagerActive))
+                {
+                    return true;
+                }
+            }
+
+            LoggerService.Log(
+                $"ViewWindowManager: No existing primary view was found for managerActive={widgetManagerActive}; process={Environment.ProcessId}.",
+                LoggerStatusEnum.INFO);
+            return false;
         }
 
         private static void ClosePinnedView()
@@ -400,11 +440,11 @@ namespace GCaLink.Services
 
         private static void PrimaryViewClosed(object sender, WindowEventArgs args)
         {
-            LoggerService.Log(
-                $"ViewWindowManager: Primary calendar view Closed event received (process={Environment.ProcessId}).",
-                LoggerStatusEnum.WARNING);
             if (ReferenceEquals(primaryViewWindow, sender))
             {
+                LoggerService.Log(
+                    $"ViewWindowManager: Primary view={primaryViewType} closed outside manager replacement; process={Environment.ProcessId}.",
+                    LoggerStatusEnum.INFO);
                 primaryViewWindow = null;
                 primaryViewType = null;
                 PrimaryViewClosedByUser?.Invoke();

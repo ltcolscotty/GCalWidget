@@ -33,6 +33,9 @@ namespace GCaLink.Platform
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
         [DllImport("user32.dll", EntryPoint = "GetWindowLongW", ExactSpelling = true, SetLastError = true)]
         private static extern int GetWindowLong32(IntPtr hWnd, int nIndex);
 
@@ -175,9 +178,12 @@ namespace GCaLink.Platform
                 0,
                 0,
                 SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_FRAMECHANGED);
-            LoggerService.Log(
-                $"Win32Interop: Applied widget manager mode active={widgetManagerActive}, hwnd=0x{hwnd.ToInt64():X}, positioned={positioned}.",
-                positioned ? LoggerStatusEnum.INFO : LoggerStatusEnum.WARNING);
+            if (!positioned)
+            {
+                LoggerService.Log(
+                    $"Win32Interop: Failed to position hwnd=0x{hwnd.ToInt64():X} for widget manager mode active={widgetManagerActive}.",
+                    LoggerStatusEnum.WARNING);
+            }
             return positioned;
         }
 
@@ -189,10 +195,17 @@ namespace GCaLink.Platform
                 return false;
             }
 
+            GetWindowThreadProcessId(hwnd, out uint ownerProcessId);
             if (!SetDesktopWidgetMode(hwnd, widgetManagerActive))
             {
+                LoggerService.Log(
+                    $"Win32Interop: Found window title='{title}', hwnd=0x{hwnd.ToInt64():X}, ownerProcess={ownerProcessId}, but failed to apply managerActive={widgetManagerActive}.",
+                    LoggerStatusEnum.WARNING);
                 return false;
             }
+
+            LoggerService.Log(
+                $"Win32Interop: Managed existing window title='{title}', hwnd=0x{hwnd.ToInt64():X}, ownerProcess={ownerProcessId}, managerActive={widgetManagerActive}.");
             if (widgetManagerActive)
             {
                 ShowWindow(hwnd, SW_RESTORE);

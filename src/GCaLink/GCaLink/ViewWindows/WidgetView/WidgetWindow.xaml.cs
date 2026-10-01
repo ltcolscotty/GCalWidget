@@ -47,14 +47,22 @@ namespace GCaLink.ViewWindows.WidgetView
             InitializeComponent();
             _isUpdatingTransparencyControls = true;
             WindowConfiguration.Configure(this, isWidgetViewActive: true);
-            ViewWindowManager.SetPrimaryViewDraggable(true);
+            ViewWindowManager.SetPrimaryViewManagerActive(true);
             Closed += (_, _) =>
             {
-                ViewWindowManager.SetPrimaryViewDraggable(false);
+                LoggerService.Log("WidgetWindow: Closed event received; publishing manager inactive state.");
+                ViewWindowManager.SetPrimaryViewManagerActive(false);
                 ViewWindowManager.PrimaryViewClosedByUser -= OnPrimaryViewClosedByUser;
             };
+            Activated += (_, args) =>
+            {
+                if (args.WindowActivationState != WindowActivationState.Deactivated)
+                {
+                    ViewWindowManager.SetPrimaryViewManagerActive(true);
+                }
+            };
 
-            SettingsRetriever.InitializeAsync();
+            _ = SettingsRetriever.InitializeAsync();
 
             BkgStyleRadioSettings.SelectedIndex = SettingsRetriever.GetBackgroundType() switch
             {
@@ -310,6 +318,7 @@ namespace GCaLink.ViewWindows.WidgetView
 
         private async Task PickImageForCardAsync(SourceCustomizationCard card)
         {
+            LoggerService.Log($"WidgetWindow: Opening image picker for source '{card.Provider}:{card.SourceId}'.");
             var picker = new FileOpenPicker();
             picker.ViewMode = PickerViewMode.Thumbnail;
             picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
@@ -323,6 +332,7 @@ namespace GCaLink.ViewWindows.WidgetView
             StorageFile file = await picker.PickSingleFileAsync();
             if (file == null)
             {
+                LoggerService.Log($"WidgetWindow: Image picker cancelled for source '{card.Provider}:{card.SourceId}'.");
                 return;
             }
 
@@ -334,7 +344,14 @@ namespace GCaLink.ViewWindows.WidgetView
 
             if (assigned)
             {
+                LoggerService.Log($"WidgetWindow: Image customization saved for source '{card.Provider}:{card.SourceId}'.");
                 await RefreshCustomizationCardsAsync();
+            }
+            else
+            {
+                LoggerService.Log(
+                    $"WidgetWindow: Image customization failed for source '{card.Provider}:{card.SourceId}'.",
+                    LoggerStatusEnum.WARNING);
             }
         }
 
@@ -349,18 +366,25 @@ namespace GCaLink.ViewWindows.WidgetView
 
         private async void ChooseBackgroundImageClick(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.DataContext is SourceCustomizationCard card)
+            try
             {
-                await PickImageForCardAsync(card);
-                return;
-            }
+                if (sender is Button button && button.DataContext is SourceCustomizationCard card)
+                {
+                    await PickImageForCardAsync(card);
+                    return;
+                }
 
-            await PickImageForCardAsync(new SourceCustomizationCard
+                await PickImageForCardAsync(new SourceCustomizationCard
+                {
+                    Provider = "Google",
+                    SourceId = GoogleCalService.PrimaryCalendarId,
+                    DisplayName = "Google Calendar"
+                });
+            }
+            catch (Exception exception)
             {
-                Provider = "Google",
-                SourceId = GoogleCalService.PrimaryCalendarId,
-                DisplayName = "Google Calendar"
-            });
+                LoggerService.LogException("WidgetWindow: Image picker or customization failed.", exception);
+            }
         }
 
         private async void RemoveBackgroundImageClick(object sender, RoutedEventArgs e)
@@ -512,7 +536,7 @@ namespace GCaLink.ViewWindows.WidgetView
                 bool? response = await EventAggService.RefreshCanvas();
                 if (response != true)
                 {
-                    LoggerService.LogWarning(
+                    LoggerService.Log(
                         $"WidgetWindow.RefreshCanvasSources: Canvas refresh did not complete (result: {response?.ToString() ?? "null"}).",
                         response == false ? LoggerStatusEnum.WARNING : LoggerStatusEnum.ERROR);
                 }
@@ -533,7 +557,7 @@ namespace GCaLink.ViewWindows.WidgetView
                 string mainDataPath = SettingsRetriever.GetMainDataPath();
                 if (!File.Exists(mainDataPath))
                 {
-                    LoggerService.LogWarning(
+                    LoggerService.Log(
                         $"WidgetWindow.RefreshGoogleSources: Could not find '{mainDataPath}'. Creating a default file.",
                         LoggerStatusEnum.WARNING);
                     await EventAggService.WriteUpcomingEventsMessagePackAsync(mainDataPath);

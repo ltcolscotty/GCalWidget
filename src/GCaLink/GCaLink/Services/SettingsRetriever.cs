@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.ViewManagement;
 
@@ -22,6 +23,9 @@ namespace GCaLink.Services
         private static string imageDataFolder;
         private static Dictionary<string, EventTypeConfig> sourceConfigs = new();
         private static bool initializedAsyncStatus = false;
+        private static readonly SemaphoreSlim sourceConfigLoadLock = new(1, 1);
+        private static FileSystemWatcher? sourceConfigWatcher;
+        private static Timer? sourceConfigReloadTimer;
         private static List<string> activeSources = [];
         private static readonly string settingsFile;
 
@@ -37,6 +41,16 @@ namespace GCaLink.Services
             ETCSettingsFile = Path.Combine(appDataLocalFolder, "ETCSettings.msgpack");
             Directory.CreateDirectory(appDataLocalFolder);
             Directory.CreateDirectory(imageDataFolder);
+            sourceConfigReloadTimer = new Timer(_ => _ = ReloadSourceConfigsFromDiskAsync(), null, Timeout.Infinite, Timeout.Infinite);
+            sourceConfigWatcher = new FileSystemWatcher(appDataLocalFolder, Path.GetFileName(ETCSettingsFile))
+            {
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size
+            };
+            sourceConfigWatcher.Changed += (_, _) => QueueSourceConfigReload();
+            sourceConfigWatcher.Created += (_, _) => QueueSourceConfigReload();
+            sourceConfigWatcher.Renamed += (_, _) => QueueSourceConfigReload();
+            sourceConfigWatcher.EnableRaisingEvents = true;
+            LoggerService.Log($"SettingsRetriever: Watching source customization file '{ETCSettingsFile}'.");
 
             if (!File.Exists(settingsFile))
             {
@@ -64,25 +78,62 @@ namespace GCaLink.Services
             WindowTransparencyChanged?.Invoke(options.BackgroundTransparency);
         }
 
-        public static async void InitializeAsync(bool forceRefresh = false)
+        public static async Task InitializeAsync(bool forceRefresh = false, bool notifyViews = true)
         {
-            if (!initializedAsyncStatus && !forceRefresh) { return; }
+            if (!forceRefresh && initializedAsyncStatus) { return; }
 
-            sourceConfigs = await LoadEventTypeConfigs(ETCSettingsFile);
-            foreach (string sourceKey in sourceConfigs
-                .Where(source => !source.Value.Enabled)
-                .Select(source => source.Key)
-                .ToList())
+            await sourceConfigLoadLock.WaitAsync();
+            bool loaded = false;
+            try
             {
-                sourceConfigs.Remove(sourceKey);
+                if (!forceRefresh && initializedAsyncStatus) { return; }
+
+                sourceConfigs = await LoadEventTypeConfigs(ETCSettingsFile);
+                foreach (string sourceKey in sourceConfigs
+                    .Where(source => !source.Value.Enabled)
+                    .Select(source => source.Key)
+                    .ToList())
+                {
+                    sourceConfigs.Remove(sourceKey);
+                }
+
+                initializedAsyncStatus = true;
+                loaded = true;
+                LoggerService.Log(
+                    $"SettingsRetriever: Loaded {sourceConfigs.Count} enabled source customizations from '{ETCSettingsFile}' (forceRefresh={forceRefresh}).");
+            }
+            finally
+            {
+                sourceConfigLoadLock.Release();
             }
 
-            initializedAsyncStatus = true;
+            if (loaded && notifyViews)
+            {
+                EventAggService.NotifyViewsChanged();
+            }
         }
 
         public static Dictionary<string, EventTypeConfig> GetSourceConfigs() { 
-            InitializeAsync();
+            _ = InitializeAsync();
             return sourceConfigs; 
+        }
+
+        private static void QueueSourceConfigReload()
+        {
+            LoggerService.Log("SettingsRetriever: Source customization file changed; debounce reload queued.");
+            sourceConfigReloadTimer?.Change(150, Timeout.Infinite);
+        }
+
+        private static async Task ReloadSourceConfigsFromDiskAsync()
+        {
+            try
+            {
+                await InitializeAsync(forceRefresh: true);
+            }
+            catch (Exception exception)
+            {
+                LoggerService.LogException("SettingsRetriever: Failed to reload source customizations.", exception);
+            }
         }
 
         public static bool SetCanvasICSLink(string newLink)
@@ -93,7 +144,7 @@ namespace GCaLink.Services
                     || uriResult.Scheme == Uri.UriSchemeHttps))
                 )
             {
-                LoggerService.LogWarning($"Invalid url {newLink}", LoggerStatusEnum.WARNING);
+                LoggerService.Log($"Invalid url {newLink}", LoggerStatusEnum.WARNING);
                 return false;
             }
             options.CanvasICSLink = newLink;

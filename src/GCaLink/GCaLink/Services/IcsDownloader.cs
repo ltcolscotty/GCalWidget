@@ -38,7 +38,7 @@ namespace GCaLink.Services
                     string responseBody =
                         await response.Content.ReadAsStringAsync(cancellationToken);
 
-                    LoggerService.LogWarning(
+                    LoggerService.Log(
                         $"Canvas ICS request failed. " +
                         $"HTTP {(int)response.StatusCode} ({response.StatusCode}). " +
                         $"Content-Type: {response.Content.Headers.ContentType}. " +
@@ -73,7 +73,7 @@ namespace GCaLink.Services
                 string statusCode =
                     ex.StatusCode?.ToString() ?? "unknown";
 
-                LoggerService.LogWarning(
+                LoggerService.Log(
                     $"Failed to download Canvas ICS " +
                     $"(HTTP status: {statusCode}): {ex.Message}",
                     LoggerStatusEnum.ERROR);

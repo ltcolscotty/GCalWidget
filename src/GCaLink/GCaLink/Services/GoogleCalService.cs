@@ -288,7 +288,7 @@ namespace GCaLink.Services
                 pageToken = events.NextPageToken;
                 if (fetchedCount >= maximumEvents)
                 {
-                    LoggerService.LogWarning(
+                    LoggerService.Log(
                         $"Google Calendar refresh reached the configured limit of {maximumEvents} events; results may be truncated.",
                         LoggerStatusEnum.WARNING);
                     if (!string.IsNullOrEmpty(pageToken))

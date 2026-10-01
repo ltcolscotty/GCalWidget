@@ -75,6 +75,11 @@ namespace GCaLink.ViewWindows
                 SettingsRetriever.WindowTransparencyChanged -= transparencyChanged;
                 SaveWindowState(window, pinned);
             };
+
+            if (kind == ManagedWindowKind.Primary)
+            {
+                DesktopWidgetWindowBehavior.SetWidgetManagerActive(window, isActive: false);
+            }
         }
 
         public static void ApplyBackground(Window window)
@@ -85,14 +90,6 @@ namespace GCaLink.ViewWindows
                 BackgroundTypeEnum.Acrylic => new DesktopAcrylicBackdrop(),
                 _ => null
             };
-        }
-
-        public static void SetWindowDraggable(Window window, bool draggable)
-        {
-            if (window.AppWindow.Presenter is OverlappedPresenter presenter)
-            {
-                presenter.SetBorderAndTitleBar(hasBorder: true, hasTitleBar: draggable);
-            }
         }
 
         private static void ApplyWindowTransparency(Window window, int transparencyPercentage)

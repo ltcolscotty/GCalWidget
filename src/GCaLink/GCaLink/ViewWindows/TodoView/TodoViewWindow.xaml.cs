@@ -41,12 +41,16 @@ namespace GCaLink.ViewWindows.TodoView
 
         private void OnEventsChanged(object? sender, EventArgs e)
         {
-            DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
+            bool enqueued = DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
+            LoggerService.Log($"TodoView: Calendar data/settings update received; refreshEnqueued={enqueued}.",
+                enqueued ? LoggerStatusEnum.INFO : LoggerStatusEnum.WARNING);
         }
 
         private void OnSourceImagesChanged(object? sender, EventArgs e)
         {
-            DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
+            bool enqueued = DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
+            LoggerService.Log($"TodoView: Source-image update received; refreshEnqueued={enqueued}.",
+                enqueued ? LoggerStatusEnum.INFO : LoggerStatusEnum.WARNING);
         }
 
         private void OnClosed(object sender, WindowEventArgs e)
@@ -62,6 +66,7 @@ namespace GCaLink.ViewWindows.TodoView
             string dataPath = SettingsRetriever.GetMainDataPath();
             if (!File.Exists(dataPath))
             {
+                LoggerService.Log($"TodoView: Calendar data file not found at '{dataPath}'.", LoggerStatusEnum.WARNING);
                 EmptyState.Visibility = Visibility.Visible;
                 return;
             }
@@ -80,6 +85,7 @@ namespace GCaLink.ViewWindows.TodoView
             }
 
             EmptyState.Visibility = Events.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            LoggerService.Log($"TodoView: Rebuilt display with {Events.Count} events.");
         }
     }
 }

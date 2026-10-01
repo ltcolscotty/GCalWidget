@@ -4,15 +4,23 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using GCaLink.Services;
 
 namespace GCaLink.Platform
 {
     class Win32Interop
     {
         private const int GWL_EXSTYLE = -20;
+        private const int GWL_STYLE = -16;
 
         private const int WS_EX_TRANSPARENT = 0x00000020;
         private const int WS_EX_LAYERED = 0x00080000;
+        private const int WS_EX_TOOLWINDOW = 0x00000080;
+        private const int WS_EX_NOACTIVATE = 0x08000000;
+        private const int WS_CAPTION = 0x00C00000;
+        private const int WS_THICKFRAME = 0x00040000;
+        private const int WS_MINIMIZEBOX = 0x00020000;
+        private const int WS_MAXIMIZEBOX = 0x00010000;
         private const uint LWA_ALPHA = 0x00000002;
         private const int SW_RESTORE = 9;
 
@@ -25,22 +33,22 @@ namespace GCaLink.Platform
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        [DllImport("user32.dll", EntryPoint = "GetWindowLongW", ExactSpelling = true)]
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongW", ExactSpelling = true, SetLastError = true)]
         private static extern int GetWindowLong32(IntPtr hWnd, int nIndex);
 
-        [DllImport("user32.dll", EntryPoint = "SetWindowLongW", ExactSpelling = true)]
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongW", ExactSpelling = true, SetLastError = true)]
         private static extern int SetWindowLong32(IntPtr hWnd, int nIndex, int dwNewLong);
 
-        [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", ExactSpelling = true)]
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", ExactSpelling = true, SetLastError = true)]
         private static extern IntPtr GetWindowLong64(IntPtr hWnd, int nIndex);
 
-        [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", ExactSpelling = true)]
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", ExactSpelling = true, SetLastError = true)]
         private static extern IntPtr SetWindowLong64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 
         [DllImport("user32.dll")]
         private static extern bool SetLayeredWindowAttributes(IntPtr hWnd, uint colorKey, byte alpha, uint flags);
 
-        [DllImport("user32.dll")]
+        [DllImport("user32.dll", SetLastError = true)]
         private static extern bool SetWindowPos(
             IntPtr hWnd,
             IntPtr hWndInsertAfter,
@@ -56,41 +64,56 @@ namespace GCaLink.Platform
         private const uint SWP_NOMOVE = 0x0002;
         private const uint SWP_NOSIZE = 0x0001;
         private const uint SWP_SHOWWINDOW = 0x0040;
+        private const uint SWP_NOACTIVATE = 0x0010;
+        private const uint SWP_FRAMECHANGED = 0x0020;
 
-        private static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
+        private static bool TryGetWindowLongPtr(IntPtr hWnd, int nIndex, out long value)
         {
-            return IntPtr.Size == 8
+            Marshal.SetLastPInvokeError(0);
+            IntPtr result = IntPtr.Size == 8
                 ? GetWindowLong64(hWnd, nIndex)
                 : new IntPtr(GetWindowLong32(hWnd, nIndex));
+            value = result.ToInt64();
+            return result != IntPtr.Zero || Marshal.GetLastPInvokeError() == 0;
         }
 
-        private static IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr value)
+        private static bool TrySetWindowLongPtr(IntPtr hWnd, int nIndex, long value)
         {
-            return IntPtr.Size == 8
-                ? SetWindowLong64(hWnd, nIndex, value)
-                : new IntPtr(SetWindowLong32(hWnd, nIndex, value.ToInt32()));
+            Marshal.SetLastPInvokeError(0);
+            IntPtr previousValue = IntPtr.Size == 8
+                ? SetWindowLong64(hWnd, nIndex, new IntPtr(value))
+                : new IntPtr(SetWindowLong32(hWnd, nIndex, unchecked((int)value)));
+            return previousValue != IntPtr.Zero || Marshal.GetLastPInvokeError() == 0;
         }
 
         public static void EnableClickThrough(IntPtr hwnd)
         {
-            var styles = GetWindowLongPtr(hwnd, GWL_EXSTYLE).ToInt64();
-            styles |= WS_EX_TRANSPARENT | WS_EX_LAYERED;
-            SetWindowLongPtr(hwnd, GWL_EXSTYLE, new IntPtr(styles));
+            if (TryGetWindowLongPtr(hwnd, GWL_EXSTYLE, out long styles))
+            {
+                styles |= WS_EX_TRANSPARENT | WS_EX_LAYERED;
+                TrySetWindowLongPtr(hwnd, GWL_EXSTYLE, styles);
+            }
         }
 
         public static void DisableClickThrough(IntPtr hwnd)
         {
-            var styles = GetWindowLongPtr(hwnd, GWL_EXSTYLE).ToInt64();
-            styles &= ~WS_EX_TRANSPARENT;
-            SetWindowLongPtr(hwnd, GWL_EXSTYLE, new IntPtr(styles));
+            if (TryGetWindowLongPtr(hwnd, GWL_EXSTYLE, out long styles))
+            {
+                styles &= ~WS_EX_TRANSPARENT;
+                TrySetWindowLongPtr(hwnd, GWL_EXSTYLE, styles);
+            }
         }
 
         public static bool SetWindowOpacity(IntPtr hwnd, byte opacity)
         {
-            var styles = GetWindowLongPtr(hwnd, GWL_EXSTYLE).ToInt64();
+            if (!TryGetWindowLongPtr(hwnd, GWL_EXSTYLE, out long styles))
+            {
+                return false;
+            }
+
             styles |= WS_EX_LAYERED;
-            SetWindowLongPtr(hwnd, GWL_EXSTYLE, new IntPtr(styles));
-            return SetLayeredWindowAttributes(hwnd, 0, opacity, LWA_ALPHA);
+            return TrySetWindowLongPtr(hwnd, GWL_EXSTYLE, styles) &&
+                SetLayeredWindowAttributes(hwnd, 0, opacity, LWA_ALPHA);
         }
 
         public static void BringToFront(IntPtr hwnd)
@@ -116,6 +139,67 @@ namespace GCaLink.Platform
         {
             SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0,
                 SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        }
+
+        public static bool SetDesktopWidgetMode(IntPtr hwnd, bool widgetManagerActive)
+        {
+            if (!TryGetWindowLongPtr(hwnd, GWL_EXSTYLE, out long extendedStyles) ||
+                !TryGetWindowLongPtr(hwnd, GWL_STYLE, out long windowStyles))
+            {
+                return false;
+            }
+
+            if (widgetManagerActive)
+            {
+                extendedStyles &= ~(WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE);
+                windowStyles |= WS_CAPTION | WS_THICKFRAME;
+            }
+            else
+            {
+                extendedStyles |= WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
+                windowStyles &= ~(WS_CAPTION | WS_THICKFRAME);
+            }
+            windowStyles &= ~(WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+
+            if (!TrySetWindowLongPtr(hwnd, GWL_EXSTYLE, extendedStyles) ||
+                !TrySetWindowLongPtr(hwnd, GWL_STYLE, windowStyles))
+            {
+                return false;
+            }
+
+            bool positioned = SetWindowPos(
+                hwnd,
+                widgetManagerActive ? HWND_TOP : HWND_NOTOPMOST,
+                0,
+                0,
+                0,
+                0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+            LoggerService.Log(
+                $"Win32Interop: Applied widget manager mode active={widgetManagerActive}, hwnd=0x{hwnd.ToInt64():X}, positioned={positioned}.",
+                positioned ? LoggerStatusEnum.INFO : LoggerStatusEnum.WARNING);
+            return positioned;
+        }
+
+        public static bool TrySetWidgetManagerActiveByTitle(string title, bool widgetManagerActive)
+        {
+            IntPtr hwnd = FindWindow(null, title);
+            if (hwnd == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            if (!SetDesktopWidgetMode(hwnd, widgetManagerActive))
+            {
+                return false;
+            }
+            if (widgetManagerActive)
+            {
+                ShowWindow(hwnd, SW_RESTORE);
+                SetForegroundWindow(hwnd);
+            }
+
+            return true;
         }
 
     }

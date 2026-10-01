@@ -18,12 +18,15 @@ namespace GCaLink.Services
                     pair.Key.Equals(identity.Key, StringComparison.OrdinalIgnoreCase) ||
                     pair.Value.Source.Equals(identity.SourceId, StringComparison.OrdinalIgnoreCase))
                 .Value?.BkgColor ?? "#3A3A3A";
+            string? imagePath = SourceImageService.Instance.GetSourceImagePath(identity);
+            LoggerService.Log(
+                $"CalendarEventDisplayService: Event '{calendarEvent.Title}' provider='{calendarEvent.Provider}' source='{calendarEvent.Source}' identity='{identity.Key}' imageMatched={!string.IsNullOrWhiteSpace(imagePath)} image='{imagePath ?? "<none>"}' color='{backgroundColor}'.");
 
             return new CalEventDisplay
             {
                 Time = time,
                 Title = calendarEvent.Title,
-                BackgroundBrush = CreateBackgroundBrush(identity, backgroundColor)
+                BackgroundBrush = CreateBackgroundBrush(imagePath, backgroundColor)
             };
         }
 
@@ -47,9 +50,8 @@ namespace GCaLink.Services
             return CalendarSourceIdentity.FromValues(provider, calendarEvent.Source);
         }
 
-        private static Brush CreateBackgroundBrush(CalendarSourceIdentity identity, string backgroundColor)
+        private static Brush CreateBackgroundBrush(string? imagePath, string backgroundColor)
         {
-            string? imagePath = SourceImageService.Instance.GetSourceImagePath(identity);
             if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
             {
                 return new ImageBrush

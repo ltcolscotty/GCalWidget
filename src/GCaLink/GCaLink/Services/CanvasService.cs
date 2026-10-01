@@ -28,7 +28,7 @@ namespace GCaLink.Services
                 (inputEvent.Uid == null) ||
                 (inputEvent.Start == null))
             {
-                LoggerService.LogWarning(
+                LoggerService.Log(
                     $"CanvasService.Normalize(): Skipping invalid event (UID: '{inputEvent.Uid ?? "<missing>"}', Summary: '{inputEvent.Summary ?? "<missing>"}', Start: '{inputEvent.Start?.ToString() ?? "<missing>"}').",
                     LoggerStatusEnum.WARNING);
                 return null;
@@ -65,7 +65,7 @@ namespace GCaLink.Services
             string expectedPath = await downloader.DownloadIcsAsync(sourceLink, calendarFile);
             if (expectedPath != calendarFile) {
                 string message = $"CanvasService: ICS download returned unexpected path '{expectedPath}' (expected '{calendarFile}').";
-                LoggerService.LogWarning(message, LoggerStatusEnum.ERROR);
+                LoggerService.Log(message, LoggerStatusEnum.ERROR);
                 throw new InvalidOperationException(message);
             }
 
@@ -75,7 +75,7 @@ namespace GCaLink.Services
             if (calendar == null)
             {
                 const string message = "CanvasService: ICS download could not be parsed into a calendar; existing Canvas events were not updated.";
-                LoggerService.LogWarning(message, LoggerStatusEnum.ERROR);
+                LoggerService.Log(message, LoggerStatusEnum.ERROR);
                 throw new InvalidOperationException(message);
             }
 
@@ -94,7 +94,7 @@ namespace GCaLink.Services
                 events[id] = newCED;
             }
 
-            LoggerService.LogWarning(
+            LoggerService.Log(
                 $"CanvasService: Calendar refresh parsed {sourceKeys.Count} events and skipped {skippedCount} invalid events.",
                 skippedCount > 0 ? LoggerStatusEnum.WARNING : LoggerStatusEnum.INFO);
 

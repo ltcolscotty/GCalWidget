@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using MessagePack.Formatters;
 using System.ComponentModel;
@@ -20,13 +21,45 @@ namespace GCaLink.Services
         private static readonly CanvasService CanvasServ = new CanvasService();
         private static Dictionary<string, bool>? sourceList;
         private static Dictionary<string, List<IDHelper.EventID>> sourceIDs = new();
+        private static readonly object eventsChangedLock = new();
+        private static readonly Timer eventsChangedDebounceTimer = new(
+            _ => EventsChanged?.Invoke(null, EventArgs.Empty),
+            null,
+            Timeout.Infinite,
+            Timeout.Infinite);
+        private static FileSystemWatcher? eventDataWatcher;
 
         public static event EventHandler? EventsChanged;
 
         static EventAggService()
         {
             _ = LoadSourcesAsync();
+            WatchCalendarDataFile();
         }
+
+        private static void WatchCalendarDataFile()
+        {
+            string dataPath = SettingsRetriever.GetMainDataPath();
+            string directory = Path.GetDirectoryName(dataPath)!;
+            eventDataWatcher = new FileSystemWatcher(directory, Path.GetFileName(dataPath))
+            {
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size
+            };
+            eventDataWatcher.Changed += (_, _) => QueueEventsChanged();
+            eventDataWatcher.Created += (_, _) => QueueEventsChanged();
+            eventDataWatcher.Renamed += (_, _) => QueueEventsChanged();
+            eventDataWatcher.EnableRaisingEvents = true;
+        }
+
+        public static void NotifyViewsChanged()
+        {
+            lock (eventsChangedLock)
+            {
+                eventsChangedDebounceTimer.Change(150, Timeout.Infinite);
+            }
+        }
+
+        private static void QueueEventsChanged() => NotifyViewsChanged();
 
         public static GoogleCalService GetGoogleCalService() { return GCS; }
 
@@ -59,7 +92,7 @@ namespace GCaLink.Services
         {
             if (sourceList == null || !sourceList.TryGetValue("google", out var enabled))
             {
-                LoggerService.LogWarning("EventAggService: google status missing or sourceList not initialized", LoggerStatusEnum.EXCEPTION);
+                LoggerService.Log("EventAggService: google status missing or sourceList not initialized", LoggerStatusEnum.EXCEPTION);
                 return false;
             }
 
@@ -106,13 +139,13 @@ namespace GCaLink.Services
         {
             if (sourceList == null)
             {
-                LoggerService.LogWarning("EventAggService: Attempted to get events on empty source list", LoggerStatusEnum.ERROR);
+                LoggerService.Log("EventAggService: Attempted to get events on empty source list", LoggerStatusEnum.ERROR);
                 return null;
             }
 
             if (!(sourceList.TryGetValue("canvas", out var cEnabled) && cEnabled))
             {
-                LoggerService.LogWarning("EventAggService: Attempted to refresh canvas events without enabled source", LoggerStatusEnum.WARNING);
+                LoggerService.Log("EventAggService: Attempted to refresh canvas events without enabled source", LoggerStatusEnum.WARNING);
                 return false;
             }
 
@@ -132,7 +165,7 @@ namespace GCaLink.Services
             sourceIDs["canvas"] = keyList;
 
             await SaveCalDataAsync(calendarData, null);
-            EventsChanged?.Invoke(null, EventArgs.Empty);
+            QueueEventsChanged();
             return true;
         }
 
@@ -140,13 +173,13 @@ namespace GCaLink.Services
         {
             if (sourceList == null)
             {
-                LoggerService.LogWarning("EventAggService: Attempted to get events on empty source list", LoggerStatusEnum.ERROR);
+                LoggerService.Log("EventAggService: Attempted to get events on empty source list", LoggerStatusEnum.ERROR);
                 return null;
             }
 
             if (!(sourceList.TryGetValue("google", out var gEnabled) && gEnabled))
             {
-                LoggerService.LogWarning("EventAggService: Attempted to refresh google events without enabled source", LoggerStatusEnum.WARNING);
+                LoggerService.Log("EventAggService: Attempted to refresh google events without enabled source", LoggerStatusEnum.WARNING);
                 return false;
             }
 
@@ -175,7 +208,7 @@ namespace GCaLink.Services
 
             await SaveCalDataAsync(calendarData, null);
             sourceIDs["google"] = googleIds;
-            EventsChanged?.Invoke(null, EventArgs.Empty);
+            QueueEventsChanged();
             return true;
         }
 
@@ -202,7 +235,7 @@ namespace GCaLink.Services
         {
             if (sourceList == null)
             {
-                LoggerService.LogWarning("EventAggService: Attempted to get events on empty source list", LoggerStatusEnum.ERROR);
+                LoggerService.Log("EventAggService: Attempted to get events on empty source list", LoggerStatusEnum.ERROR);
                 return;
             }
 
@@ -234,7 +267,7 @@ namespace GCaLink.Services
             }
 
             await SaveCalDataAsync(calendarData, outputPath);
-            EventsChanged?.Invoke(null, EventArgs.Empty);
+            QueueEventsChanged();
         }
     }
 }

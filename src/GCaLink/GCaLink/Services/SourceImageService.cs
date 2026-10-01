@@ -27,6 +27,8 @@ namespace GCaLink.Services
         private readonly string _managedImageDirectory;
         private readonly string _associationFilePath;
         private readonly Dictionary<string, SourceImageAssociation> _associations;
+        private readonly FileSystemWatcher _associationWatcher;
+        private readonly Timer _associationReloadTimer;
 
         public SourceImageService()
         {
@@ -37,9 +39,45 @@ namespace GCaLink.Services
             Directory.CreateDirectory(_managedImageDirectory);
             _associations = LoadAssociations();
             CleanupStaleAssociations();
+
+            _associationReloadTimer = new Timer(_ => ReloadAssociations(), null, Timeout.Infinite, Timeout.Infinite);
+            _associationWatcher = new FileSystemWatcher(_managedImageDirectory, AssociationFileName)
+            {
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size
+            };
+            _associationWatcher.Changed += (_, _) => QueueAssociationReload();
+            _associationWatcher.Created += (_, _) => QueueAssociationReload();
+            _associationWatcher.Deleted += (_, _) => QueueAssociationReload();
+            _associationWatcher.Renamed += (_, _) => QueueAssociationReload();
+            _associationWatcher.EnableRaisingEvents = true;
+            LoggerService.Log($"SourceImageService: Watching association file '{_associationFilePath}'.");
         }
 
         public string ManagedImageDirectory => _managedImageDirectory;
+
+        public void ReloadAssociations()
+        {
+            LoggerService.Log($"SourceImageService: Reloading image associations from '{_associationFilePath}'.");
+            Dictionary<string, SourceImageAssociation> latestAssociations = LoadAssociations();
+            lock (SyncLock)
+            {
+                _associations.Clear();
+                foreach (var association in latestAssociations)
+                {
+                    _associations[association.Key] = association.Value;
+                }
+            }
+
+            CleanupStaleAssociations();
+            LoggerService.Log($"SourceImageService: Reloaded {latestAssociations.Count} image associations.");
+            SourceImagesChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void QueueAssociationReload()
+        {
+            LoggerService.Log("SourceImageService: Association file changed; debounce reload queued.");
+            _associationReloadTimer.Change(150, Timeout.Infinite);
+        }
 
         public IReadOnlyCollection<SourceImageAssociation> GetAllAssociations()
         {
@@ -87,7 +125,7 @@ namespace GCaLink.Services
             string fullPath = Path.Combine(_managedImageDirectory, association.ManagedImageFileName);
             if (!File.Exists(fullPath))
             {
-                LoggerService.LogWarning(
+                LoggerService.Log(
                     $"SourceImageService: Missing managed image for provider '{provider}' and source '{sourceId}'. Clearing stale association.",
                     LoggerStatusEnum.WARNING);
                 RemoveSourceImage(provider, sourceId, persist: true);
@@ -106,7 +144,7 @@ namespace GCaLink.Services
             managedImagePath = string.Empty;
             if (source.IsEmpty)
             {
-                LoggerService.LogWarning("SourceImageService: Attempted to assign a source image without a valid source identity.", LoggerStatusEnum.ERROR);
+                LoggerService.Log("SourceImageService: Attempted to assign a source image without a valid source identity.", LoggerStatusEnum.ERROR);
                 return false;
             }
 
@@ -118,19 +156,19 @@ namespace GCaLink.Services
             managedImagePath = string.Empty;
             if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(sourceId))
             {
-                LoggerService.LogWarning("SourceImageService: Attempted to assign an image without provider/source information.", LoggerStatusEnum.ERROR);
+                LoggerService.Log("SourceImageService: Attempted to assign an image without provider/source information.", LoggerStatusEnum.ERROR);
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(selectedImagePath) || !File.Exists(selectedImagePath))
             {
-                LoggerService.LogWarning("SourceImageService: Selected image file does not exist or was not provided.", LoggerStatusEnum.ERROR);
+                LoggerService.Log("SourceImageService: Selected image file does not exist or was not provided.", LoggerStatusEnum.ERROR);
                 return false;
             }
 
             if (!IsSupportedImage(selectedImagePath))
             {
-                LoggerService.LogWarning(
+                LoggerService.Log(
                     $"SourceImageService: Unsupported image type for source '{provider}:{sourceId}' file '{selectedImagePath}'.",
                     LoggerStatusEnum.WARNING);
                 return false;
@@ -158,6 +196,8 @@ namespace GCaLink.Services
                     managedImagePath = destinationPath;
                 }
 
+                LoggerService.Log(
+                    $"SourceImageService: Saved image customization for '{provider}:{sourceId}' to '{Path.GetFileName(managedImagePath)}'.");
                 SourceImagesChanged?.Invoke(this, EventArgs.Empty);
                 return true;
             }
@@ -229,7 +269,7 @@ namespace GCaLink.Services
                         continue;
                     }
 
-                    LoggerService.LogWarning(
+                    LoggerService.Log(
                         $"SourceImageService: Missing managed image for provider '{association.Provider}' source '{association.SourceId}' at '{managedPath}'. Clearing stale association.",
                         LoggerStatusEnum.WARNING);
                     _associations.Remove(key);

@@ -43,12 +43,16 @@ namespace GCaLink.ViewWindows.WeekView
 
         private void OnEventsChanged(object? sender, EventArgs e)
         {
-            DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
+            bool enqueued = DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
+            LoggerService.Log($"WeekView: Calendar data/settings update received; refreshEnqueued={enqueued}.",
+                enqueued ? LoggerStatusEnum.INFO : LoggerStatusEnum.WARNING);
         }
 
         private void OnSourceImagesChanged(object? sender, EventArgs e)
         {
-            DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
+            bool enqueued = DispatcherQueue.TryEnqueue(() => _ = LoadUpcomingEventsAsync());
+            LoggerService.Log($"WeekView: Source-image update received; refreshEnqueued={enqueued}.",
+                enqueued ? LoggerStatusEnum.INFO : LoggerStatusEnum.WARNING);
         }
 
         private void OnClosed(object sender, WindowEventArgs e)
@@ -75,6 +79,7 @@ namespace GCaLink.ViewWindows.WeekView
             string dataPath = SettingsRetriever.GetMainDataPath();
             if (!File.Exists(dataPath))
             {
+                LoggerService.Log($"WeekView: Calendar data file not found at '{dataPath}'.", LoggerStatusEnum.WARNING);
                 return;
             }
 
@@ -93,6 +98,8 @@ namespace GCaLink.ViewWindows.WeekView
                     calendarEvent,
                     calendarEvent.Datetime.ToLocalTime().ToString("h:mm tt")));
             }
+
+            LoggerService.Log($"WeekView: Rebuilt display with {Days.Sum(day => day.Events.Count)} events.");
         }
     }
 

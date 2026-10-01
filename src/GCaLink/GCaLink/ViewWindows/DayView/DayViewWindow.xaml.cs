@@ -45,12 +45,16 @@ public sealed partial class DayViewWindow : Window
 
     private void OnEventsChanged(object? sender, EventArgs e)
     {
-        DispatcherQueue.TryEnqueue(() => _ = LoadTodayEventsAsync());
+        bool enqueued = DispatcherQueue.TryEnqueue(() => _ = LoadTodayEventsAsync());
+        LoggerService.Log($"DayView: Calendar data/settings update received; refreshEnqueued={enqueued}.",
+            enqueued ? LoggerStatusEnum.INFO : LoggerStatusEnum.WARNING);
     }
 
     private void OnSourceImagesChanged(object? sender, EventArgs e)
     {
-        DispatcherQueue.TryEnqueue(() => _ = LoadTodayEventsAsync());
+        bool enqueued = DispatcherQueue.TryEnqueue(() => _ = LoadTodayEventsAsync());
+        LoggerService.Log($"DayView: Source-image update received; refreshEnqueued={enqueued}.",
+            enqueued ? LoggerStatusEnum.INFO : LoggerStatusEnum.WARNING);
     }
 
     private void OnClosed(object sender, WindowEventArgs e)
@@ -71,6 +75,7 @@ public sealed partial class DayViewWindow : Window
         string dataPath = SettingsRetriever.GetMainDataPath();
         if (!File.Exists(dataPath))
         {
+            LoggerService.Log($"DayView: Calendar data file not found at '{dataPath}'.", LoggerStatusEnum.WARNING);
             EmptyState.Visibility = Visibility.Visible;
             return;
         }
@@ -86,6 +91,7 @@ public sealed partial class DayViewWindow : Window
         }
 
         EmptyState.Visibility = Events.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    LoggerService.Log($"DayView: Rebuilt display with {Events.Count} events.");
     }
 }
 }

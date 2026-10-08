@@ -22,6 +22,8 @@
 - [ ] Memory usage optimization
     - [ ] Basic checks for memory leaks
     - [ ] Benchmark view usage
+- [ ] Real documentation inside the code
+- [ ] Finish docs folder
 
 ### In Progress
 

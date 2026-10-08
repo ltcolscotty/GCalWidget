@@ -14,6 +14,7 @@
 - [ ] Solid color customization option for event backgrounds
     - [ ] Color selector UI
 - [ ] On startup request
+- [ ] Prevent processes from interrupting shutdown
 
 #### <font color="green"> Low Priority </font>
 

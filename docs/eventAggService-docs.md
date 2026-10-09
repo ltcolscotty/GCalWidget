@@ -6,7 +6,9 @@ Centralized event aggregator class. This should be the only part of GCaLink to m
 
 ## Read/Write - Locks (IMPORTANT)
 
-To ensure data races don't happen, use the `_calEventMsgPackLock` lock to ensure atomicity. 
+All access to the calendar message-pack file should go through `AcquireCalendarDataLockAsync()`. That method creates/opens a sidecar lock file at `SettingsRetriever.GetMainDataPath() + ".lock"` using `FileStream` with `FileShare.None`, which serializes readers and writers and prevents concurrent reads/writes to `GCWMainData.msgpack`.
+
+This is the actual data-safety lock for the message pack file; the `eventsChangedLock` is only for debounced view notifications and not for protecting the calendar data itself.
 
 ## Aggregation
 

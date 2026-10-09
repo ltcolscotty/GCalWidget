@@ -9,15 +9,8 @@
     mc:Ignorable="d"
     Title="GCaLink Day View">
 
-    <Grid Background="#202020">
 
-        <Border
-            Margin="12"
-            Padding="20"
-            Background="#2B2B2B"
-            CornerRadius="16">
-
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
+        <Grid Padding="16" RowDefinitions="Auto,Auto,Auto,Auto,*" Background="#202020">
 
                 <TextBlock
                     x:Name="DayText"
@@ -28,8 +21,8 @@
                 <TextBlock
                     x:Name="DateText"
                     Grid.Row="1"
-                    Margin="0,2,0,18"
-                    FontSize="30"
+                    Margin="0,2,0,16"
+                    FontSize="24"
                     FontWeight="Bold"
                     Foreground="White"/>
 
@@ -57,12 +50,12 @@
                         <DataTemplate>
 
                             <Border
-                                Margin="0,0,0,10"
+                                Margin="0,0,0,8"
                                 Padding="12"
                                 Background="{Binding BackgroundBrush}"
                                 CornerRadius="10">
 
-                                <Grid ColumnDefinitions="70,*">
+                                <Grid ColumnDefinitions="78,*">
 
                                     <TextBlock
                                         Text="{Binding Time}"
@@ -92,10 +85,6 @@
                     </ItemsControl>
                 </ScrollViewer>
 
-            </Grid>
-
-        </Border>
-
-    </Grid>
+        </Grid>
 
 </Window>

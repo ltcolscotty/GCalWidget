@@ -405,5 +405,7 @@ FodyWeavers.xsd
 .ipynb_checkpoints/
 env/
 
+.idea/
+
 #ical files
 *.ics

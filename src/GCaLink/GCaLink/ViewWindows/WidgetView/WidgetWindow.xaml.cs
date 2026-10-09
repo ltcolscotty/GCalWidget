@@ -39,12 +39,16 @@ namespace GCaLink.ViewWindows.WidgetView
         public ObservableCollection<SourceCustomizationCard> GoogleSourceCards { get; } = new();
         public ObservableCollection<SourceCustomizationCard> CanvasSourceCards { get; } = new();
 
+        private readonly RefreshSchedService _refreshSchedService;
         private bool _isUpdatingTransparencyControls;
         private bool _isUpdatingPrimaryViewControl;
 
         public WidgetWindow()
         {
             InitializeComponent();
+            _ = SettingsRetriever.InitializeAsync();
+            _refreshSchedService = new RefreshSchedService(
+                TimeSpan.FromMinutes(SettingsRetriever.GetUpdateDurationMins()));
             _isUpdatingTransparencyControls = true;
             WindowConfiguration.Configure(this, isWidgetViewActive: true);
             ViewWindowManager.SetPrimaryViewManagerActive(true);
@@ -53,6 +57,7 @@ namespace GCaLink.ViewWindows.WidgetView
                 LoggerService.Log("WidgetWindow: Closed event received; publishing manager inactive state.");
                 ViewWindowManager.SetPrimaryViewManagerActive(false);
                 ViewWindowManager.PrimaryViewClosedByUser -= OnPrimaryViewClosedByUser;
+                _ = _refreshSchedService.DisposeAsync();
             };
             Activated += (_, args) =>
             {
@@ -62,7 +67,7 @@ namespace GCaLink.ViewWindows.WidgetView
                 }
             };
 
-            _ = SettingsRetriever.InitializeAsync();
+            _ = _refreshSchedService.RunAsync();
 
             BkgStyleRadioSettings.SelectedIndex = SettingsRetriever.GetBackgroundType() switch
             {

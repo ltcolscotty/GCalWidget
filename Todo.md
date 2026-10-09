@@ -29,7 +29,6 @@
 ### In Progress
 
 - [ ] Automatic Refreshing [<font color="lightgreen"> High Priority </font>]
-    - No branch set yet
 
 ### Done
 

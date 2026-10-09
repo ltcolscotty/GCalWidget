@@ -256,6 +256,7 @@ namespace GCaLink.Services
         public static string GetMainDataPath() { return dataFile; }
         public static bool GetInitializedStatus() { return initializedAsyncStatus; }
         public static int GetTrackedDays() { return options.TrackedDays; }
+        public static int GetUpdateDurationMins() { return options.updateDurationMins; }
         public static string GetImageDataFolder() { return SourceImageService.Instance.ManagedImageDirectory; }
 
         private static async Task<Dictionary<string, EventTypeConfig>> LoadEventTypeConfigs(string inputPath)

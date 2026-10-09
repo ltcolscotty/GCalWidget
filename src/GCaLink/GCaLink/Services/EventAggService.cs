@@ -17,6 +17,12 @@ namespace GCaLink.Services
 {
     internal static class EventAggService
     {
+        /// <summary>
+        /// _calEventMsgPackLock mutex lock to prevent multiple file modifications at the same time
+        /// Use this when doing a read/write operation to the cal even messagePack file
+        /// </summary>
+        private static readonly SemaphoreSlim _calEventMsgPackLock = new(1, 1);
+
         private static GoogleCalService GCS = new(SettingsRetriever.GetGoogleCalOptions());
         private static readonly CanvasService CanvasServ = new CanvasService();
         private static Dictionary<string, bool>? sourceList;
@@ -99,6 +105,11 @@ namespace GCaLink.Services
             return enabled;
         }
 
+        /// <summary>
+        /// Reads calendar event message pack file and returns calendar events
+        /// </summary>
+        /// <param name="inputPath">File path for events MessagePack file</param>
+        /// <returns>All eventIDs with affiliated CalEventDto objects</returns>
         public static async Task<Dictionary<IDHelper.EventID, CalEventDto>> ReadUpcomingEventsMessagePackAsync(string? inputPath)
         {
             if (inputPath == null)
@@ -120,6 +131,10 @@ namespace GCaLink.Services
             await File.WriteAllBytesAsync(outputPath, bytes);
         }
 
+        /// <summary>
+        /// Get events only from enabled sources
+        /// </summary>
+        /// <returns>Dictionary of keys of eventIDs with affiliated CalEventDto objects</returns>
         public static async Task<Dictionary<IDHelper.EventID, CalEventDto>> GetFilteredDTO()
         {
             List<string> enabledSources = SettingsRetriever.GetActiveLongSources();
@@ -149,26 +164,40 @@ namespace GCaLink.Services
                 return false;
             }
 
-            Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadUpcomingEventsMessagePackAsync(null);
-            Dictionary<string, EventTypeConfig> sourceConfig = SettingsRetriever.GetSourceConfigs();
+            await _calEventMsgPackLock.WaitAsync();
 
-            if (sourceIDs.TryGetValue("canvas", out List<IDHelper.EventID>? canvasIds))
+            try
             {
-                foreach (IDHelper.EventID id in canvasIds)
+                Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadUpcomingEventsMessagePackAsync(null);
+                Dictionary<string, EventTypeConfig> sourceConfig = SettingsRetriever.GetSourceConfigs();
+
+                if (sourceIDs.TryGetValue("canvas", out List<IDHelper.EventID>? canvasIds))
                 {
-                    calendarData.Remove(id);
+                    foreach (IDHelper.EventID id in canvasIds)
+                    {
+                        calendarData.Remove(id);
+                    }
                 }
+
+                var (tCalendarData, keyList) = await CanvasServ.FetchUpcomingEventsAsync(SettingsRetriever.GetCanvasICSLink(), calendarData, sourceConfig);
+                calendarData = tCalendarData;
+                sourceIDs["canvas"] = keyList;
+
+                await SaveCalDataAsync(calendarData, null);
+                QueueEventsChanged();
+            }
+            finally
+            {
+                _calEventMsgPackLock.Release();
             }
 
-            var (tCalendarData, keyList) = await CanvasServ.FetchUpcomingEventsAsync(SettingsRetriever.GetCanvasICSLink(), calendarData, sourceConfig);
-            calendarData = tCalendarData;
-            sourceIDs["canvas"] = keyList;
-
-            await SaveCalDataAsync(calendarData, null);
-            QueueEventsChanged();
             return true;
         }
 
+        /// <summary>
+        /// Granular control for refreshing only google sources
+        /// </summary>
+        /// <returns>Successful operation status</returns>
         public static async Task<bool?> RefreshGoogle()
         {
             if (sourceList == null)
@@ -192,23 +221,32 @@ namespace GCaLink.Services
                 return false;
             }
 
-            Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadUpcomingEventsMessagePackAsync(null);
-            foreach (IDHelper.EventID id in calendarData
-                .Where(pair => IsGooglePrimaryEvent(pair.Value))
-                .Select(pair => pair.Key)
-                .ToList())
-            {
-                calendarData.Remove(id);
-            }
+            await _calEventMsgPackLock.WaitAsync();
 
-            foreach ((IDHelper.EventID id, CalEventDto calendarEvent) in googleEvents)
+            try
             {
-                calendarData[id] = calendarEvent;
-            }
+                Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadUpcomingEventsMessagePackAsync(null);
+                foreach (IDHelper.EventID id in calendarData
+                    .Where(pair => IsGooglePrimaryEvent(pair.Value))
+                    .Select(pair => pair.Key)
+                    .ToList())
+                {
+                    calendarData.Remove(id);
+                }
 
-            await SaveCalDataAsync(calendarData, null);
-            sourceIDs["google"] = googleIds;
-            QueueEventsChanged();
+                foreach ((IDHelper.EventID id, CalEventDto calendarEvent) in googleEvents)
+                {
+                    calendarData[id] = calendarEvent;
+                }
+
+                await SaveCalDataAsync(calendarData, null);
+                sourceIDs["google"] = googleIds;
+                QueueEventsChanged();
+            }
+            finally
+            {
+                _calEventMsgPackLock.Release();
+            }
             return true;
         }
 
@@ -268,6 +306,30 @@ namespace GCaLink.Services
 
             await SaveCalDataAsync(calendarData, outputPath);
             QueueEventsChanged();
+        }
+
+        /// <summary>
+        /// Refresh all source events
+        /// </summary>
+        /// <returns></returns>
+        public static async Task RefreshAllAsync()
+        {
+            if (sourceList == null)
+            {
+                LoggerService.Log("EventAggService: Attempted to get events on empty source list", LoggerStatusEnum.ERROR);
+                return;
+            }
+
+            // Wrapper prevents logging
+            if (sourceList.TryGetValue("google", out var gEnabled) && gEnabled)
+            {
+                await RefreshGoogle();
+            }
+
+            if (sourceList.TryGetValue("canvas", out var cEnabled) && cEnabled)
+            {
+                await RefreshCanvas();
+            }
         }
     }
 }

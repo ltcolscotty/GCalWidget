@@ -57,6 +57,8 @@ namespace GCaLink.Models
         public WindowSize? PinnedViewSize { get; set; }
         public int TrackedDays { get; set; } = 3;
         public List<string> PinnedEventsList { get; set; } = [];
+        public int updateDurationMins { get; set; } = 720;
+        public DateTimeOffset lastUpdateTime { get; set; } = DateTimeOffset.MinValue;
 
         [JsonExtensionData]
         public Dictionary<string, JsonElement>? ExtraData { get; set; }

@@ -152,6 +152,13 @@ namespace GCaLink.Services
             return true;
         }
 
+        public static DateTimeOffset getLastUpdateTime() { return options.lastUpdateTime; }
+        public static void setLastUpdateTime(DateTimeOffset newTime)
+        {
+            options.lastUpdateTime = newTime;
+            SaveOptions();
+        }
+
         public static string GetCanvasICSLink() { return options.CanvasICSLink; }
         public static bool GetCanvasEnabled() { return options.CanvasEnabled; }
         public static void SetCanvasEnabled(bool enabled)

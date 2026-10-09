@@ -330,6 +330,9 @@ namespace GCaLink.Services
             {
                 await RefreshCanvas();
             }
+
+            SettingsRetriever.setLastUpdateTime(DateTimeOffset.Now);
+            LoggerService.Log("EventAggService: All sources refreshed successfully", LoggerStatusEnum.INFO);
         }
     }
 }

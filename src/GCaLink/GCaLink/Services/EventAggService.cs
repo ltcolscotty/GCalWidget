@@ -22,6 +22,7 @@ namespace GCaLink.Services
         private static Dictionary<string, bool>? sourceList;
         private static Dictionary<string, List<IDHelper.EventID>> sourceIDs = new();
         private static readonly object eventsChangedLock = new();
+        private static readonly CancellationTokenSource shutdownCancellation = new();
         private static readonly Timer eventsChangedDebounceTimer = new(
             _ => EventsChanged?.Invoke(null, EventArgs.Empty),
             null,
@@ -30,6 +31,16 @@ namespace GCaLink.Services
         private static FileSystemWatcher? eventDataWatcher;
 
         public static event EventHandler? EventsChanged;
+
+        public static bool IsShutdownRequested => shutdownCancellation.IsCancellationRequested;
+
+        public static void RequestShutdown()
+        {
+            if (!shutdownCancellation.IsCancellationRequested)
+            {
+                shutdownCancellation.Cancel();
+            }
+        }
 
         static EventAggService()
         {
@@ -63,19 +74,20 @@ namespace GCaLink.Services
 
         public static GoogleCalService GetGoogleCalService() { return GCS; }
 
-        private static async Task<FileStream> AcquireCalendarDataLockAsync()
+        private static async Task<FileStream> AcquireCalendarDataLockAsync(CancellationToken cancellationToken)
         {
             string lockPath = SettingsRetriever.GetMainDataPath() + ".lock";
 
             while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
                     return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
                 }
                 catch (IOException exception) when ((exception.HResult & 0xFFFF) is 32 or 33)
                 {
-                    await Task.Delay(50);
+                    await Task.Delay(50, cancellationToken);
                 }
             }
         }
@@ -128,24 +140,53 @@ namespace GCaLink.Services
                 inputPath = SettingsRetriever.GetMainDataPath();
             }
 
-            await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync();
-            return await ReadCalendarDataWithoutLockAsync(inputPath);
+            CancellationToken cancellationToken = shutdownCancellation.Token;
+            await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync(cancellationToken);
+            return await ReadCalendarDataWithoutLockAsync(inputPath, cancellationToken);
         }
 
-        private static async Task<Dictionary<IDHelper.EventID, CalEventDto>> ReadCalendarDataWithoutLockAsync(string inputPath)
+        private static async Task<Dictionary<IDHelper.EventID, CalEventDto>> ReadCalendarDataWithoutLockAsync(
+            string inputPath,
+            CancellationToken cancellationToken)
         {
-            byte[] bytes = await File.ReadAllBytesAsync(inputPath);
+            byte[] bytes = await File.ReadAllBytesAsync(inputPath, cancellationToken);
             return MessagePackSerializer.Deserialize<Dictionary<IDHelper.EventID, CalEventDto>>(bytes);
         }
 
-        private static async Task SaveCalDataAsync(Dictionary<IDHelper.EventID, CalEventDto> calendarData, string? outputPath)
+        private static async Task SaveCalDataAsync(
+            Dictionary<IDHelper.EventID, CalEventDto> calendarData,
+            string? outputPath,
+            CancellationToken cancellationToken)
         {
             if (outputPath == null)
             {
                 outputPath = SettingsRetriever.GetMainDataPath();
             }
+
             byte[] bytes = MessagePackSerializer.Serialize(calendarData);
-            await File.WriteAllBytesAsync(outputPath, bytes);
+            string temporaryPath = $"{outputPath}.{Guid.NewGuid():N}.tmp";
+            try
+            {
+                await File.WriteAllBytesAsync(temporaryPath, bytes, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                File.Move(temporaryPath, outputPath, overwrite: true);
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath))
+                {
+                    try
+                    {
+                        File.Delete(temporaryPath);
+                    }
+                    catch (Exception exception)
+                    {
+                        LoggerService.LogException(
+                            "EventAggService: Failed to remove temporary calendar data file.",
+                            exception);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -169,8 +210,9 @@ namespace GCaLink.Services
 
         public static async Task<bool?> RefreshCanvas()
         {
-            await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync();
-            bool? result = await RefreshCanvasWithoutLockAsync();
+            CancellationToken cancellationToken = shutdownCancellation.Token;
+            await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync(cancellationToken);
+            bool? result = await RefreshCanvasWithoutLockAsync(cancellationToken);
             if (result == true)
             {
                 SettingsRetriever.setLastUpdateTime(DateTimeOffset.Now);
@@ -178,7 +220,7 @@ namespace GCaLink.Services
             return result;
         }
 
-        private static async Task<bool?> RefreshCanvasWithoutLockAsync()
+        private static async Task<bool?> RefreshCanvasWithoutLockAsync(CancellationToken cancellationToken)
         {
             if (sourceList == null)
             {
@@ -192,7 +234,9 @@ namespace GCaLink.Services
                 return false;
             }
 
-            Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadCalendarDataWithoutLockAsync(SettingsRetriever.GetMainDataPath());
+            Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadCalendarDataWithoutLockAsync(
+                SettingsRetriever.GetMainDataPath(),
+                cancellationToken);
             Dictionary<string, EventTypeConfig> sourceConfig = SettingsRetriever.GetSourceConfigs();
 
             if (sourceIDs.TryGetValue("canvas", out List<IDHelper.EventID>? canvasIds))
@@ -203,11 +247,15 @@ namespace GCaLink.Services
                 }
             }
 
-            var (tCalendarData, keyList) = await CanvasServ.FetchUpcomingEventsAsync(SettingsRetriever.GetCanvasICSLink(), calendarData, sourceConfig);
+            var (tCalendarData, keyList) = await CanvasServ.FetchUpcomingEventsAsync(
+                SettingsRetriever.GetCanvasICSLink(),
+                calendarData,
+                sourceConfig,
+                cancellationToken);
             calendarData = tCalendarData;
-            sourceIDs["canvas"] = keyList;
 
-            await SaveCalDataAsync(calendarData, null);
+            await SaveCalDataAsync(calendarData, null, cancellationToken);
+            sourceIDs["canvas"] = keyList;
             QueueEventsChanged();
             return true;
         }
@@ -218,8 +266,9 @@ namespace GCaLink.Services
         /// <returns>Successful operation status</returns>
         public static async Task<bool?> RefreshGoogle()
         {
-            await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync();
-            bool? result = await RefreshGoogleWithoutLockAsync();
+            CancellationToken cancellationToken = shutdownCancellation.Token;
+            await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync(cancellationToken);
+            bool? result = await RefreshGoogleWithoutLockAsync(cancellationToken);
             if (result == true)
             {
                 SettingsRetriever.setLastUpdateTime(DateTimeOffset.Now);
@@ -227,7 +276,7 @@ namespace GCaLink.Services
             return result;
         }
 
-        private static async Task<bool?> RefreshGoogleWithoutLockAsync()
+        private static async Task<bool?> RefreshGoogleWithoutLockAsync(CancellationToken cancellationToken)
         {
             if (sourceList == null)
             {
@@ -241,16 +290,19 @@ namespace GCaLink.Services
                 return false;
             }
 
-            CalendarService service = await GCS.CreateCalendarServiceAsync();
+            CalendarService service = await GCS.CreateCalendarServiceAsync(cancellationToken);
             var (googleEvents, googleIds, isComplete) = await GCS.FetchUpcomingEventsAsync(
                 service,
-                new Dictionary<IDHelper.EventID, CalEventDto>());
+                new Dictionary<IDHelper.EventID, CalEventDto>(),
+                cancellationToken);
             if (!isComplete)
             {
                 return false;
             }
 
-            Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadCalendarDataWithoutLockAsync(SettingsRetriever.GetMainDataPath());
+            Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadCalendarDataWithoutLockAsync(
+                SettingsRetriever.GetMainDataPath(),
+                cancellationToken);
             foreach (IDHelper.EventID id in calendarData
                 .Where(pair => IsGooglePrimaryEvent(pair.Value))
                 .Select(pair => pair.Key)
@@ -264,7 +316,7 @@ namespace GCaLink.Services
                 calendarData[id] = calendarEvent;
             }
 
-            await SaveCalDataAsync(calendarData, null);
+            await SaveCalDataAsync(calendarData, null, cancellationToken);
             sourceIDs["google"] = googleIds;
             QueueEventsChanged();
             return true;
@@ -289,9 +341,15 @@ namespace GCaLink.Services
             return isGoogleHost && link.AbsolutePath.StartsWith("/calendar/event", StringComparison.OrdinalIgnoreCase);
         }
 
-        public static async Task WriteUpcomingEventsMessagePackAsync(string? outputPath)
+        public static async Task WriteUpcomingEventsMessagePackAsync(
+            string? outputPath,
+            CancellationToken cancellationToken = default)
         {
-            await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync();
+            using CancellationTokenSource linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                shutdownCancellation.Token,
+                cancellationToken);
+            cancellationToken = linkedCancellation.Token;
+            await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync(cancellationToken);
 
             if (sourceList == null)
             {
@@ -306,27 +364,39 @@ namespace GCaLink.Services
 
             Dictionary<IDHelper.EventID, CalEventDto> calendarData = [];
             Dictionary<string, EventTypeConfig> sourceConfig = SettingsRetriever.GetSourceConfigs();
+            Dictionary<string, List<IDHelper.EventID>> pendingSourceIds = new();
 
             if (sourceList.TryGetValue("google", out var gEnabled) && gEnabled)
             {
-                CalendarService service = await GCS.CreateCalendarServiceAsync();
-                var (tCalendarData, keyList, isComplete) = await GCS.FetchUpcomingEventsAsync(service, calendarData);
+                CalendarService service = await GCS.CreateCalendarServiceAsync(cancellationToken);
+                var (tCalendarData, keyList, isComplete) = await GCS.FetchUpcomingEventsAsync(
+                    service,
+                    calendarData,
+                    cancellationToken);
                 if (!isComplete)
                 {
                     return;
                 }
                 calendarData = tCalendarData;
-                sourceIDs["google"] = keyList;
+                pendingSourceIds["google"] = keyList;
             }
 
             if (sourceList.TryGetValue("canvas", out var cEnabled) && cEnabled)
             {
-                var (tCalendarData, keyList) = await CanvasServ.FetchUpcomingEventsAsync(SettingsRetriever.GetCanvasICSLink(), calendarData, sourceConfig);
+                var (tCalendarData, keyList) = await CanvasServ.FetchUpcomingEventsAsync(
+                    SettingsRetriever.GetCanvasICSLink(),
+                    calendarData,
+                    sourceConfig,
+                    cancellationToken);
                 calendarData = tCalendarData;
-                sourceIDs["canvas"] = keyList;
+                pendingSourceIds["canvas"] = keyList;
             }
 
-            await SaveCalDataAsync(calendarData, outputPath);
+            await SaveCalDataAsync(calendarData, outputPath, cancellationToken);
+            foreach ((string source, List<IDHelper.EventID> ids) in pendingSourceIds)
+            {
+                sourceIDs[source] = ids;
+            }
             SettingsRetriever.setLastUpdateTime(DateTimeOffset.Now);
             QueueEventsChanged();
         }
@@ -337,7 +407,8 @@ namespace GCaLink.Services
         /// <returns></returns>
         public static async Task RefreshAllAsync()
         {
-            await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync();
+            CancellationToken cancellationToken = shutdownCancellation.Token;
+            await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync(cancellationToken);
 
             if (sourceList == null)
             {
@@ -348,12 +419,12 @@ namespace GCaLink.Services
             // Wrapper prevents logging
             if (sourceList.TryGetValue("google", out var gEnabled) && gEnabled)
             {
-                await RefreshGoogleWithoutLockAsync();
+                await RefreshGoogleWithoutLockAsync(cancellationToken);
             }
 
             if (sourceList.TryGetValue("canvas", out var cEnabled) && cEnabled)
             {
-                await RefreshCanvasWithoutLockAsync();
+                await RefreshCanvasWithoutLockAsync(cancellationToken);
             }
 
             SettingsRetriever.setLastUpdateTime(DateTimeOffset.Now);

@@ -131,19 +131,19 @@ namespace GCaLink.Services
             }
         }
 
-        public async Task<GoogleAccountProfile?> GetAccountProfileAsync()
+        public async Task<GoogleAccountProfile?> GetAccountProfileAsync(CancellationToken cancellationToken = default)
         {
             const string userId = "user";
 
             try
             {
                 using GoogleAuthorizationCodeFlow flow = CreateFlow();
-                TokenResponse? token = await flow.LoadTokenAsync(userId, CancellationToken.None);
+                TokenResponse? token = await flow.LoadTokenAsync(userId, cancellationToken);
                 if (token == null)
                     return null;
 
                 UserCredential credential = new UserCredential(flow, userId, token);
-                if (credential.Token.IsStale && !await credential.RefreshTokenAsync(CancellationToken.None))
+                if (credential.Token.IsStale && !await credential.RefreshTokenAsync(cancellationToken))
                     return null;
 
                 using HttpClient client = new();
@@ -154,11 +154,12 @@ namespace GCaLink.Services
                     "Bearer",
                     credential.Token.AccessToken);
 
-                using HttpResponseMessage response = await client.SendAsync(request);
+                using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
                 if (!response.IsSuccessStatusCode)
                     return null;
 
-                using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                using JsonDocument document = JsonDocument.Parse(
+                    await response.Content.ReadAsStringAsync(cancellationToken));
                 JsonElement profile = document.RootElement;
                 string name = profile.TryGetProperty("name", out JsonElement nameElement)
                     ? nameElement.GetString() ?? string.Empty
@@ -172,6 +173,10 @@ namespace GCaLink.Services
 
                 return new GoogleAccountProfile(name, email, picture);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch
             {
                 return null;
@@ -184,7 +189,7 @@ namespace GCaLink.Services
             await flow.DataStore.ClearAsync();
         }
 
-        public async Task<CalendarService> CreateCalendarServiceAsync()
+        public async Task<CalendarService> CreateCalendarServiceAsync(CancellationToken cancellationToken = default)
         {
             ClientSecrets secrets = LoadClientSecrets();
 
@@ -192,7 +197,7 @@ namespace GCaLink.Services
                 secrets,
                 Scopes,
                 "user",
-                CancellationToken.None,
+                cancellationToken,
                 new FileDataStore(Path.GetDirectoryName(_options.TokenPath) ?? "token-store", true)
             );
 
@@ -245,17 +250,19 @@ namespace GCaLink.Services
 
         public async Task<(Dictionary<IDHelper.EventID, CalEventDto> Events, List<IDHelper.EventID> EventIds, bool IsComplete)> FetchUpcomingEventsAsync(
             CalendarService service, 
-            Dictionary<IDHelper.EventID, CalEventDto> calendarData)
+            Dictionary<IDHelper.EventID, CalEventDto> calendarData,
+            CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             DateTimeOffset now = DateTimeOffset.UtcNow;
             DateTimeOffset end = now.AddDays(7);
             List<IDHelper.EventID> sourceKeys = new();
             int maximumEvents = Math.Max(1, _options.MaximumEventsPerRefresh);
             int fetchedCount = 0;
-            string accountEmail = (await GetAccountProfileAsync())?.Email ?? string.Empty;
+            string accountEmail = (await GetAccountProfileAsync(cancellationToken))?.Email ?? string.Empty;
 
             ColorsResource.GetRequest colorsRequest = service.Colors.Get();
-            Colors colors = await colorsRequest.ExecuteAsync();
+            Colors colors = await colorsRequest.ExecuteAsync(cancellationToken);
 
             string? pageToken = null;
             do
@@ -268,7 +275,7 @@ namespace GCaLink.Services
                 eventsRequest.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
                 eventsRequest.PageToken = pageToken;
 
-                Events events = await eventsRequest.ExecuteAsync();
+                Events events = await eventsRequest.ExecuteAsync(cancellationToken);
                 if (events.Items != null)
                 {
                     foreach (Event ev in events.Items)

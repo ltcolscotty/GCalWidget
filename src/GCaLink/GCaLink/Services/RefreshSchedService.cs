@@ -9,6 +9,7 @@ namespace GCaLink.Services
         private readonly PeriodicTimer _timer;
         private readonly CancellationTokenSource _cts = new();
         private Task? _runTask;
+        private int _disposed;
 
         public RefreshSchedService(TimeSpan interval)
         {
@@ -35,7 +36,14 @@ namespace GCaLink.Services
                 {
                     try
                     {
-                        await EventAggService.WriteUpcomingEventsMessagePackAsync(SettingsRetriever.GetMainDataPath());
+                        await EventAggService.WriteUpcomingEventsMessagePackAsync(
+                            SettingsRetriever.GetMainDataPath(),
+                            _cts.Token);
+                    }
+                    catch (OperationCanceledException) when (
+                        _cts.IsCancellationRequested || EventAggService.IsShutdownRequested)
+                    {
+                        return;
                     }
                     catch (Exception exception)
                     {
@@ -51,6 +59,11 @@ namespace GCaLink.Services
 
         public async ValueTask DisposeAsync()
         {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            {
+                return;
+            }
+
             _cts.Cancel();
             _timer.Dispose();
 

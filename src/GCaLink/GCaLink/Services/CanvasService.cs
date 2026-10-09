@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using GCaLink.Models;
 using Ical.Net.CalendarComponents;
 using System.Collections;
+using System.Threading;
 
 namespace GCaLink.Services
 {
@@ -54,7 +55,8 @@ namespace GCaLink.Services
         public async Task<(Dictionary<IDHelper.EventID, CalEventDto>, List<IDHelper.EventID>)> FetchUpcomingEventsAsync(
             string sourceLink, 
             Dictionary<IDHelper.EventID, CalEventDto> events, 
-            Dictionary<string, EventTypeConfig> sourceList)
+            Dictionary<string, EventTypeConfig> sourceList,
+            CancellationToken cancellationToken = default)
         {
             // May need to check that folder exists
             string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -62,14 +64,14 @@ namespace GCaLink.Services
             string calendarFile = Path.Combine(appDataLocalFolder, "CanvasData.ics");
             List<IDHelper.EventID> sourceKeys = new();
 
-            string expectedPath = await downloader.DownloadIcsAsync(sourceLink, calendarFile);
+            string expectedPath = await downloader.DownloadIcsAsync(sourceLink, calendarFile, cancellationToken);
             if (expectedPath != calendarFile) {
                 string message = $"CanvasService: ICS download returned unexpected path '{expectedPath}' (expected '{calendarFile}').";
                 LoggerService.Log(message, LoggerStatusEnum.ERROR);
                 throw new InvalidOperationException(message);
             }
 
-            string icsContent = File.ReadAllText(expectedPath);
+            string icsContent = await File.ReadAllTextAsync(expectedPath, cancellationToken);
             var calendar = Calendar.Load(icsContent);
 
             if (calendar == null)

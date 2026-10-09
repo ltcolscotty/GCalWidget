@@ -10,7 +10,8 @@ All access to the calendar message-pack file should go through `AcquireCalendarD
 
 This is the actual data-safety lock for the message pack file; the `eventsChangedLock` is only for debounced view notifications and not for protecting the calendar data itself.
 
+During confirmed Windows shutdown, source refreshes are canceled and release the calendar data lock as they unwind. Refreshed data is written to a temporary file and replaces `GCWMainData.msgpack` only after the full snapshot is ready, so canceling a refresh preserves the last complete calendar data file.
+
 ## Aggregation
 
 There are individual `Refresh<source>()` functions as well as the `RefreshAllAsync()` function to call updates and refresh data from a specific and all sources as their namesake suggests. Any new sources should continue to follow this convention where there is a dedicated refresher function and a call to it in `RefreshAllAsync()`.
-

@@ -21,6 +21,7 @@ using Windows.Foundation.Collections;
 using Microsoft.UI;
 using GCaLink.Models;
 using GCaLink.Services;
+using GCaLink.Platform;
 using GCaLink.ViewWindows;
 using Windows.ApplicationModel.UserDataTasks;
 using System.Security.Cryptography.X509Certificates;
@@ -40,6 +41,7 @@ namespace GCaLink.ViewWindows.WidgetView
         public ObservableCollection<SourceCustomizationCard> CanvasSourceCards { get; } = new();
 
         private readonly RefreshSchedService _refreshSchedService;
+        private readonly IDisposable _shutdownHandler;
         private bool _isUpdatingTransparencyControls;
         private bool _isUpdatingPrimaryViewControl;
 
@@ -49,6 +51,9 @@ namespace GCaLink.ViewWindows.WidgetView
             _ = SettingsRetriever.InitializeAsync();
             _refreshSchedService = new RefreshSchedService(
                 TimeSpan.FromMinutes(SettingsRetriever.GetUpdateDurationMins()));
+            _shutdownHandler = GCaLink.Platform.Win32Interop.RegisterShutdownHandler(
+                WindowNative.GetWindowHandle(this),
+                HandleShutdown);
             _isUpdatingTransparencyControls = true;
             WindowConfiguration.Configure(this, isWidgetViewActive: true);
             ViewWindowManager.SetPrimaryViewManagerActive(true);
@@ -57,6 +62,7 @@ namespace GCaLink.ViewWindows.WidgetView
                 LoggerService.Log("WidgetWindow: Closed event received; publishing manager inactive state.");
                 ViewWindowManager.SetPrimaryViewManagerActive(false);
                 ViewWindowManager.PrimaryViewClosedByUser -= OnPrimaryViewClosedByUser;
+                _shutdownHandler.Dispose();
                 _ = _refreshSchedService.DisposeAsync();
             };
             Activated += (_, args) =>
@@ -98,6 +104,13 @@ namespace GCaLink.ViewWindows.WidgetView
             ViewWindowManager.SyncWithSettings();
             _ = UpdateConnectionStatusAsync();
             _ = RefreshCustomizationCardsAsync();
+        }
+
+        internal void HandleShutdown()
+        {
+            LoggerService.Log("WidgetWindow: Windows shutdown confirmed; canceling in-progress refreshes.");
+            EventAggService.RequestShutdown();
+            _ = _refreshSchedService.DisposeAsync();
         }
 
         private async Task RefreshCustomizationCardsAsync()
@@ -549,6 +562,10 @@ namespace GCaLink.ViewWindows.WidgetView
                     ? "Canvas events refreshed."
                     : "Canvas events could not be refreshed.";
             }
+            catch (OperationCanceledException) when (EventAggService.IsShutdownRequested)
+            {
+                LoggerService.Log("WidgetWindow: Canvas refresh canceled because Windows is shutting down.");
+            }
             catch (Exception exception)
             {
                 LoggerService.LogException("WidgetWindow.RefreshCanvasSources", exception);
@@ -573,6 +590,10 @@ namespace GCaLink.ViewWindows.WidgetView
                     ? "Google Calendar events refreshed."
                     : "Google Calendar events could not be refreshed.";
             }
+            catch (OperationCanceledException) when (EventAggService.IsShutdownRequested)
+            {
+                LoggerService.Log("WidgetWindow: Google refresh canceled because Windows is shutting down.");
+            }
             catch (Exception exception)
             {
                 LoggerService.LogException("WidgetWindow.RefreshGoogleSources", exception);
@@ -585,6 +606,10 @@ namespace GCaLink.ViewWindows.WidgetView
             try
             {
                 await EventAggService.WriteUpcomingEventsMessagePackAsync(null);
+            }
+            catch (OperationCanceledException) when (EventAggService.IsShutdownRequested)
+            {
+                LoggerService.Log("WidgetWindow: Source refresh canceled because Windows is shutting down.");
             }
             catch (Exception exception)
             {

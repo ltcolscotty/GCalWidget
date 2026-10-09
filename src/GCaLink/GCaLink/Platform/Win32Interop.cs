@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -8,7 +9,7 @@ using GCaLink.Services;
 
 namespace GCaLink.Platform
 {
-    class Win32Interop
+    internal class Win32Interop
     {
         private const int GWL_EXSTYLE = -20;
         private const int GWL_STYLE = -16;
@@ -64,11 +65,126 @@ namespace GCaLink.Platform
         private static readonly IntPtr HWND_TOP = new IntPtr(0);
         private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
 
+        private const uint WM_QUERYENDSESSION = 0x0011;
+        private const uint WM_ENDSESSION = 0x0016;
         private const uint SWP_NOMOVE = 0x0002;
         private const uint SWP_NOSIZE = 0x0001;
         private const uint SWP_SHOWWINDOW = 0x0040;
         private const uint SWP_NOACTIVATE = 0x0010;
         private const uint SWP_FRAMECHANGED = 0x0020;
+        private static readonly UIntPtr ShutdownSubclassId = new(1);
+
+        private delegate IntPtr SubclassProc(
+            IntPtr hWnd,
+            uint message,
+            UIntPtr wParam,
+            IntPtr lParam,
+            UIntPtr subclassId,
+            UIntPtr referenceData);
+
+        [DllImport("comctl32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetWindowSubclass(
+            IntPtr hWnd,
+            SubclassProc callback,
+            UIntPtr subclassId,
+            UIntPtr referenceData);
+
+        [DllImport("comctl32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool RemoveWindowSubclass(
+            IntPtr hWnd,
+            SubclassProc callback,
+            UIntPtr subclassId);
+
+        [DllImport("comctl32.dll")]
+        private static extern IntPtr DefSubclassProc(
+            IntPtr hWnd,
+            uint message,
+            UIntPtr wParam,
+            IntPtr lParam);
+
+        public static IDisposable RegisterShutdownHandler(IntPtr hwnd, Action onShutdownConfirmed)
+        {
+            if (hwnd == IntPtr.Zero)
+            {
+                throw new ArgumentException("A valid window handle is required.", nameof(hwnd));
+            }
+
+            ArgumentNullException.ThrowIfNull(onShutdownConfirmed);
+            var registration = new ShutdownHandlerRegistration(hwnd, onShutdownConfirmed);
+            if (!SetWindowSubclass(hwnd, registration.Callback, ShutdownSubclassId, UIntPtr.Zero))
+            {
+                throw new Win32Exception(
+                    Marshal.GetLastWin32Error(),
+                    "Failed to register the window shutdown handler.");
+            }
+
+            return registration;
+        }
+
+        private sealed class ShutdownHandlerRegistration : IDisposable
+        {
+            private readonly IntPtr _hwnd;
+            private readonly Action _onShutdownConfirmed;
+            private bool _disposed;
+
+            public ShutdownHandlerRegistration(IntPtr hwnd, Action onShutdownConfirmed)
+            {
+                _hwnd = hwnd;
+                _onShutdownConfirmed = onShutdownConfirmed;
+                Callback = WindowSubclassCallback;
+            }
+
+            public SubclassProc Callback { get; }
+
+            private IntPtr WindowSubclassCallback(
+                IntPtr hWnd,
+                uint message,
+                UIntPtr wParam,
+                IntPtr lParam,
+                UIntPtr subclassId,
+                UIntPtr referenceData)
+            {
+                if (message == WM_QUERYENDSESSION)
+                {
+                    DefSubclassProc(hWnd, message, wParam, lParam);
+                    return new IntPtr(1);
+                }
+
+                if (message == WM_ENDSESSION && wParam != UIntPtr.Zero)
+                {
+                    try
+                    {
+                        _onShutdownConfirmed();
+                    }
+                    catch (Exception exception)
+                    {
+                        LoggerService.LogException(
+                            "Win32Interop: Failed to begin graceful shutdown.",
+                            exception);
+                    }
+                }
+
+                return DefSubclassProc(hWnd, message, wParam, lParam);
+            }
+
+            public void Dispose()
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+                if (!RemoveWindowSubclass(_hwnd, Callback, ShutdownSubclassId))
+                {
+                    LoggerService.Log(
+                        $"Win32Interop: Failed to remove shutdown handler for hwnd=0x{_hwnd.ToInt64():X} (error {Marshal.GetLastWin32Error()}).",
+                        LoggerStatusEnum.WARNING);
+                }
+            }
+        }
 
         private static bool TryGetWindowLongPtr(IntPtr hWnd, int nIndex, out long value)
         {

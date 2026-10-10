@@ -3,7 +3,6 @@
 #### In Consideration
 
 - [ ] Font customization
-- [ ] Independent transparency customization for view background
 - [ ] Source title color customization
 - [ ] Apple iCal support
 - [ ] Microsoft Outlook support
@@ -25,6 +24,8 @@
     - [ ] Benchmark view usage
 - [ ] Real documentation inside the code
 - [ ] Finish docs folder
+- [ ] Liquid Glass background
+- [ ] Independent transparency customization for view background
 
 ### In Progress
 

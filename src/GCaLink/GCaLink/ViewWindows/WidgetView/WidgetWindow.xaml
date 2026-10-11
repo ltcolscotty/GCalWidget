@@ -97,6 +97,9 @@
                                           Content="Pin calendar view"
                                           Checked="PinnedViewEnabled"
                                           Unchecked="PinnedViewDisabled"/>
+                                <TextBlock x:Name="ViewSourceRequirementMessage"
+                                           Text="Checking configured sources..."
+                                           TextWrapping="Wrap" />
                             </StackPanel>
                         </muxc:Expander>
                         <muxc:Expander Header="Window transparency"

@@ -44,6 +44,7 @@ namespace GCaLink.ViewWindows.WidgetView
         private readonly IDisposable _shutdownHandler;
         private bool _isUpdatingTransparencyControls;
         private bool _isUpdatingPrimaryViewControl;
+        private bool _hasConfiguredSource;
 
         public WidgetWindow()
         {
@@ -86,8 +87,11 @@ namespace GCaLink.ViewWindows.WidgetView
             CanvasCalLinkInput.Text = SettingsRetriever.GetCanvasICSLink();
             EnableGoogle.IsChecked = SettingsRetriever.GetGoogleEnabled();
             EnableCanvas.IsChecked = SettingsRetriever.GetCanvasEnabled();
+            _isUpdatingPrimaryViewControl = true;
             EnablePrimaryView.IsChecked = SettingsRetriever.GetPrimaryViewEnabled();
             EnablePinnedView.IsChecked = SettingsRetriever.GetPinnedViewEnabled();
+            EnablePrimaryView.IsEnabled = false;
+            EnablePinnedView.IsEnabled = false;
             PrimaryViewSelector.SelectedIndex = SettingsRetriever.GetPrimaryView() switch
             {
                 PrimaryViewEnum.Todo => 0,
@@ -95,15 +99,69 @@ namespace GCaLink.ViewWindows.WidgetView
                 PrimaryViewEnum.Week => 2,
                 _ => 0
             };
+            _isUpdatingPrimaryViewControl = false;
             int transparencyPercentage = SettingsRetriever.GetWindowTransparency();
             WindowTransparencySlider.Value = transparencyPercentage;
             WindowTransparencyInput.Text = transparencyPercentage.ToString();
             _isUpdatingTransparencyControls = false;
             ViewWindowManager.PrimaryViewClosedByUser += OnPrimaryViewClosedByUser;
             ApplyBackgroundType();
-            ViewWindowManager.SyncWithSettings();
             _ = UpdateConnectionStatusAsync();
             _ = RefreshCustomizationCardsAsync();
+            _ = UpdateViewSourceAvailabilityAsync();
+        }
+
+        private async Task UpdateViewSourceAvailabilityAsync()
+        {
+            bool googleConfigured = false;
+            try
+            {
+                googleConfigured = await EventAggService.GetGoogleCalService().IsAccountActiveAsync();
+            }
+            catch (Exception exception)
+            {
+                LoggerService.LogException("WidgetWindow: Failed to check Google Calendar configuration.", exception);
+            }
+
+            bool canvasConfigured = IsCanvasCalendarConfigured(SettingsRetriever.GetCanvasICSLink());
+            _hasConfiguredSource = googleConfigured || canvasConfigured;
+            EnablePrimaryView.IsEnabled = _hasConfiguredSource;
+            EnablePinnedView.IsEnabled = _hasConfiguredSource;
+            if (!_hasConfiguredSource)
+            {
+                ViewSourceRequirementMessage.Text =
+                    "Configure a source before enabling views: sign in to Google Calendar or add a Canvas calendar link.";
+            }
+
+            ViewSourceRequirementMessage.Visibility = _hasConfiguredSource
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+
+            if (!_hasConfiguredSource)
+            {
+                if (SettingsRetriever.GetPrimaryViewEnabled())
+                {
+                    SettingsRetriever.SetPrimaryViewEnabled(false);
+                }
+
+                if (SettingsRetriever.GetPinnedViewEnabled())
+                {
+                    SettingsRetriever.SetPinnedViewEnabled(false);
+                }
+
+                _isUpdatingPrimaryViewControl = true;
+                EnablePrimaryView.IsChecked = false;
+                EnablePinnedView.IsChecked = false;
+                _isUpdatingPrimaryViewControl = false;
+            }
+
+            ViewWindowManager.SyncWithSettings();
+        }
+
+        private static bool IsCanvasCalendarConfigured(string? calendarUrl)
+        {
+            return Uri.TryCreate(calendarUrl, UriKind.Absolute, out Uri? uri) &&
+                (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }
 
         internal void HandleShutdown()
@@ -482,6 +540,7 @@ namespace GCaLink.ViewWindows.WidgetView
             SettingsRetriever.SetGoogleEnabled(false);
             EnableGoogle.IsChecked = false;
             await UpdateConnectionStatusAsync(false);
+            await UpdateViewSourceAvailabilityAsync();
         }
 
         private async void GoogleSwitchAccountClick(object sender, RoutedEventArgs e)
@@ -511,6 +570,7 @@ namespace GCaLink.ViewWindows.WidgetView
             }
             finally
             {
+                await UpdateViewSourceAvailabilityAsync();
                 GoogleSI.IsEnabled = true;
             }
         }
@@ -544,7 +604,7 @@ namespace GCaLink.ViewWindows.WidgetView
 
             CanvasSaveStatus.Text = "Canvas calendar link saved.";
             await EventAggService.ReloadSourcesAsync();
-
+            await UpdateViewSourceAvailabilityAsync();
         }
 
         private async void RefreshCanvasSources(object sender, RoutedEventArgs e)
@@ -688,7 +748,7 @@ namespace GCaLink.ViewWindows.WidgetView
                 _ => PrimaryViewEnum.Todo
             };
             SettingsRetriever.SetPrimaryView(selectedView);
-            if (SettingsRetriever.GetPrimaryViewEnabled())
+            if (_hasConfiguredSource && SettingsRetriever.GetPrimaryViewEnabled())
             {
                 ViewWindowManager.SyncWithSettings(replacePrimaryView: true);
             }
@@ -698,6 +758,14 @@ namespace GCaLink.ViewWindows.WidgetView
         {
             if (_isUpdatingPrimaryViewControl)
             {
+                return;
+            }
+
+            if (!_hasConfiguredSource)
+            {
+                _isUpdatingPrimaryViewControl = true;
+                EnablePrimaryView.IsChecked = false;
+                _isUpdatingPrimaryViewControl = false;
                 return;
             }
 
@@ -726,12 +794,30 @@ namespace GCaLink.ViewWindows.WidgetView
 
         private void PinnedViewEnabled(object sender, RoutedEventArgs e)
         {
+            if (_isUpdatingPrimaryViewControl)
+            {
+                return;
+            }
+
+            if (!_hasConfiguredSource)
+            {
+                _isUpdatingPrimaryViewControl = true;
+                EnablePinnedView.IsChecked = false;
+                _isUpdatingPrimaryViewControl = false;
+                return;
+            }
+
             SettingsRetriever.SetPinnedViewEnabled(true);
             ViewWindowManager.SyncWithSettings();
         }
 
         private void PinnedViewDisabled(object sender, RoutedEventArgs e)
         {
+            if (_isUpdatingPrimaryViewControl)
+            {
+                return;
+            }
+
             SettingsRetriever.SetPinnedViewEnabled(false);
             ViewWindowManager.SyncWithSettings();
         }

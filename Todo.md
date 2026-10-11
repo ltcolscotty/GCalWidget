@@ -27,6 +27,10 @@
 - [ ] Finish docs folder
 - [ ] Liquid Glass background
 - [ ] Independent transparency customization for view background
+- [ ] Bracket edge case in assignment name parsing
+    - [ ] Tighten up regexes
+- [ ] Default fallback case for unsupported universities in parsing handler
+- [ ] Good looking default config
 
 ### In Progress
 

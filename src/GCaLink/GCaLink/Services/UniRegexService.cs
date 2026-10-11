@@ -31,6 +31,13 @@ namespace GCaLink.Services
                     ["AssignmentName"] = AssignmentNameUniversal,
                     ["ClassName"] = GetOhioStUniCN,
                     ["SectionName"] = GetOhioStUniSN
+                },
+                ["University of Washington"] = new Dictionary<string, Func<string, string>>
+                {
+                    ["SectionInfo"] = SectionInfoUniversal,
+                    ["AssignmentName"] = AssignmentNameUniversal,
+                    ["ClassName"] = GetUWStUniCN,
+                    ["SectionName"] = GetUWStUniSN
                 }
             };
         }
@@ -56,10 +63,19 @@ namespace GCaLink.Services
         }
 
         /* NOTE FOR CONTRIBUTORS:
-         * Certain universities may have edge cases for section naming. We will keep Regex.Match in every definition for this reason.
+         * Certain universities may have edge cases for section naming. We will keep the definition
+         * to be lambda functions; full on functions can be added if more logic is needed down the line.
          */
 
         // Universal
+        /* TODO: 
+        If an instructor decides to do something and add a bracket in the assignment name, this will break.
+            possible improvement for a SectionInfoUniversal regex. I haven't seen such an edge case yet, but this should
+            addressed before V1 release. 
+
+        Another improvement idea is to use named capture groups; this would make running regex
+        multiple times unnessecary.  
+        */
         private string SectionInfoUniversal(string summary) => Regex.Match(summary, @"(?<=\[).*?(?=\])").Value.Trim();
         private string AssignmentNameUniversal(string summary) => Regex.Match(summary, @"^([^\[]*)").Value.Trim();
 
@@ -71,8 +87,11 @@ namespace GCaLink.Services
         private string GetAzStUniSN(string sectionInfo) => Regex.Match(sectionInfo, @"[0-9]{4}(.*?)[ABC]").Value.Trim();
 
         // Ohio State University
-        private string GetOhioStUniCN(string sectionInfo) => Regex.Match(sectionInfo,@"[A-Z]{3,} [0-9]{4}(?:\.[0-9]{2})?(?:[A-Z])?").Value.Trim();
+        private string GetOhioStUniCN(string sectionInfo) => Regex.Match(sectionInfo, @"[A-Z]{3,} [0-9]{4}(?:\.[0-9]{2})?(?:[A-Z])?").Value.Trim();
         private string GetOhioStUniSN(string sectionInfo) => Regex.Match(sectionInfo, @"(?<=[.* .* ])[A-Z]{2}[0-9]{4}").Value.Trim();
 
+        // University of Washington
+        private string GetUWStUniCN(string sectionInfo) => Regex.Match(sectionInfo, @"^[A-Z][A-Z& ]*?\s+\d{3}(?=\s+[A-Z][A-Z0-9]?$)").Value.Trim();
+        private string GetUWStUniSN(string sectionInfo) => Regex.Match(sectionInfo, @"(?<=\s)[A-Z][A-Z0-9]?$").Value.Trim();
     }
 }

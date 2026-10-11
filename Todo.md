@@ -6,6 +6,7 @@
 - [ ] Source title color customization
 - [ ] Apple iCal support
 - [ ] Microsoft Outlook support
+- [ ] Signed Installer
 
 #### <font color="lightgreen"> High Priority </font>
 

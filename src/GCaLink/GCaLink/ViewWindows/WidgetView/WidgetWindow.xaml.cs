@@ -155,6 +155,7 @@ namespace GCaLink.ViewWindows.WidgetView
                 _isUpdatingPrimaryViewControl = false;
             }
 
+            StartupLaunchService.SyncWithSettings();
             ViewWindowManager.SyncWithSettings();
         }
 
@@ -770,6 +771,7 @@ namespace GCaLink.ViewWindows.WidgetView
             }
 
             SettingsRetriever.SetPrimaryViewEnabled(true);
+            StartupLaunchService.SyncWithSettings();
             ViewWindowManager.SyncWithSettings();
         }
 
@@ -781,12 +783,14 @@ namespace GCaLink.ViewWindows.WidgetView
             }
 
             SettingsRetriever.SetPrimaryViewEnabled(false);
+            StartupLaunchService.SyncWithSettings();
             ViewWindowManager.SyncWithSettings();
         }
 
         private void OnPrimaryViewClosedByUser()
         {
             SettingsRetriever.SetPrimaryViewEnabled(false);
+            StartupLaunchService.SyncWithSettings();
             _isUpdatingPrimaryViewControl = true;
             EnablePrimaryView.IsChecked = false;
             _isUpdatingPrimaryViewControl = false;

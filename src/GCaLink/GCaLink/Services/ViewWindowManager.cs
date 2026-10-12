@@ -21,6 +21,7 @@ namespace GCaLink.Services
         private static PrimaryViewEnum? primaryViewType;
         private static PinnedViewWindow? pinnedViewWindow;
         private static volatile bool primaryViewManagerActive;
+        private static volatile bool systemShutdownInProgress;
         private static readonly string managerStatePath = Path.Combine(
             Path.GetDirectoryName(SettingsRetriever.GetMainDataPath())!,
             "GCWWidgetManagerState");
@@ -45,6 +46,12 @@ namespace GCaLink.Services
         private sealed record PublishedPrimaryViewState(int ProcessId, bool Enabled, PrimaryViewEnum View);
 
         public static event Action? PrimaryViewClosedByUser;
+
+        public static void NotifySystemShutdown()
+        {
+            systemShutdownInProgress = true;
+            LoggerService.Log("ViewWindowManager: System shutdown confirmed; preserving the primary-view enabled preference.");
+        }
 
         static ViewWindowManager()
         {
@@ -215,6 +222,17 @@ namespace GCaLink.Services
             {
                 ClosePinnedView();
             }
+        }
+
+        public static void OpenConfiguredPrimaryViewOnStartup()
+        {
+            if (!SettingsRetriever.GetPrimaryViewEnabled())
+            {
+                return;
+            }
+
+            primaryViewManagerActive = true;
+            OpenPrimaryView(replaceExisting: false);
         }
 
         private static void OpenPrimaryView(bool replaceExisting)
@@ -411,6 +429,13 @@ namespace GCaLink.Services
 
         private static bool SetExistingPrimaryViewMode(bool widgetManagerActive)
         {
+            if (widgetManagerActive && !SettingsRetriever.GetPrimaryViewEnabled())
+            {
+                LoggerService.Log(
+                    "ViewWindowManager: Skipping existing primary view activation because the calendar view is disabled in settings.");
+                return false;
+            }
+
             string[] viewTitles =
             {
                 "GCaLink Day View",
@@ -447,7 +472,14 @@ namespace GCaLink.Services
                     LoggerStatusEnum.INFO);
                 primaryViewWindow = null;
                 primaryViewType = null;
-                PrimaryViewClosedByUser?.Invoke();
+                if (systemShutdownInProgress)
+                {
+                    LoggerService.Log("ViewWindowManager: Primary view closed during system shutdown; leaving its enabled preference unchanged.");
+                }
+                else
+                {
+                    PrimaryViewClosedByUser?.Invoke();
+                }
             }
         }
 

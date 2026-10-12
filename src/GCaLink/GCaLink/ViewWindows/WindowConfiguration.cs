@@ -70,9 +70,15 @@ namespace GCaLink.ViewWindows
                     SaveWindowState(window, pinned);
                 }
             };
+            IDisposable? shutdownHandler = kind == ManagedWindowKind.Primary
+                ? Win32Interop.RegisterShutdownHandler(
+                    WindowNative.GetWindowHandle(window),
+                    ViewWindowManager.NotifySystemShutdown)
+                : null;
             window.Closed += (_, _) =>
             {
                 SettingsRetriever.WindowTransparencyChanged -= transparencyChanged;
+                shutdownHandler?.Dispose();
                 SaveWindowState(window, pinned);
             };
 

@@ -50,6 +50,7 @@ namespace GCaLink.Models
         public bool CanvasEnabled { get; set; } = false;
         public bool PrimaryViewEnabled { get; set; } = false;
         public bool PinnedViewEnabled { get; set; } = false;
+        public bool? StartupAtLoginConsent { get; set; }
         public PrimaryViewEnum PrimaryView { get; set; } = PrimaryViewEnum.Todo;
         public WindowPosition? PrimaryViewPosition { get; set; }
         public WindowPosition? PinnedViewPosition { get; set; }

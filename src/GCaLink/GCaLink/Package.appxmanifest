@@ -8,15 +8,15 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="cb4faff9-004c-446d-b32a-aeb660b2a1b8"
-    Publisher="CN=midnightChaos"
-    Version="1.0.0.0" />
+    Name="MosaiCal"
+    Publisher="CN=Aidan Yung"
+    Version="0.1.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="cb4faff9-004c-446d-b32a-aeb660b2a1b8" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>GCaLink</DisplayName>
-    <PublisherDisplayName>midnightChaos</PublisherDisplayName>
+    <DisplayName>MosaiCal</DisplayName>
+    <PublisherDisplayName>AYung Software</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -31,21 +31,22 @@
 
   <Applications>
     <Application Id="App"
-      Executable="$targetnametoken$.exe"
+      Executable="GCaLink.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="GCaLink"
-        Description="GCaLink"
+        DisplayName="MosaiCal"
+        Description="Canvas and Calendar service display widget"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
-      </uap:VisualElements>
+	  </uap:VisualElements>
     </Application>
   </Applications>
 
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
+    <Capability Name="internetClient"/>
   </Capabilities>
 </Package>

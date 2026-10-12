@@ -230,7 +230,7 @@ namespace GCaLink.Services
 
             if (!(sourceList.TryGetValue("canvas", out var cEnabled) && cEnabled))
             {
-                LoggerService.Log("EventAggService: Attempted to refresh canvas events without enabled source", LoggerStatusEnum.WARNING);
+                LoggerService.Log("EventAggService: Attempted to sync canvas events without enabled source", LoggerStatusEnum.WARNING);
                 return false;
             }
 
@@ -286,7 +286,7 @@ namespace GCaLink.Services
 
             if (!(sourceList.TryGetValue("google", out var gEnabled) && gEnabled))
             {
-                LoggerService.Log("EventAggService: Attempted to refresh google events without enabled source", LoggerStatusEnum.WARNING);
+                LoggerService.Log("EventAggService: Attempted to sync google events without enabled source", LoggerStatusEnum.WARNING);
                 return false;
             }
 

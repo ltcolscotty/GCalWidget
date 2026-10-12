@@ -49,10 +49,43 @@ namespace GCaLink
         /// Invoked when the application is launched.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            StartupLaunchService.SyncWithSettings();
+            if (IsStartupLaunch(args.Arguments))
+            {
+                if (!SettingsRetriever.GetPrimaryViewEnabled())
+                {
+                    LoggerService.Log("App: Startup launch skipped because the calendar view is disabled.");
+                    Exit();
+                    return;
+                }
+
+                ViewWindowManager.PrimaryViewClosedByUser += OnStartupPrimaryViewClosedByUser;
+                ViewWindowManager.OpenConfiguredPrimaryViewOnStartup();
+                return;
+            }
+
             _window = new WidgetWindow();
             _window.Activate();
+            await StartupLaunchService.RequestConsentIfNeededAsync(_window);
+        }
+
+        private static bool IsStartupLaunch(string? activationArguments)
+        {
+            return string.Equals(
+                    activationArguments?.Trim(),
+                    StartupLaunchService.StartupArgument,
+                    StringComparison.OrdinalIgnoreCase) ||
+                Environment.GetCommandLineArgs().Skip(1).Any(argument =>
+                    string.Equals(argument, StartupLaunchService.StartupArgument, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private void OnStartupPrimaryViewClosedByUser()
+        {
+            ViewWindowManager.PrimaryViewClosedByUser -= OnStartupPrimaryViewClosedByUser;
+            SettingsRetriever.SetPrimaryViewEnabled(false);
+            StartupLaunchService.SyncWithSettings();
         }
     }
 }

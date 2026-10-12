@@ -178,6 +178,12 @@ namespace GCaLink.Services
             options.PrimaryViewEnabled = enabled;
             SaveOptions();
         }
+        public static bool? GetStartupAtLoginConsent() { return options.StartupAtLoginConsent; }
+        public static void SetStartupAtLoginConsent(bool consent)
+        {
+            options.StartupAtLoginConsent = consent;
+            SaveOptions();
+        }
         public static PrimaryViewEnum GetPrimaryView() { return options.PrimaryView; }
         public static void SetPrimaryView(PrimaryViewEnum primaryView)
         {

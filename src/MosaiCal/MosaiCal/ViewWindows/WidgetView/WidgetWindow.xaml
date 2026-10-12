@@ -198,16 +198,35 @@
                                     <TextBlock x:Name="GoogleProfileNameText" FontWeight="SemiBold" />
                                     <TextBlock x:Name="GoogleProfileEmailText" Opacity="0.7" TextWrapping="Wrap" />
                                 </StackPanel>
-                                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal"
-                                            HorizontalAlignment="Right" Spacing="8">
-                                    <Button Content="Sign out" Click="GoogleSignOutClick" />
-                                    <Button Content="Switch account" Click="GoogleSwitchAccountClick" />
-                                </StackPanel>
+                                <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <muxc:Button x:Name="RefreshGoogleSourcesButton"
+                                                     Content="Sync Google Sources"
+                                                     Click="RefreshGoogleSources"
+                                                     Visibility="Collapsed"/>
+                                        <TextBlock x:Name="GoogleSyncStatus"
+                                                   VerticalAlignment="Center"
+                                                   MaxWidth="300"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="Right"
+                                                Spacing="8">
+                                        <Button Content="Sign out" Click="GoogleSignOutClick" />
+                                        <Button Content="Switch account" Click="GoogleSwitchAccountClick" />
+                                    </StackPanel>
+                                </Grid>
                             </Grid>
                         </Border>
                         <TextBlock x:Name="GoogleConnectionStatus"
                                    Grid.Row="1"
-                                   Margin="0,16,0,0"
+                                   Margin="0,8,0,0"
                                    Text="Not connected"
                                    TextWrapping="Wrap" />
                     </Grid>
@@ -231,35 +250,55 @@
                             </ListView.ItemTemplate>
                         </ListView>
                     </Grid>
-                    <Grid Grid.Row="2" Padding="0,10">
-                        <muxc:Button x:Name="RefreshGoogleSourcesButton"
-                                     Content="Sync Google Sources"
-                                     Click="RefreshGoogleSources"
-                                     Visibility="Collapsed"/>
-                    </Grid>
                 </Grid>
             </muxc:TabViewItem>
 
             <muxc:TabViewItem Header="Canvas" IsClosable="False">
                 <Grid Padding="16">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <Grid Grid.Row="0" Padding="0,10">
-                        <muxc:Button Content="Sync Canvas Now" Click="RefreshCanvasSources"/>
+                    <Grid Grid.Row="0" ColumnSpacing="12" Padding="0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <muxc:TextBox x:Name="CanvasCalLinkInput"
+                                      Header="Canvas Calendar Feed URL"
+                                      PlaceholderText="https://canvas.asu.edu/feeds/calendars/---.ics" />
+                        <muxc:Button Grid.Column="1"
+                                     VerticalAlignment="Bottom"
+                                     Click="CanvasSaveClick">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Image Source="ms-appx:///Assets/canvas-lms.png"
+                                       Width="20"
+                                       Height="20"
+                                       Stretch="Uniform" />
+                                <TextBlock Text="Connect Calendar"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </muxc:Button>
+                        <TextBlock x:Name="CanvasLinkStatus"
+                                   Grid.Column="2"
+                                   VerticalAlignment="Bottom"
+                                   Margin="0,0,0,8"
+                                   TextWrapping="Wrap" />
                     </Grid>
-                    <muxc:TextBox x:Name="CanvasCalLinkInput"
-                                  Header="Canvas Calendar Feed URL"
-                                  HorizontalAlignment="Left"
-                                  PlaceholderText="https://canvas.asu.edu/feeds/calendars/---.ics"
-                                  Width="500"
-                                  Grid.Row="1"/>
-                    <Grid Grid.Row="2" Padding="0,10">
+                    <Grid Grid.Row="1" ColumnSpacing="12" Padding="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <muxc:Button Content="Sync Canvas Now" Click="RefreshCanvasSources" />
+                        <TextBlock x:Name="CanvasSyncStatus"
+                                   Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap" />
+                    </Grid>
+                    <Grid Grid.Row="2">
                         <ListView x:Name="CanvasSourceCardsList">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
@@ -279,19 +318,6 @@
                             </ListView.ItemTemplate>
                         </ListView>
                     </Grid>
-                    <Grid Grid.Row="3" Padding="0,10">
-                        <muxc:Button Click="CanvasSaveClick">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Image Source="ms-appx:///Assets/canvas-lms.png"
-                                       Width="20"
-                                       Height="20"
-                                       Stretch="Uniform" />
-                                <TextBlock Text="Connect Calendar"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
-                        </muxc:Button>
-                    </Grid>
-                    <TextBlock x:Name="CanvasSaveStatus" Grid.Row="3" TextWrapping="Wrap" />
                 </Grid>
             </muxc:TabViewItem>
 

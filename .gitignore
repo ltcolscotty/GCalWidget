@@ -401,10 +401,10 @@ FodyWeavers.xsd
 
 # End of https://www.toptal.com/developers/gitignore/api/csharp
 
+# Python
 .env
 .ipynb_checkpoints/
 env/
-
 .idea/
 
 #ical files

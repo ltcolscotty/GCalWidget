@@ -145,6 +145,17 @@ internal static class EventAggService
         string inputPath,
         CancellationToken cancellationToken)
     {
+        if (!File.Exists(inputPath))
+        {
+            await SaveCalDataAsync(
+                new Dictionary<IDHelper.EventID, CalEventDto>(),
+                inputPath,
+                cancellationToken);
+            LoggerService.Log(
+                $"EventAggService: Initialized missing calendar data file '{inputPath}'.",
+                LoggerStatusEnum.INFO);
+        }
+
         byte[] bytes = await File.ReadAllBytesAsync(inputPath, cancellationToken);
         return MessagePackSerializer.Deserialize<Dictionary<IDHelper.EventID, CalEventDto>>(bytes);
     }

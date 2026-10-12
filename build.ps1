@@ -4,7 +4,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$projectPath = Join-Path $PSScriptRoot "src\GCaLink\GCaLink\GCaLink.csproj"
+$projectPath = Join-Path $PSScriptRoot "src\MosaiCal\MosaiCal\MosaiCal.csproj"
 
 foreach ($targetPlatform in $Platform) {
     Write-Host "Building Debug for $targetPlatform..."

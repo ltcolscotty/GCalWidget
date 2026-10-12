@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Centralized event aggregator class. This should be the only part of GCaLink to modify the `GCWMainData.msgpack` file. Support for other calendar providers should be centralized to [EventAggService.cs](..\src\GCaLink\GCaLink\Services\EventAggService.cs) after making a dedicated service to call the API and parse the return into [CalEventDto](..\src\GCaLink\GCaLink\Models\CalEventDto.cs) objects.
+Centralized event aggregator class. This should be the only part of MosaiCal to modify the `GCWMainData.msgpack` file. Support for other calendar providers should be centralized to [EventAggService.cs](..\src\MosaiCal\MosaiCal\Services\EventAggService.cs) after making a dedicated service to call the API and parse the return into [CalEventDto](..\src\MosaiCal\MosaiCal\Models\CalEventDto.cs) objects.
 
 ## Read/Write - Locks (IMPORTANT)
 

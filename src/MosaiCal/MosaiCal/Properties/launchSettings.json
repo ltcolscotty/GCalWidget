@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MosaiCal (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "MosaiCal (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

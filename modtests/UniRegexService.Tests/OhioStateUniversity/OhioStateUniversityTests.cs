@@ -1,7 +1,7 @@
-using GCaLink.Services;
+using MosaiCal.Services;
 using Xunit;
 
-namespace GCaLink.Tests;
+namespace MosaiCal.Tests;
 
 public sealed class OhioStateUniversityTests
 {

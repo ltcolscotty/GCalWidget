@@ -19,6 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\GCaLink\GCaLink\GCaLink.csproj" />
+    <ProjectReference Include="..\..\src\MosaiCal\MosaiCal\MosaiCal.csproj" />
   </ItemGroup>
 </Project>

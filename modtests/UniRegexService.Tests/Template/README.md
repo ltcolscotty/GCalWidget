@@ -3,10 +3,10 @@
 Use this example when adding a test class for another supported university. Replace the placeholders with the university's registered name and concrete input/output values before enabling the test.
 
 ```csharp
-using GCaLink.Services;
+using MosaiCal.Services;
 using Xunit;
 
-namespace GCaLink.Tests;
+namespace MosaiCal.Tests;
 
 public sealed class UniversityTests
 {

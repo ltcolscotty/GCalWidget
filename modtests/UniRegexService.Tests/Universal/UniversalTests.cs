@@ -1,6 +1,6 @@
-using GCaLink.Services;
+using MosaiCal.Services;
 
-namespace GCaLink.Tests;
+namespace MosaiCal.Tests;
 
 public sealed class UniversalTests
 {

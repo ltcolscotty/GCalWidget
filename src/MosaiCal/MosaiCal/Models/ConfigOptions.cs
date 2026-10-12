@@ -1,0 +1,84 @@
+﻿using Microsoft.UI.Xaml.Controls;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace MosaiCal.Models;
+
+public enum BackgroundTypeEnum
+{
+    Solid,
+    Mica,
+    Acrylic,
+}
+
+public enum BackgroundSettingEnum
+{
+    Color,
+    Image,
+}
+
+public enum BackgroundImageType;
+
+public enum PrimaryViewEnum
+{
+    Day,
+    Todo,
+    Week,
+}
+
+public class ConfigOptions
+{
+    public int ConfigVersion { get; } = 1;
+    public string CanvasICSLink { get; set; } = "";
+    public string School { get; set; } = "Arizona State University";
+    public int BackgroundTransparency { get; set; } = 0;
+    public string BackgroundColor { get; set; } = "#ff00ff";
+    public string BackgroundImage { get; set; } = "";
+    public BackgroundSettingEnum BackgroundSetting { get; set; } = BackgroundSettingEnum.Color;
+    public BackgroundTypeEnum BackgroundType { get; set; } = BackgroundTypeEnum.Solid;
+    public string FontFamily {get; set; } = "Segoe UI";
+    public int FontSize { get; set; } = 12;
+    public bool GoogleEnabled { get; set; } = false;
+    public int GoogleMaxEventsPerRefresh { get; set; } = 200;
+    public string GoogleClientId { get; set; } = "";
+    public string GoogleClientSecret { get; set; } = "";
+    public bool CanvasEnabled { get; set; } = false;
+    public bool PrimaryViewEnabled { get; set; } = false;
+    public bool PinnedViewEnabled { get; set; } = false;
+    public bool? StartupAtLoginConsent { get; set; }
+    public PrimaryViewEnum PrimaryView { get; set; } = PrimaryViewEnum.Todo;
+    public WindowPosition? PrimaryViewPosition { get; set; }
+    public WindowPosition? PinnedViewPosition { get; set; }
+    public WindowSize? PrimaryViewSize { get; set; }
+    public WindowSize? PinnedViewSize { get; set; }
+    public int TrackedDays { get; set; } = 3;
+    public List<string> PinnedEventsList { get; set; } = [];
+    public int updateDurationMins { get; set; } = 720;
+    public DateTimeOffset lastUpdateTime { get; set; } = DateTimeOffset.MinValue;
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? ExtraData { get; set; }
+
+    public void Normalize()
+    {
+        // Keep this for later if settings config gets updated in released version
+    }
+}
+
+public class WindowPosition
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+}
+
+public class WindowSize
+{
+    public int Width { get; set; }
+    public int Height { get; set; }
+}
+

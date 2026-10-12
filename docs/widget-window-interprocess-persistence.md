@@ -2,7 +2,7 @@
 
 ## Purpose
 
-GCaLink can have more than one `gcalink.exe` process at a time. The widget controller owns its settings window, while a calendar view may have been created by an earlier process and remain alive after that controller closes. Each process has its own `ViewWindowManager` and in-memory settings; shared files and Win32 window operations coordinate them.
+MosaiCal can have more than one `MosaiCal.exe` process at a time. The widget controller owns its settings window, while a calendar view may have been created by an earlier process and remain alive after that controller closes. Each process has its own `ViewWindowManager` and in-memory settings; shared files and Win32 window operations coordinate them.
 
 The controller closing is not intended to close the primary calendar view. It publishes that manager interaction is inactive, allowing the existing view to return to its desktop-widget style while its owning process keeps the window alive.
 
@@ -53,7 +53,7 @@ The state file is a latest-value message, not a queue. If multiple selections ha
 - **Controller inactive:** add tool-window and no-activate styles, remove the caption and sizing frame, and place the window at `HWND_NOTOPMOST`. The window remains alive and is not deliberately sent behind the desktop shell.
 - Both transitions preserve the current position and size by passing `SWP_NOMOVE` and `SWP_NOSIZE`.
 
-The interop layer finds existing windows by their exact titles: `GCaLink Day View`, `GCaLink Week View`, and `GCaLink Todo View`. The pinned view is similarly activated by its title. `FindWindow` returns a native handle; it does not establish ownership of the remote WinUI window.
+The interop layer finds existing windows by their exact titles: `MosaiCal Day View`, `MosaiCal Week View`, and `MosaiCal Todo View`. The pinned view is similarly activated by its title. `FindWindow` returns a native handle; it does not establish ownership of the remote WinUI window.
 
 ## Position and Size Persistence
 

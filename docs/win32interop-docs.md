@@ -12,6 +12,6 @@ For anyone not familiar, the hex values set are bitfields, eg: `SWP_NOACTIVATE =
 
 ## Microsoft References:
 
-Direct links to microsoft interop documentation. If you're purely interested in what is primarily used in the [Win32Interop](..\src\GCaLink\GCaLink\Platform\Win32Interop.cs) code, [`System.Runtime.InteropServices`](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke) is the most docs reference to use. Otherwise, the full API docs are linked below.
+Direct links to microsoft interop documentation. If you're purely interested in what is primarily used in the [Win32Interop](..\src\MosaiCal\MosaiCal\Platform\Win32Interop.cs) code, [`System.Runtime.InteropServices`](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke) is the most docs reference to use. Otherwise, the full API docs are linked below.
 
 [Full Win32 API](https://learn.microsoft.com/en-us/windows/win32/api/)

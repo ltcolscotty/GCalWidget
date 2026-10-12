@@ -4,12 +4,12 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "src/GCaLink/GCaLink/Services/UniRegexService.cs"
+      - "src/MosaiCal/MosaiCal/Services/UniRegexService.cs"
       - "modtests/UniRegexService.Tests/**"
   pull_request:
     branches: ["main"]
     paths:
-      - "src/GCaLink/GCaLink/Services/UniRegexService.cs"
+      - "src/MosaiCal/MosaiCal/Services/UniRegexService.cs"
       - "modtests/UniRegexService.Tests/**"
 
 jobs:

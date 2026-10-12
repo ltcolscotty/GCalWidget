@@ -46,7 +46,7 @@ For significant UI changes, include before/after screenshots when possible.
 
 ## Building locally
 
-See [Building from source](README.md#building-from-source) for current requirements and dependencies.
+See [Building from source](README.md#building-from-source) for current requirements and dependencies. Other information about building can be found in [Building.md](docs/building.md).
 
 ## Project scope
 

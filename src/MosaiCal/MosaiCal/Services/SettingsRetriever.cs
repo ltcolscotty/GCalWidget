@@ -33,8 +33,7 @@ internal static class SettingsRetriever
 
     static SettingsRetriever() 
     {
-        string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string appDataLocalFolder = Path.Combine(appDataLocalPath, "MosaiCal");
+        string appDataLocalFolder = AppDataPaths.LocalFolderPath;
         settingsFile = Path.Combine(appDataLocalFolder, "Config.json");
         imageDataFolder = Path.Combine(appDataLocalFolder, "SourceImages");
         dataFile = Path.Combine(appDataLocalFolder, "MainData.msgpack");
@@ -301,4 +300,3 @@ internal static class SettingsRetriever
         };
     }
 }
-

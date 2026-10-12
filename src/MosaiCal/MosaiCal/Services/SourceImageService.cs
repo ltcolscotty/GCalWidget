@@ -32,9 +32,7 @@ internal sealed class SourceImageService
 
     public SourceImageService()
     {
-        string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string appDataLocalFolder = Path.Combine(appDataLocalPath, "MosaiCal");
-        _managedImageDirectory = Path.Combine(appDataLocalFolder, "SourceImages");
+        _managedImageDirectory = Path.Combine(AppDataPaths.LocalFolderPath, "SourceImages");
         _associationFilePath = Path.Combine(_managedImageDirectory, AssociationFileName);
         Directory.CreateDirectory(_managedImageDirectory);
         _associations = LoadAssociations();
@@ -383,4 +381,3 @@ internal sealed class SourceImageService
         return sanitized.Length > 80 ? sanitized[..80] : sanitized;
     }
 }
-

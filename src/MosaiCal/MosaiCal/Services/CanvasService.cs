@@ -59,9 +59,7 @@ internal class CanvasService
         CancellationToken cancellationToken = default)
     {
         // May need to check that folder exists
-        string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string appDataLocalFolder = Path.Combine(appDataLocalPath, "MosaiCal");
-        string calendarFile = Path.Combine(appDataLocalFolder, "CanvasData.ics");
+        string calendarFile = Path.Combine(AppDataPaths.LocalFolderPath, "CanvasData.ics");
         List<IDHelper.EventID> sourceKeys = new();
 
         string expectedPath = await downloader.DownloadIcsAsync(sourceLink, calendarFile, cancellationToken);
@@ -103,4 +101,3 @@ internal class CanvasService
         return (events, sourceKeys);
     }
 }
-

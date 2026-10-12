@@ -409,3 +409,6 @@ env/
 
 #ical files
 *.ics
+
+# Local Build Properties
+Local.Build.props

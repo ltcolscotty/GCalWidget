@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MessagePack.Formatters;
 using System.ComponentModel;
+using Windows.Networking.Connectivity;
 
 namespace GCaLink.Services
 {
@@ -211,6 +212,12 @@ namespace GCaLink.Services
         public static async Task<bool?> RefreshCanvas()
         {
             CancellationToken cancellationToken = shutdownCancellation.Token;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!CanRefreshEvents())
+            {
+                return false;
+            }
+
             await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync(cancellationToken);
             bool? result = await RefreshCanvasWithoutLockAsync(cancellationToken);
             if (result == true)
@@ -267,6 +274,12 @@ namespace GCaLink.Services
         public static async Task<bool?> RefreshGoogle()
         {
             CancellationToken cancellationToken = shutdownCancellation.Token;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!CanRefreshEvents())
+            {
+                return false;
+            }
+
             await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync(cancellationToken);
             bool? result = await RefreshGoogleWithoutLockAsync(cancellationToken);
             if (result == true)
@@ -349,6 +362,12 @@ namespace GCaLink.Services
                 shutdownCancellation.Token,
                 cancellationToken);
             cancellationToken = linkedCancellation.Token;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!CanRefreshEvents())
+            {
+                return;
+            }
+
             await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync(cancellationToken);
 
             if (sourceList == null)
@@ -408,6 +427,12 @@ namespace GCaLink.Services
         public static async Task RefreshAllAsync()
         {
             CancellationToken cancellationToken = shutdownCancellation.Token;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!CanRefreshEvents())
+            {
+                return;
+            }
+
             await using FileStream calendarDataLock = await AcquireCalendarDataLockAsync(cancellationToken);
 
             if (sourceList == null)
@@ -429,6 +454,20 @@ namespace GCaLink.Services
 
             SettingsRetriever.setLastUpdateTime(DateTimeOffset.Now);
             LoggerService.Log("EventAggService: All sources refreshed successfully", LoggerStatusEnum.INFO);
+        }
+
+        private static bool CanRefreshEvents()
+        {
+            if (NetworkInformation.GetInternetConnectionProfile()?.GetNetworkConnectivityLevel() ==
+                NetworkConnectivityLevel.InternetAccess)
+            {
+                return true;
+            }
+
+            LoggerService.Log(
+                "EventAggService: Internet access is unavailable; skipping calendar refresh and retaining existing events.",
+                LoggerStatusEnum.INFO);
+            return false;
         }
     }
 }

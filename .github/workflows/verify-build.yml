@@ -26,4 +26,4 @@ jobs:
         run: dotnet restore ./src/MosaiCal/MosaiCal.sln
 
       - name: Build
-        run: dotnet build ./src/MosaiCal/MosaiCal.sln --no-restore --configuration Debug
+        run: dotnet build ./src/MosaiCal/MosaiCal.sln --no-restore --configuration Debug -p:AppxPackageSigningEnabled=false

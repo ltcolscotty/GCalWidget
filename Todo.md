@@ -1,3 +1,54 @@
+### V1 Release Targets
+
+Target: Winter 2027
+
+#### Core Functionality
+
+- [x] Automatic refreshing
+- [x] On startup request
+- [x] Prevent processes from interrupting shutdown
+- [ ] Default fallback case for unsupported universities in parsing handler
+- [ ] Bracket edge case in assignment name parsing
+  - [ ] Tighten up regexes
+
+#### Customization
+
+- [ ] Solid color customization option for event backgrounds
+- [ ] Color selector UI
+- [ ] Good looking default config
+
+#### Reliability
+
+- [ ] Basic checks for memory leaks
+- [ ] Test extended runtime
+- [ ] Test sleep / wake behavior
+- [ ] Test network loss and recovery
+- [ ] Test configuration persistence
+- [ ] Test Google authentication failure / expiration
+- [ ] Test malformed or unavailable Canvas ICS feeds
+
+#### Distribution
+
+- [ ] Signed installer
+- [ ] Test clean installation on another Windows machine
+- [ ] Test uninstall
+- [ ] Decide initial distribution method
+- [ ] Finalize Google OAuth production configuration
+
+#### Documentation & Release
+
+- [ ] Finish essential docs
+- [ ] Finish README for V1
+  - [ ] Installation instructions
+  - [ ] Setup instructions
+  - [ ] Customization documentation
+  - [ ] Screenshots
+  - [ ] Short setup / demonstration GIF
+- [ ] Finalize CONTRIBUTING.md
+- [ ] Prepare V1 release notes
+
+---
+
 ### Todo
 
 #### In Consideration
@@ -6,49 +57,50 @@
 - [ ] Source title color customization
 - [ ] Apple iCal support
 - [ ] Microsoft Outlook support
-- [ ] Signed Installer
-
-#### <font color="lightgreen"> High Priority </font>
-
 - [ ] Multiple Google account support
-- [ ] Solid color customization option for event backgrounds
-    - [ ] Color selector UI
-- [ ] On startup request
 
-#### <font color="green"> Low Priority </font>
+#### \<font color="lightgreen"> High Priority \</font>
+
+- [ ] Accent Bar for lighter customization options
+- [ ] Solid/Mica/Acrylic customization options for calendar view window
+- [ ] Independent transparency customization for view background
+
+#### \<font color="green"> Low Priority \</font>
 
 - [ ] Gif support for events
 - [ ] Controller window background image customization
 - [ ] Memory usage optimization
-    - [ ] Basic checks for memory leaks
-    - [ ] Benchmark view usage
+  - [ ] Benchmark view usage
 - [ ] Real documentation inside the code
-- [ ] Finish docs folder
 - [ ] Liquid Glass background
-- [ ] Independent transparency customization for view background
-- [ ] Bracket edge case in assignment name parsing
-    - [ ] Tighten up regexes
-- [ ] Default fallback case for unsupported universities in parsing handler
-- [ ] Good looking default config
 
 ### In Progress
+
+- [ ] Signed Installer
 
 ### Done
 
 - [x] Prevent processes from interrupting shutdown
 - [x] Automatic Refreshing
+- [x] On startup request
 
 ### Conventions
 
-Tasks moved to [Done](#Done) should be removed somewhat shortly after being finished to reduce clutter
+Tasks moved to [Done](#done) should be removed somewhat shortly after being finished to reduce clutter.
 
-High priority tasks - Essential to feature goal or functionality, or a critical bug
+**V1 Release Targets** are tasks required before the initial public release. New features should generally not be added to the V1 target unless they are necessary for normal use, reliability, security, or distribution.
 
-Low priority - Minor QoL changes to improve a feature implementation goal
+**High priority** — Essential to a planned feature or core functionality, or a critical bug.
+
+**Low priority** — Minor QoL changes or improvements that are not required for normal operation.
+
+**In Consideration** — Potential future features that are not currently committed to a release.
 
 #### Copy/Paste References
+
 - [ ] Not done
 - [x] Done
 
-#### Reference:
+#### Reference
+
 [Todo.md](https://github.com/todomd/todo.md)

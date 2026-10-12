@@ -17,22 +17,22 @@ A primary view (`Todo`, `Day`, or `Week`) is created and retained by the process
 
 ## Shared State Files
 
-Both files are stored beside the calendar data in `%LOCALAPPDATA%\GCWidget`.
+Both files are stored beside the calendar data in `%LOCALAPPDATA%\MosaiCal`.
 
-### `GCWWidgetManagerState`
+### `WidgetManagerState`
 
 This file contains a Boolean (`True` or `False`) representing whether the widget controller is active.
 
 - `WidgetWindow` calls `SetPrimaryViewManagerActive(true)` when opened or activated, and `false` when closed.
 - A process publishes only when its local active value changes.
-- Publishing writes a process-specific temporary file, then replaces `GCWWidgetManagerState` with a move operation.
+- Publishing writes a process-specific temporary file, then replaces `WidgetManagerState` with a move operation.
 - Each process watches the state file for changes, creation, and rename. Events are debounced for 150 ms before the latest value is read.
 - A receiving process marshals native window-mode updates to the primary view's `DispatcherQueue`.
 - An active update also reloads persisted calendar customizations in the view-owning process.
 
 This message changes interaction mode; it does not choose `Todo`, `Day`, or `Week` and does not close the primary view.
 
-### `GCWPrimaryViewState`
+### `PrimaryViewState`
 
 This file contains JSON with the controller process ID, whether the primary view is enabled, and the selected `PrimaryViewEnum` value.
 
@@ -59,7 +59,7 @@ The interop layer finds existing windows by their exact titles: `MosaiCal Day Vi
 
 Position and size are separate from process coordination. `WindowConfiguration.Configure` restores the primary or pinned view's saved size and position from `SettingsRetriever`. `AppWindow.Changed` persists changes, and the window's `Closed` event saves the final state.
 
-The values are stored in `GCWConfig.json` under `%LOCALAPPDATA%\GCWidget`. Closing the controller does not itself save or reset the calendar view's position; closing or moving/resizing the view does.
+The values are stored in `Config.json` under `%LOCALAPPDATA%\MosaiCal`. Closing the controller does not itself save or reset the calendar view's position; closing or moving/resizing the view does.
 
 ## Customization Refresh
 
@@ -74,7 +74,7 @@ An image association is keyed by provider and source ID (for example, `Canvas:CS
 
 ## Diagnostics
 
-`GCWLogs.txt` is also under `%LOCALAPPDATA%\GCWidget`. Each line includes a process ID so entries from the controller and view-owning process can be distinguished.
+`Logs.txt` is also under `%LOCALAPPDATA%\MosaiCal`. Each line includes a process ID so entries from the controller and view-owning process can be distinguished.
 
 Useful entries when investigating a reopen or view swap include:
 

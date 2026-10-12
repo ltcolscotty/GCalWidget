@@ -8,7 +8,7 @@
 
 ### Log Location
 
-The default log location is in `%LOCALAPPDATA%\GCWidget\GCWLogs.txt` for all builds.
+The default log location is in `%LOCALAPPDATA%\MosaiCal\Logs.txt` for all builds.
 
 ### Log limits
 

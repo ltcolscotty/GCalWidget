@@ -24,10 +24,10 @@ internal static class ViewWindowManager
     private static volatile bool systemShutdownInProgress;
     private static readonly string managerStatePath = Path.Combine(
         Path.GetDirectoryName(SettingsRetriever.GetMainDataPath())!,
-        "GCWWidgetManagerState");
+        "WidgetManagerState");
     private static readonly string primaryViewStatePath = Path.Combine(
         Path.GetDirectoryName(SettingsRetriever.GetMainDataPath())!,
-        "GCWPrimaryViewState");
+        "WidgetPrimaryViewState");
     private static readonly object managerStateLock = new();
     private static readonly Timer managerStateDebounceTimer = new(
         _ => ApplyPublishedManagerState(),

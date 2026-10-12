@@ -60,7 +60,7 @@ internal class CanvasService
     {
         // May need to check that folder exists
         string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
+        string appDataLocalFolder = Path.Combine(appDataLocalPath, "MosaiCal");
         string calendarFile = Path.Combine(appDataLocalFolder, "CanvasData.ics");
         List<IDHelper.EventID> sourceKeys = new();
 

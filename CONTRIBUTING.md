@@ -30,7 +30,7 @@ When opening an issue, include:
 - Your MosaiCal and Windows versions.
 - Relevant errors, screenshots, or logs with personal information removed.
 
-Logs can be found under `%LocalAppData%\GCWidget\`, including `GCWLogs.txt` and similarly named files.
+Logs can be found under `%LocalAppData%\MosaiCal\`, including `Logs.txt` and similarly named files.
 
 Please remove personal, course, and configuration information from logs unless necessary to reproduce the problem. Never post authentication tokens or ICS URLs.
 

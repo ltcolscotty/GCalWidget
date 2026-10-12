@@ -34,10 +34,10 @@ internal static class SettingsRetriever
     static SettingsRetriever() 
     {
         string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
-        settingsFile = Path.Combine(appDataLocalFolder, "GCWConfig.json");
+        string appDataLocalFolder = Path.Combine(appDataLocalPath, "MosaiCal");
+        settingsFile = Path.Combine(appDataLocalFolder, "Config.json");
         imageDataFolder = Path.Combine(appDataLocalFolder, "SourceImages");
-        dataFile = Path.Combine(appDataLocalFolder, "GCWMainData.msgpack");
+        dataFile = Path.Combine(appDataLocalFolder, "MainData.msgpack");
         ETCSettingsFile = Path.Combine(appDataLocalFolder, "ETCSettings.msgpack");
         Directory.CreateDirectory(appDataLocalFolder);
         Directory.CreateDirectory(imageDataFolder);

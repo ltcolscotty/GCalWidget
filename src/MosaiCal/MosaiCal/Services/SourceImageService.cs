@@ -33,7 +33,7 @@ internal sealed class SourceImageService
     public SourceImageService()
     {
         string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
+        string appDataLocalFolder = Path.Combine(appDataLocalPath, "MosaiCal");
         _managedImageDirectory = Path.Combine(appDataLocalFolder, "SourceImages");
         _associationFilePath = Path.Combine(_managedImageDirectory, AssociationFileName);
         Directory.CreateDirectory(_managedImageDirectory);

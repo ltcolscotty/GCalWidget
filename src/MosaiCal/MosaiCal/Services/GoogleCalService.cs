@@ -204,7 +204,7 @@ public sealed class GoogleCalService
         return new CalendarService(new BaseClientService.Initializer
         {
             HttpClientInitializer = credential,
-            ApplicationName = "GCWidget"
+            ApplicationName = "MosaiCal"
         });
     }
 

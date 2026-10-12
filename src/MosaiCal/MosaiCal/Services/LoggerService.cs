@@ -27,8 +27,8 @@ internal static class LoggerService
     static LoggerService()
     {
         string appDataLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string appDataLocalFolder = Path.Combine(appDataLocalPath, "GCWidget");
-        logFilePath = Path.Combine(appDataLocalFolder, "GCWLogs.txt");
+        string appDataLocalFolder = Path.Combine(appDataLocalPath, "MosaiCal");
+        logFilePath = Path.Combine(appDataLocalFolder, "Logs.txt");
     }
 
     public static void Log(string warningText, LoggerStatusEnum statusType=LoggerStatusEnum.INFO)
@@ -72,7 +72,7 @@ internal static class LoggerService
         }
         catch (Exception exception)
         {
-            Debug.WriteLine($"GCWidget could not write to '{logFilePath}': {exception}; original log entry: [{statusType}] {warningText}");
+            Debug.WriteLine($"MosaiCal could not write to '{logFilePath}': {exception}; original log entry: [{statusType}] {warningText}");
         }
     }
 

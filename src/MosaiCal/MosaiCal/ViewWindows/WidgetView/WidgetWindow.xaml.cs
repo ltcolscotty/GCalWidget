@@ -630,7 +630,7 @@ public sealed partial class WidgetWindow : Window
         catch (Exception exception)
         {
             LoggerService.LogException("WidgetWindow.RefreshCanvasSources", exception);
-            CanvasSaveStatus.Text = "Canvas refresh failed. See GCWLogs.txt for details.";
+            CanvasSaveStatus.Text = "Canvas refresh failed. See Logs.txt for details.";
         }
     }
     private async void RefreshGoogleSources(object sender, RoutedEventArgs e)
@@ -658,7 +658,7 @@ public sealed partial class WidgetWindow : Window
         catch (Exception exception)
         {
             LoggerService.LogException("WidgetWindow.RefreshGoogleSources", exception);
-            GoogleConnectionStatus.Text = "Google refresh failed. See GCWLogs.txt for details.";
+            GoogleConnectionStatus.Text = "Google refresh failed. See Logs.txt for details.";
         }
     }
 

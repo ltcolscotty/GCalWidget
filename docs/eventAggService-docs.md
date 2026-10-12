@@ -2,15 +2,15 @@
 
 ## Purpose
 
-Centralized event aggregator class. This should be the only part of MosaiCal to modify the `GCWMainData.msgpack` file. Support for other calendar providers should be centralized to [EventAggService.cs](..\src\MosaiCal\MosaiCal\Services\EventAggService.cs) after making a dedicated service to call the API and parse the return into [CalEventDto](..\src\MosaiCal\MosaiCal\Models\CalEventDto.cs) objects.
+Centralized event aggregator class. This should be the only part of MosaiCal to modify the `MainData.msgpack` file. Support for other calendar providers should be centralized to [EventAggService.cs](..\src\MosaiCal\MosaiCal\Services\EventAggService.cs) after making a dedicated service to call the API and parse the return into [CalEventDto](..\src\MosaiCal\MosaiCal\Models\CalEventDto.cs) objects.
 
 ## Read/Write - Locks (IMPORTANT)
 
-All access to the calendar message-pack file should go through `AcquireCalendarDataLockAsync()`. That method creates/opens a sidecar lock file at `SettingsRetriever.GetMainDataPath() + ".lock"` using `FileStream` with `FileShare.None`, which serializes readers and writers and prevents concurrent reads/writes to `GCWMainData.msgpack`.
+All access to the calendar message-pack file should go through `AcquireCalendarDataLockAsync()`. That method creates/opens a sidecar lock file at `SettingsRetriever.GetMainDataPath() + ".lock"` using `FileStream` with `FileShare.None`, which serializes readers and writers and prevents concurrent reads/writes to `MainData.msgpack`.
 
 This is the actual data-safety lock for the message pack file; the `eventsChangedLock` is only for debounced view notifications and not for protecting the calendar data itself.
 
-During confirmed Windows shutdown, source refreshes are canceled and release the calendar data lock as they unwind. Refreshed data is written to a temporary file and replaces `GCWMainData.msgpack` only after the full snapshot is ready, so canceling a refresh preserves the last complete calendar data file.
+During confirmed Windows shutdown, source refreshes are canceled and release the calendar data lock as they unwind. Refreshed data is written to a temporary file and replaces `MainData.msgpack` only after the full snapshot is ready, so canceling a refresh preserves the last complete calendar data file.
 
 ## Aggregation
 

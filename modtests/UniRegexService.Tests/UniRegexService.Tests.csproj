@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MosaiCal\MosaiCal\MosaiCal.csproj" />
+    <Compile Include="..\..\src\MosaiCal\MosaiCal\Services\UniRegexService.cs"
+             Link="Services\UniRegexService.cs" />
   </ItemGroup>
 </Project>

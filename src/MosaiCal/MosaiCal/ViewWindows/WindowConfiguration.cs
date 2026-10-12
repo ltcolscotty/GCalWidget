@@ -1,10 +1,10 @@
-using System;
-using MosaiCal.Models;
-using MosaiCal.Platform;
-using MosaiCal.Services;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using MosaiCal.Models;
+using MosaiCal.Platform;
+using MosaiCal.Services;
+using System;
 using WinRT.Interop;
 
 namespace MosaiCal.ViewWindows;

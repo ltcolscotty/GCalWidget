@@ -1,7 +1,6 @@
+using Microsoft.UI;
 using System;
 using Windows.UI;
-using Microsoft.UI;
-using Microsoft.UI.Xaml.Media;
 
 namespace MosaiCal.Services;
 

@@ -1,17 +1,12 @@
-﻿using MosaiCal.Models;
-using Google.Apis.Auth;
-
+﻿using MessagePack;
+using MosaiCal.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.UI.ViewManagement;
-
-using MessagePack;
 
 namespace MosaiCal.Services;
 

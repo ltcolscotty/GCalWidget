@@ -1,7 +1,6 @@
+using Microsoft.UI.Xaml;
 using MosaiCal.Models;
 using MosaiCal.Services;
-using MosaiCal.ViewWindows;
-using Microsoft.UI.Xaml;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;

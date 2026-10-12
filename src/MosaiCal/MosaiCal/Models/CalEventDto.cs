@@ -1,5 +1,5 @@
-﻿using MosaiCal.Services;
-using MessagePack;
+﻿using MessagePack;
+using MosaiCal.Services;
 using System;
 
 namespace MosaiCal.Models;

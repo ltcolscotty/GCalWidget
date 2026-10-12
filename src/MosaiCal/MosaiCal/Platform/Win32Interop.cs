@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using MosaiCal.Services;
+using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using MosaiCal.Services;
 
 namespace MosaiCal.Platform;
 

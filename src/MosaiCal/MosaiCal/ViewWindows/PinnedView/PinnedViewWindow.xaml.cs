@@ -1,6 +1,5 @@
-using MosaiCal.Services;
-using MosaiCal.ViewWindows;
 using Microsoft.UI.Xaml;
+using MosaiCal.Services;
 
 namespace MosaiCal.ViewWindows.PinnedView
 {

@@ -1,16 +1,11 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Ical.Net;
-using System.Text.RegularExpressions;
-
-using MosaiCal.Models;
+﻿using Ical.Net;
 using Ical.Net.CalendarComponents;
-using System.Collections;
+using MosaiCal.Models;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MosaiCal.Services;
 

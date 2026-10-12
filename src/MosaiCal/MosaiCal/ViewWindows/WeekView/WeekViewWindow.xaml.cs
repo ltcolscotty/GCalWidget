@@ -1,3 +1,6 @@
+using Microsoft.UI.Xaml;
+using MosaiCal.Models;
+using MosaiCal.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -5,10 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using MosaiCal.Models;
-using MosaiCal.Services;
-using MosaiCal.ViewWindows;
-using Microsoft.UI.Xaml;
 
 namespace MosaiCal.ViewWindows.WeekView;
 

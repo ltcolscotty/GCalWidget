@@ -1,10 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media.Imaging;
 using MosaiCal.Models;
 using MosaiCal.Services;
-using Microsoft.UI.Xaml.Media.Imaging;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
+using System;
+using System.Threading.Tasks;
 
 namespace MosaiCal.ViewWindows.SettingsView;
 

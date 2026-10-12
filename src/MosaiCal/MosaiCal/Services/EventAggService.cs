@@ -1,17 +1,12 @@
-﻿using MosaiCal.Models;
-using MosaiCal.Services;
-
-using Google.Apis.Calendar.v3;
+﻿using Google.Apis.Calendar.v3;
 using MessagePack;
+using MosaiCal.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MessagePack.Formatters;
-using System.ComponentModel;
 using Windows.Networking.Connectivity;
 
 namespace MosaiCal.Services;

@@ -1,6 +1,6 @@
-using MosaiCal.Platform;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using MosaiCal.Platform;
 using WinRT.Interop;
 
 namespace MosaiCal.ViewWindows;

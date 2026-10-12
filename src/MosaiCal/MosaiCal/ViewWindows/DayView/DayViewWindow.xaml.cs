@@ -1,13 +1,10 @@
-﻿using System;
+﻿using Microsoft.UI.Xaml;
+using MosaiCal.Models;
+using MosaiCal.Services;
+using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-
-using Microsoft.UI.Xaml;
-
-using MosaiCal.Models;
-using MosaiCal.Services;
-using MosaiCal.ViewWindows;
 using System.Threading.Tasks;
 
 namespace MosaiCal.ViewWindows.DayView;

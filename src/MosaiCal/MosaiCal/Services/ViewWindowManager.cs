@@ -1,16 +1,16 @@
+using Microsoft.UI.Xaml;
+using MosaiCal.Models;
+using MosaiCal.Platform;
+using MosaiCal.ViewWindows;
+using MosaiCal.ViewWindows.DayView;
+using MosaiCal.ViewWindows.PinnedView;
+using MosaiCal.ViewWindows.TodoView;
+using MosaiCal.ViewWindows.WeekView;
 using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using MosaiCal.Models;
-using MosaiCal.Platform;
-using MosaiCal.ViewWindows.DayView;
-using MosaiCal.ViewWindows.PinnedView;
-using MosaiCal.ViewWindows.TodoView;
-using MosaiCal.ViewWindows.WeekView;
-using MosaiCal.ViewWindows;
-using Microsoft.UI.Xaml;
 using WinRT.Interop;
 
 namespace MosaiCal.Services;

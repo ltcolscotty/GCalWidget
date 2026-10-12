@@ -14,7 +14,6 @@
 - [ ] Solid color customization option for event backgrounds
     - [ ] Color selector UI
 - [ ] On startup request
-- [ ] Prevent processes from interrupting shutdown
 
 #### <font color="green"> Low Priority </font>
 
@@ -34,9 +33,10 @@
 
 ### In Progress
 
-- [ ] Automatic Refreshing [<font color="lightgreen"> High Priority </font>]
-
 ### Done
+
+- [x] Prevent processes from interrupting shutdown
+- [x] Automatic Refreshing
 
 ### Conventions
 

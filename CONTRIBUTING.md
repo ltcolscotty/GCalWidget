@@ -1,6 +1,6 @@
-# Contributing to GCalWidget
+# Contributing to MosaiCal
 
-Thanks for your interest in contributing to GCalWidget! GCalWidget is currently maintained by one developer, so review times may vary.
+Thanks for your interest in contributing to MosaiCal! MosaiCal is currently maintained by one developer, so review times may vary.
 
 ## Ways to contribute
 
@@ -27,7 +27,7 @@ When opening an issue, include:
 
 - Steps to reproduce the problem.
 - What you expected and what happened.
-- Your GCalWidget and Windows versions.
+- Your MosaiCal and Windows versions.
 - Relevant errors, screenshots, or logs with personal information removed.
 
 Logs can be found under `%LocalAppData%\GCWidget\`, including `GCWLogs.txt` and similarly named files.
@@ -50,4 +50,4 @@ See [Building from source](README.md#building-from-source) for current requireme
 
 ## Project scope
 
-GCalWidget focuses on providing a reliable and customizable Windows widget for Google Calendar and Canvas. Major features and integrations may be deferred to keep the project maintainable. Please discuss substantial additions before investing significant development time.
+MosaiCal focuses on providing a reliable and customizable Windows widget for Google Calendar and Canvas. Major features and integrations may be deferred to keep the project maintainable. Please discuss substantial additions before investing significant development time.

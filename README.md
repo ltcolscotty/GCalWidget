@@ -1,8 +1,8 @@
-# GCalWidget
+# MosaiCal
 
 (i need to make a logo and get some screenshots for this lol)
 
-GCalWidget is a customizable Windows desktop calendar widget that aggregates Google Calendar and Canvas events together in one place with per-source customization controls.
+MosaiCal is a customizable Windows desktop calendar widget that aggregates Google Calendar and Canvas events together in one place with per-source customization controls.
 
 Version: In Development
 
@@ -31,7 +31,7 @@ Coming soon
 
 1. Go to your calendar on Canvas
 2. Click the 'Calendar Feed' button at the right
-3. Copy the provided link into GCalWidget's Canvas tab
+3. Copy the provided link into MosaiCal's Canvas tab
 4. Enable Canvas as a tracked source in the main settings page
 5. Refresh and you're set!
 
@@ -45,7 +45,7 @@ Description coming soon
 See [contributing](#contributing) for information on adding university configurations
 
 ### Supported List:
-GCalWidget can use Canvas calendar feeds from other universities, but university-specific configurations improve assignment name cleanup and course detection. The following universities have tested configurations:
+MosaiCal can use Canvas calendar feeds from other universities, but university-specific configurations improve assignment name cleanup and course detection. The following universities have tested configurations:
 - Arizona State University
 - Ohio State University
 - University of Washington
@@ -57,7 +57,7 @@ GCalWidget can use Canvas calendar feeds from other universities, but university
 - Only supports one Google Calendar account
 
 ## Privacy
-GCalWidget does not have an external server to upload calendar data, nor does it have telemetry. Calendar and configuration data is stored locally on your device. Network connections are only made when authenticating with supported services and retrieving data during syncing.
+MosaiCal does not have an external server to upload calendar data, nor does it have telemetry. Calendar and configuration data is stored locally on your device. Network connections are only made when authenticating with supported services and retrieving data during syncing.
 
 ## Contributing
 Contributions are welcome, in particular:

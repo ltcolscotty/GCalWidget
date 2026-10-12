@@ -89,5 +89,3 @@ Useful entries when investigating a reopen or view swap include:
 - `CalendarEventDisplayService: ... identity=... imageMatched=...`
 - `TodoView`, `DayView`, or `WeekView` refresh and rebuilt-event messages
 - `Failed applying primary view state` or `Unhandled application exception` with exception details
-
-A manager-state update without a primary-view-state update can change native interaction mode but cannot switch the selected calendar view. Manager-driven closes are logged as `Closing primary view` with a reason and are detached from the external-close handler first. A `Primary view=... closed outside manager replacement` entry instead means the manager did not initiate that close; the controller treats it as a user close and disables the primary-view setting.

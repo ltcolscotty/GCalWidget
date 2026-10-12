@@ -229,18 +229,6 @@ internal static class EventAggService
 
     private static async Task<bool?> RefreshCanvasWithoutLockAsync(CancellationToken cancellationToken)
     {
-        if (sourceList == null)
-        {
-            LoggerService.Log("EventAggService: Attempted to get events on empty source list", LoggerStatusEnum.ERROR);
-            return null;
-        }
-
-        if (!(sourceList.TryGetValue("canvas", out var cEnabled) && cEnabled))
-        {
-            LoggerService.Log("EventAggService: Attempted to sync canvas events without enabled source", LoggerStatusEnum.WARNING);
-            return false;
-        }
-
         Dictionary<IDHelper.EventID, CalEventDto> calendarData = await ReadCalendarDataWithoutLockAsync(
             SettingsRetriever.GetMainDataPath(),
             cancellationToken);
@@ -291,18 +279,6 @@ internal static class EventAggService
 
     private static async Task<bool?> RefreshGoogleWithoutLockAsync(CancellationToken cancellationToken)
     {
-        if (sourceList == null)
-        {
-            LoggerService.Log("EventAggService: Attempted to get events on empty source list", LoggerStatusEnum.ERROR);
-            return null;
-        }
-
-        if (!(sourceList.TryGetValue("google", out var gEnabled) && gEnabled))
-        {
-            LoggerService.Log("EventAggService: Attempted to sync google events without enabled source", LoggerStatusEnum.WARNING);
-            return false;
-        }
-
         CalendarService service = await GCS.CreateCalendarServiceAsync(cancellationToken);
         var (googleEvents, googleIds, isComplete) = await GCS.FetchUpcomingEventsAsync(
             service,
@@ -470,4 +446,3 @@ internal static class EventAggService
         return false;
     }
 }
-

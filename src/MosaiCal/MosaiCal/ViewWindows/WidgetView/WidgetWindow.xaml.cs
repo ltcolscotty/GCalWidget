@@ -43,12 +43,14 @@ public sealed partial class WidgetWindow : Window
     private readonly RefreshSchedService _refreshSchedService;
     private readonly IDisposable _shutdownHandler;
     private bool _isUpdatingTransparencyControls;
+    private bool _isUpdatingSourceControls;
     private bool _isUpdatingPrimaryViewControl;
     private bool _hasConfiguredSource;
 
     public WidgetWindow()
     {
         InitializeComponent();
+        EventAggService.EventsChanged += OnEventsChanged;
         _ = SettingsRetriever.InitializeAsync();
         _refreshSchedService = new RefreshSchedService(
             TimeSpan.FromMinutes(SettingsRetriever.GetUpdateDurationMins()));
@@ -63,6 +65,7 @@ public sealed partial class WidgetWindow : Window
             LoggerService.Log("WidgetWindow: Closed event received; publishing manager inactive state.");
             ViewWindowManager.SetPrimaryViewManagerActive(false);
             ViewWindowManager.PrimaryViewClosedByUser -= OnPrimaryViewClosedByUser;
+            EventAggService.EventsChanged -= OnEventsChanged;
             _shutdownHandler.Dispose();
             _ = _refreshSchedService.DisposeAsync();
         };
@@ -85,8 +88,10 @@ public sealed partial class WidgetWindow : Window
         };
 
         CanvasCalLinkInput.Text = SettingsRetriever.GetCanvasICSLink();
+        _isUpdatingSourceControls = true;
         EnableGoogle.IsChecked = SettingsRetriever.GetGoogleEnabled();
         EnableCanvas.IsChecked = SettingsRetriever.GetCanvasEnabled();
+        _isUpdatingSourceControls = false;
         _isUpdatingPrimaryViewControl = true;
         EnablePrimaryView.IsChecked = SettingsRetriever.GetPrimaryViewEnabled();
         EnablePinnedView.IsChecked = SettingsRetriever.GetPinnedViewEnabled();
@@ -189,6 +194,25 @@ public sealed partial class WidgetWindow : Window
 
         GoogleSourceCardsList.ItemsSource = GoogleSourceCards;
         CanvasSourceCardsList.ItemsSource = CanvasSourceCards;
+    }
+
+    private void OnEventsChanged(object? sender, EventArgs e)
+    {
+        bool enqueued = DispatcherQueue.TryEnqueue(() => _ = RefreshCustomizationCardsAfterEventsChangedAsync());
+        LoggerService.Log($"WidgetWindow: Calendar data update received; customization-card refreshEnqueued={enqueued}.",
+            enqueued ? LoggerStatusEnum.INFO : LoggerStatusEnum.WARNING);
+    }
+
+    private async Task RefreshCustomizationCardsAfterEventsChangedAsync()
+    {
+        try
+        {
+            await RefreshCustomizationCardsAsync();
+        }
+        catch (Exception exception)
+        {
+            LoggerService.LogException("WidgetWindow: Failed to refresh source customization cards after calendar data changed.", exception);
+        }
     }
 
     private async Task<List<SourceCustomizationCard>> BuildSourceCardsAsync(string provider)
@@ -538,8 +562,10 @@ public sealed partial class WidgetWindow : Window
     private async void GoogleSignOutClick(object sender, RoutedEventArgs e)
     {
         await EventAggService.GetGoogleCalService().SignOutAsync();
-        SettingsRetriever.SetGoogleEnabled(false);
+        await SetGoogleEnabledAsync(false);
+        _isUpdatingSourceControls = true;
         EnableGoogle.IsChecked = false;
+        _isUpdatingSourceControls = false;
         await UpdateConnectionStatusAsync(false);
         await UpdateViewSourceAvailabilityAsync();
     }
@@ -547,8 +573,10 @@ public sealed partial class WidgetWindow : Window
     private async void GoogleSwitchAccountClick(object sender, RoutedEventArgs e)
     {
         await EventAggService.GetGoogleCalService().SignOutAsync();
-        SettingsRetriever.SetGoogleEnabled(false);
+        await SetGoogleEnabledAsync(false);
+        _isUpdatingSourceControls = true;
         EnableGoogle.IsChecked = false;
+        _isUpdatingSourceControls = false;
         await GoogleSignInAsync();
     }
 
@@ -561,13 +589,13 @@ public sealed partial class WidgetWindow : Window
             bool connected = await EventAggService.GetGoogleCalService().AuthorizeAsync();
             if (connected)
             {
-                SettingsRetriever.SetGoogleEnabled(true);
+                await SetGoogleEnabledAsync(true, reloadGoogleService: true);
+                _isUpdatingSourceControls = true;
                 EnableGoogle.IsChecked = true;
-                await EventAggService.ReloadGoogleServiceAsync();
+                _isUpdatingSourceControls = false;
             }
 
             await UpdateConnectionStatusAsync(connected);
-            await UpdateRefreshButton();
         }
         finally
         {
@@ -598,12 +626,11 @@ public sealed partial class WidgetWindow : Window
         bool response = SettingsRetriever.SetCanvasICSLink(CanvasCalLinkInput.Text);
         if (!response)
         {
-            // Notification - Unsuccessful
-            CanvasSaveStatus.Text = "Enter a valid calendar URL.";
+            CanvasLinkStatus.Text = "Enter a valid calendar URL.";
             return;
         }
 
-        CanvasSaveStatus.Text = "Canvas calendar link saved.";
+        CanvasLinkStatus.Text = "Canvas calendar link saved.";
         await EventAggService.ReloadSourcesAsync();
         await UpdateViewSourceAvailabilityAsync();
     }
@@ -619,7 +646,7 @@ public sealed partial class WidgetWindow : Window
                     $"WidgetWindow.RefreshCanvasSources: Canvas refresh did not complete (result: {response?.ToString() ?? "null"}).",
                     response == false ? LoggerStatusEnum.WARNING : LoggerStatusEnum.ERROR);
             }
-            CanvasSaveStatus.Text = response == true
+            CanvasSyncStatus.Text = response == true
                 ? "Canvas events refreshed."
                 : "Canvas events could not be refreshed.";
         }
@@ -630,11 +657,13 @@ public sealed partial class WidgetWindow : Window
         catch (Exception exception)
         {
             LoggerService.LogException("WidgetWindow.RefreshCanvasSources", exception);
-            CanvasSaveStatus.Text = "Canvas refresh failed. See Logs.txt for details.";
+            CanvasSyncStatus.Text = "Canvas refresh failed. See Logs.txt for details.";
         }
     }
     private async void RefreshGoogleSources(object sender, RoutedEventArgs e)
     {
+        RefreshGoogleSourcesButton.IsEnabled = false;
+        GoogleSyncStatus.Text = "Syncing Google Calendar...";
         try
         {
             string mainDataPath = SettingsRetriever.GetMainDataPath();
@@ -647,7 +676,7 @@ public sealed partial class WidgetWindow : Window
             }
 
             bool? response = await EventAggService.RefreshGoogle();
-            GoogleConnectionStatus.Text = response == true
+            GoogleSyncStatus.Text = response == true
                 ? "Google Calendar events refreshed."
                 : "Google Calendar events could not be refreshed.";
         }
@@ -658,7 +687,11 @@ public sealed partial class WidgetWindow : Window
         catch (Exception exception)
         {
             LoggerService.LogException("WidgetWindow.RefreshGoogleSources", exception);
-            GoogleConnectionStatus.Text = "Google refresh failed. See Logs.txt for details.";
+            GoogleSyncStatus.Text = "Google refresh failed. See Logs.txt for details.";
+        }
+        finally
+        {
+            RefreshGoogleSourcesButton.IsEnabled = true;
         }
     }
 
@@ -678,22 +711,13 @@ public sealed partial class WidgetWindow : Window
         }
     }
     
-    private async Task UpdateRefreshButton()
-    {
-        GoogleCalService GCS = EventAggService.GetGoogleCalService();
-        Dictionary<string, bool> sources = await SettingsRetriever.GetActiveSources(GCS);
-        RefreshGoogleSourcesButton.Visibility = sources["google"]
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-    }
-
     private async Task UpdateConnectionStatusAsync(bool? connectedOverride = null)
     {
         bool connected = connectedOverride ?? await EventAggService.GetGoogleCalService().IsAccountActiveAsync();
         GoogleConnectionStatus.Text = connected ? "Connected to Google Calendar." : "Not connected";
         GoogleSignedOutPanel.Visibility = connected ? Visibility.Collapsed : Visibility.Visible;
         GoogleAccountCard.Visibility = connected ? Visibility.Visible : Visibility.Collapsed;
-        RefreshGoogleSourcesButton.Visibility = connected && SettingsRetriever.GetGoogleEnabled()
+        RefreshGoogleSourcesButton.Visibility = connected
             ? Visibility.Visible
             : Visibility.Collapsed;
 
@@ -715,23 +739,69 @@ public sealed partial class WidgetWindow : Window
         WindowConfiguration.ApplyBackground(this);
     }
 
-    private void GoogleEnabled(object sender, RoutedEventArgs e)
+    private async void GoogleEnabled(object sender, RoutedEventArgs e)
     {
-        SettingsRetriever.SetGoogleEnabled(true);
+        if (_isUpdatingSourceControls)
+        {
+            return;
+        }
+
+        await SetGoogleEnabledAsync(true);
     }
-    private void GoogleDisabled(object sender, RoutedEventArgs e)
+    private async void GoogleDisabled(object sender, RoutedEventArgs e)
     {
-        SettingsRetriever.SetGoogleEnabled(false);
+        if (_isUpdatingSourceControls)
+        {
+            return;
+        }
+
+        await SetGoogleEnabledAsync(false);
     }
 
-    private void CanvasEnabled(object sender, RoutedEventArgs e)
+    private async void CanvasEnabled(object sender, RoutedEventArgs e)
     {
-        SettingsRetriever.SetCanvasEnabled(true);
+        if (_isUpdatingSourceControls)
+        {
+            return;
+        }
+
+        await SetCanvasEnabledAsync(true);
     }
 
-    private void CanvasDisabled(object sender, RoutedEventArgs e)
+    private async void CanvasDisabled(object sender, RoutedEventArgs e)
     {
-        SettingsRetriever.SetCanvasEnabled(false);
+        if (_isUpdatingSourceControls)
+        {
+            return;
+        }
+
+        await SetCanvasEnabledAsync(false);
+    }
+
+    private async Task SetGoogleEnabledAsync(bool enabled, bool reloadGoogleService = false)
+    {
+        SettingsRetriever.SetGoogleEnabled(enabled);
+        LoggerService.Log(
+            $"WidgetWindow: Google Calendar source toggled {(enabled ? "enabled" : "disabled")}.",
+            LoggerStatusEnum.INFO);
+
+        if (reloadGoogleService)
+        {
+            await EventAggService.ReloadGoogleServiceAsync();
+        }
+        else
+        {
+            await EventAggService.ReloadSourcesAsync();
+        }
+    }
+
+    private async Task SetCanvasEnabledAsync(bool enabled)
+    {
+        SettingsRetriever.SetCanvasEnabled(enabled);
+        LoggerService.Log(
+            $"WidgetWindow: Canvas source toggled {(enabled ? "enabled" : "disabled")}.",
+            LoggerStatusEnum.INFO);
+        await EventAggService.ReloadSourcesAsync();
     }
 
     private void PrimaryViewChanged(object sender, SelectionChangedEventArgs e)
@@ -826,4 +896,3 @@ public sealed partial class WidgetWindow : Window
         ViewWindowManager.SyncWithSettings();
     }
 }
-

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
+using System.Security.Cryptography;
 
 namespace MosaiCal.Services;
 
@@ -174,15 +175,28 @@ internal sealed class SourceImageService
 
         try
         {
+            byte[] hashBytes;
+            using (var stream = File.OpenRead(selectedImagePath))
+            {
+                hashBytes = SHA256.HashData(stream);
+            }
+            
+            string hash = Convert.ToHexString(hashBytes);
             string key = BuildKey(provider, sourceId);
             string extension = Path.GetExtension(selectedImagePath).ToLowerInvariant();
-            string safeFileName = $"{Sanitize(provider)}-{Sanitize(sourceId)}-{Guid.NewGuid():N}{extension}";
+            string safeFileName = $"{hash}{extension}";
             string destinationPath = Path.Combine(_managedImageDirectory, safeFileName);
 
             lock (SyncLock)
             {
-                RemoveManagedImageForAssociation(key, deleteFile: true);
-                File.Copy(selectedImagePath, destinationPath, overwrite: false);
+                string? previousFileName = null;
+
+                if (_associations.TryGetValue(key, out var existing))
+                    previousFileName = existing.ManagedImageFileName;
+
+                if (!File.Exists(destinationPath))
+                    File.Copy(selectedImagePath, destinationPath);
+
                 _associations[key] = new SourceImageAssociation
                 {
                     Provider = provider.Trim(),
@@ -190,12 +204,26 @@ internal sealed class SourceImageService
                     ManagedImageFileName = safeFileName,
                     UpdatedUtc = DateTimeOffset.UtcNow
                 };
+
+                if (!string.IsNullOrWhiteSpace(previousFileName) &&
+                    !string.Equals(previousFileName, safeFileName,
+                        StringComparison.OrdinalIgnoreCase) &&
+                    !_associations.Values.Any(a =>
+                        string.Equals(a.ManagedImageFileName, previousFileName,
+                            StringComparison.OrdinalIgnoreCase)))
+                {
+                    string previousPath =
+                        Path.Combine(_managedImageDirectory, previousFileName);
+
+                    if (File.Exists(previousPath))
+                        File.Delete(previousPath);
+                }
+
                 SaveAssociations();
                 managedImagePath = destinationPath;
             }
 
-            LoggerService.Log(
-                $"SourceImageService: Saved image customization for '{provider}:{sourceId}' to '{Path.GetFileName(managedImagePath)}'.");
+            LoggerService.Log($"SourceImageService: Saved image customization for '{provider}:{sourceId}' to '{Path.GetFileName(managedImagePath)}'.");
             SourceImagesChanged?.Invoke(this, EventArgs.Empty);
             return true;
         }
@@ -286,13 +314,22 @@ internal sealed class SourceImageService
     private bool RemoveManagedImageForAssociation(string key, bool deleteFile)
     {
         if (!_associations.TryGetValue(key, out SourceImageAssociation? association))
-        {
             return false;
-        }
 
-        if (deleteFile && !string.IsNullOrWhiteSpace(association.ManagedImageFileName))
+        string fileName = association.ManagedImageFileName;
+
+        _associations.Remove(key);
+
+        if (deleteFile &&
+            !string.IsNullOrWhiteSpace(fileName) &&
+            !_associations.Values.Any(a =>
+                string.Equals(
+                    a.ManagedImageFileName,
+                    fileName,
+                    StringComparison.OrdinalIgnoreCase)))
         {
-            string filePath = Path.Combine(_managedImageDirectory, association.ManagedImageFileName);
+            string filePath = Path.Combine(_managedImageDirectory, fileName);
+
             if (File.Exists(filePath))
             {
                 try
@@ -301,12 +338,13 @@ internal sealed class SourceImageService
                 }
                 catch (Exception exception)
                 {
-                    LoggerService.LogException($"SourceImageService: Failed to delete old image file '{filePath}'.", exception);
+                    LoggerService.LogException(
+                        $"SourceImageService: Failed to delete unreferenced image '{filePath}'.",
+                        exception);
                 }
             }
         }
 
-        _associations.Remove(key);
         return true;
     }
 

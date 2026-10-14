@@ -7,7 +7,8 @@ Target: Winter 2027
 - [x] Automatic refreshing
 - [x] On startup request
 - [x] Prevent processes from interrupting shutdown
-- [ ] Default fallback case for unsupported universities in parsing handler
+- [ ] Disable specific sources
+- [x] Default fallback case for unsupported universities in parsing handler
 - [ ] Bracket edge case in assignment name parsing
   - [ ] Tighten up regexes
 
@@ -16,9 +17,12 @@ Target: Winter 2027
 - [ ] Solid color customization option for event backgrounds
 - [ ] Color selector UI
 - [ ] Good looking default config
+- [ ] Darkness adjuster for images per source
 
 #### Reliability
 
+- [ ] Race condition on startup for open on start dialouge
+- [ ] Prevent multiple controllers from opening
 - [ ] Basic checks for memory leaks
 - [ ] Test extended runtime
 - [ ] Test sleep / wake behavior
@@ -64,6 +68,7 @@ Target: Winter 2027
 - [ ] Accent Bar for lighter customization options
 - [ ] Solid/Mica/Acrylic customization options for calendar view window
 - [ ] Independent transparency customization for view background
+- [ ] Separation of google calendar sources by calendar color
 
 #### \<font color="green"> Low Priority \</font>
 
